@@ -39,11 +39,6 @@ public:
         return difftime(mktime(const_cast<tm *>(&timeinfo)), mktime(const_cast<tm *>(&other.timeinfo)));
     }
 
-    // DateTime(int year, int month, int day, int hour, int minute, int second);
-    // void setTime(int hour, int minute, int second);
-    // void setDate(int year, int month, int day);
-    // String toString() const;
-
 private:
     String timestamp_;
     struct tm timeinfo;
