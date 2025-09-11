@@ -321,14 +321,11 @@ void NodeApp::doGet(WiFiClientSecure &client)
 #endif
 
 #ifdef HAS_DISPLAY
-// TODO: use sunandmoon.h instead
 void NodeApp::moonPhase(char phase)
 {
-  U8G2_FOR_ADAFRUIT_GFX &u8g2 = this->u8g2_;
-
-  u8g2.setFont(moon_phases_48pt);
-  u8g2.print(phase);
-  u8g2.setFont(defaultFont);
+  u8g2_.setFont(moon_phases_48pt);
+  u8g2_.print(phase);
+  u8g2_.setFont(defaultFont);
 }
 
 void NodeApp::updateDisplay()
