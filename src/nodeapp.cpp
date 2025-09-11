@@ -332,43 +332,42 @@ void NodeApp::updateDisplay()
 {
   JsonDocument *doc = this->doc_;
   GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> &display = *this->display_;
-  U8G2_FOR_ADAFRUIT_GFX &u8g2 = this->u8g2_;
-
+  
   display.init(115200);
   Serial.println("E-Paper display initialized");
 
   display.setRotation(0); // Landscape
 
-  u8g2.begin(display);
+  u8g2_.begin(display);
 
   display.setFullWindow();
   display.firstPage();
   do
   {
-    u8g2.setFontMode(0);
-    u8g2.setFontDirection(0);
-    u8g2.setForegroundColor(GxEPD_BLACK);
-    u8g2.setBackgroundColor(GxEPD_WHITE);
-    u8g2.setFont(defaultFont);
+    u8g2_.setFontMode(0);
+    u8g2_.setFontDirection(0);
+    u8g2_.setForegroundColor(GxEPD_BLACK);
+    u8g2_.setBackgroundColor(GxEPD_WHITE);
+    u8g2_.setFont(defaultFont);
 
-    u8g2.setCursor(0, 50);
+    u8g2_.setCursor(0, 50);
 
     // TODO: need to distinguish GET failure vs partial response
     if (doc == nullptr || doc->isNull() || !doc->operator[]("nodes").is<JsonObject>())
     {
-      u8g2.println("Failed to get data - local sensor only");
+      u8g2_.println("Failed to get data - local sensor only");
       if (!sensors_["bme680"]->ok())
       {
-        u8g2.println("Local sensor (BME680) setup failed");
+        u8g2_.println("Local sensor (BME680) setup failed");
       }
       else
       {
         std::map<std::string, Measurement> measurements = sensors_["bme680"]->read();
         for (const auto &measurement : measurements)
         {
-          u8g2.printf("%s: ", measurement.first.c_str());
+          u8g2_.printf("%s: ", measurement.first.c_str());
           Measurement m = measurement.second;
-          u8g2.printf("%.2f %s\n", m.value, m.unit.c_str());
+          u8g2_.printf("%.2f %s\n", m.value, m.unit.c_str());
         }
       }
     }
@@ -381,10 +380,10 @@ void NodeApp::updateDisplay()
       if (local_timestamp.ok())
       {
         Serial.printf("Local time: %s\n", local_timestamp.format("%A %d %B %Y").c_str());
-        u8g2.printf("%s  ", local_timestamp.niceDate().c_str());
+        u8g2_.printf("%s  ", local_timestamp.niceDate().c_str());
 
-        u8g2.println();
-        u8g2.println();
+        u8g2_.println();
+        u8g2_.println();
 
         // Get location data from response config section if available
         double latitude = 48.866667;
@@ -410,17 +409,17 @@ void NodeApp::updateDisplay()
         SunAndMoon sunAndMoon(local_timestamp.year(), local_timestamp.month(), local_timestamp.day(),
                               local_timestamp.hour(), local_timestamp.minute(), local_timestamp.second(),
                               latitude, longitude, utc_offset_seconds);
-        u8g2.printf("Sun:  %s  %s  %s\n", sunAndMoon.getSunrise().c_str(), sunAndMoon.getSunTransit().c_str(), sunAndMoon.getSunset().c_str());
-        u8g2.printf("Moon: %s  %s  %s  ", sunAndMoon.getMoonRise().c_str(), sunAndMoon.getMoonTransit().c_str(), sunAndMoon.getMoonSet().c_str());
+        u8g2_.printf("Sun:  %s  %s  %s\n", sunAndMoon.getSunrise().c_str(), sunAndMoon.getSunTransit().c_str(), sunAndMoon.getSunset().c_str());
+        u8g2_.printf("Moon: %s  %s  %s  ", sunAndMoon.getMoonRise().c_str(), sunAndMoon.getMoonTransit().c_str(), sunAndMoon.getMoonSet().c_str());
         moonPhase(sunAndMoon.getMoonPhaseLetter());
-        u8g2.println();
-        u8g2.printf("      %s\n", sunAndMoon.getMoonPhase().c_str());
+        u8g2_.println();
+        u8g2_.printf("      %s\n", sunAndMoon.getMoonPhase().c_str());
       }
       else
       {
-        u8g2.println("(Date unknown)");
+        u8g2_.println("(Date unknown)");
       }
-      u8g2.println();
+      u8g2_.println();
 
       JsonObject nodes = doc->operator[]("nodes");
 
@@ -429,7 +428,7 @@ void NodeApp::updateDisplay()
         JsonObject nodeData = node.value().as<JsonObject>();
         displayNodeHeader(node, nodeData, utc_timestamp);
         displayNodeMeasurements(nodeData);
-        u8g2.println();
+        u8g2_.println();
       }
     }
   } while (display.nextPage());
@@ -450,8 +449,6 @@ void NodeApp::displayNodeMeasurements(JsonObject &nodeData)
 
 void NodeApp::displayDeviceMeasurements(JsonObject &measurements_v2, const std::string &device, JsonObject &nodeData)
 {
-  U8G2_FOR_ADAFRUIT_GFX &u8g2 = this->u8g2_;
-
   if (measurements_v2[device].is<JsonObject>())
   {
     JsonObject device_map = measurements_v2[device].as<JsonObject>();
@@ -460,22 +457,22 @@ void NodeApp::displayDeviceMeasurements(JsonObject &measurements_v2, const std::
       auto min_max = getDeviceMinMax(nodeData, device, "temperature");
       if (min_max.first)
       {
-        u8g2.printf(" %.1f(%.1f/%.1f)°C ", float(device_map["temperature"]), min_max.second.first, min_max.second.second);
+        u8g2_.printf(" %.1f(%.1f/%.1f)°C ", float(device_map["temperature"]), min_max.second.first, min_max.second.second);
       }
       else
       {
-        u8g2.printf(" %.1f°C", float(device_map["temperature"]));
+        u8g2_.printf(" %.1f°C", float(device_map["temperature"]));
       }
     }
     if (device_map["humidity"].is<JsonString>())
     {
-        u8g2.printf(" %.1f%% ", float(device_map["humidity"]));
+        u8g2_.printf(" %.1f%% ", float(device_map["humidity"]));
     }
     if (device_map["pressure"].is<JsonString>())
     {
-      u8g2.printf(" %.0fhPa ", float(device_map["pressure"]));
+      u8g2_.printf(" %.0fhPa ", float(device_map["pressure"]));
     }
-    u8g2.println();
+    u8g2_.println();
   }
 }
 
@@ -506,11 +503,10 @@ std::pair<bool, std::pair<float, float>> NodeApp::getDeviceMinMax(JsonObject &no
 
 void NodeApp::displayNodeHeader(JsonPair &node, JsonObject &nodeData, DateTime &utc_timestamp)
 {
-  U8G2_FOR_ADAFRUIT_GFX &u8g2 = this->u8g2_;
   String displayName = node.key().c_str();
   if (nodeData["display_name"].is<JsonString>())
     displayName = nodeData["display_name"].as<String>();
-  u8g2.printf("%s", displayName.c_str());
+  u8g2_.printf("%s", displayName.c_str());
 
   if (nodeData["measurements_v2"].is<JsonObject>())
   {
@@ -540,30 +536,29 @@ void NodeApp::displayNodeHeader(JsonPair &node, JsonObject &nodeData, DateTime &
         double diff = utc_timestamp.diff(node_utc_dt);
         if (diff < 0)
         {
-          u8g2.printf(" Time travel %.0f\"!", -diff);
+          u8g2_.printf(" Time travel %.0f\"!", -diff);
         }
         else if (diff > MAX_STALE_SECONDS)
         {
-          u8g2.printf(" %.0f' old", diff / 60);
+          u8g2_.printf(" %.0f' old", diff / 60);
         }
       }
       else
       {
-        u8g2.printf(" (%s)", measurements_timestamp_utc.c_str());
+        u8g2_.printf(" (%s)", measurements_timestamp_utc.c_str());
         Serial.printf("Bad timestamp: %s\n", measurements_timestamp_utc.c_str());
       }
     }
   }
   else
   {
-    u8g2.printf(" (No reference time)");
+    u8g2_.printf(" (No reference time)");
   }
-  u8g2.println();
+  u8g2_.println();
 }
 
 void NodeApp::displayBadStatuses(ArduinoJson::V742PB22::JsonObject &nodeData)
 {
-  U8G2_FOR_ADAFRUIT_GFX &u8g2 = this->u8g2_;
   // Display status entries that are not "ok"
   if (nodeData["status"].is<JsonObject>())
   {
@@ -574,7 +569,7 @@ void NodeApp::displayBadStatuses(ArduinoJson::V742PB22::JsonObject &nodeData)
       if (value != "ok")
       {
         String key = kvp.key().c_str();
-        u8g2.printf(" %s=%s", key.c_str(), value.c_str());
+        u8g2_.printf(" %s=%s", key.c_str(), value.c_str());
       }
     }
   }
@@ -606,8 +601,6 @@ DateTime NodeApp::parseTimestampString(const String &timestamp, const String &ti
 
 void NodeApp::printBatteryLevel(float battery_percentage)
 {
-  U8G2_FOR_ADAFRUIT_GFX &u8g2 = this->u8g2_;
-
   // List of characters for battery indicator, from empty to full
   char battery_chars[] = {'0', '5', '6', '7', '8', '9', ':', ';', '<'};
   int num_levels = sizeof(battery_chars) / sizeof(battery_chars[0]);
@@ -620,9 +613,9 @@ void NodeApp::printBatteryLevel(float battery_percentage)
   int char_offset = round(level);
   Serial.printf("Battery percentage: %.1f%%, level: %.1f, char_offset: %d\n", battery_percentage, level, char_offset);
 
-  u8g2.print(" ");
-  u8g2.setFont(u8g2_font_battery24_tr);
-  u8g2.print(battery_chars[char_offset]);
-  u8g2.setFont(defaultFont);
+  u8g2_.print(" ");
+  u8g2_.setFont(u8g2_font_battery24_tr);
+  u8g2_.print(battery_chars[char_offset]);
+  u8g2_.setFont(defaultFont);
 }
 #endif
