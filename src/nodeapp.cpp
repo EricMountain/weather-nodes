@@ -437,7 +437,6 @@ void NodeApp::updateDisplay()
 
 void NodeApp::displayNodeMeasurements(JsonObject &nodeData)
 {
-  U8G2_FOR_ADAFRUIT_GFX &u8g2 = this->u8g2_;
   if (nodeData["measurements_v2"].is<JsonObject>())
   {
     JsonObject measurements_v2 = nodeData["measurements_v2"].as<JsonObject>();
