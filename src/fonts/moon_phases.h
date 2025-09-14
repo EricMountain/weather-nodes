@@ -1,7 +1,7 @@
-#include <U8g2_for_Adafruit_GFX.h>
-
 #ifndef MOON_PHASES_H
 #define MOON_PHASES_H
+
+#include <U8g2_for_Adafruit_GFX.h>
 
 /*
   Fontname: -FreeType-Moon Phases-Medium-R-Normal--33-240-100-100-P-244-ISO10646-1
