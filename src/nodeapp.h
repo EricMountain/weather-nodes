@@ -26,6 +26,8 @@
 #include <U8g2_for_Adafruit_GFX.h>
 #include "fonts/u8g2_font_battery24_tr.h"
 
+#include "model.h"
+
 // Pin mapping for many ESP32 dev boards and Waveshare 7.5in V2 SPI displays:
 // - from perplexity
 #define EPD_CS 5
@@ -56,6 +58,9 @@ public:
 #endif
   {
     doc_ = nullptr;
+#ifdef HAS_DISPLAY
+    model_ = Model();
+#endif
     bmeOK_ = false;
   }
 
@@ -73,11 +78,14 @@ private:
   GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> *display_;
   U8G2_FOR_ADAFRUIT_GFX u8g2_;
   const uint8_t *defaultFont = u8g2_font_inb24_mf;
+  Model model_;
 #endif
 
   std::map<std::string, Sensor*> sensors_;
 
   JsonDocument *doc_;
+
+  // TODO remove
   bool bmeOK_;
 
   void setupSerial();

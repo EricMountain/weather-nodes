@@ -12,6 +12,9 @@
 #ifdef HAS_DISPLAY
 #include "sunandmoon.h"
 #include "fonts/moon_phases_48pt.h"
+
+#include <LittleFS.h>
+#include "data-controller.h"
 #endif
 
 #if defined(HAS_BME680) || defined(HAS_SHT31D)
@@ -380,7 +383,12 @@ void NodeApp::updateDisplay()
       if (local_timestamp.ok())
       {
         Serial.printf("Local time: %s\n", local_timestamp.format("%A %d %B %Y").c_str());
-        u8g2_.printf("%s  ", local_timestamp.niceDate().c_str());
+        std::string display_date = local_timestamp.niceDate();
+        model_.setDateTime(display_date);
+        u8g2_.printf("%s  ", display_date.c_str());
+
+        Controller c = Controller(model_);
+        Serial.printf("Refresh needed according to controller: %s\n", c.needRefresh() ? "yes" : "no");
 
         u8g2_.println();
         u8g2_.println();
