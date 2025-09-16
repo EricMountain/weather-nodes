@@ -91,7 +91,7 @@ private:
   void setupSerial();
   void registerSensors();
   void setupWiFi();
-  void moonPhase(char phase);
+  void moonPhase();
   void printBatteryLevel(float battery_percentage);
   DateTime parseTimestamp(const String &timestamp_key);
   DateTime parseTimestampString(const String &timestamp, const String &timestamp_key);

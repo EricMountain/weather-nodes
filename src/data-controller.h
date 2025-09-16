@@ -37,8 +37,8 @@ public:
         }
 
         // TODO remove when ready
-        Serial.println("Forcing refresh for now");
-        needRefresh_ = true; // always refresh for now
+        // Serial.println("Forcing refresh for now");
+        // needRefresh_ = true; // always refresh for now
 
         writeData();
     }

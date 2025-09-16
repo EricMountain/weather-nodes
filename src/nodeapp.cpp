@@ -324,10 +324,10 @@ void NodeApp::doGet(WiFiClientSecure &client)
 #endif
 
 #ifdef HAS_DISPLAY
-void NodeApp::moonPhase(char phase)
+void NodeApp::moonPhase()
 {
   u8g2_.setFont(moon_phases_48pt);
-  u8g2_.print(phase);
+  u8g2_.print(model_.getMoonPhaseLetter());
   u8g2_.setFont(defaultFont);
 }
 
@@ -335,7 +335,72 @@ void NodeApp::updateDisplay()
 {
   JsonDocument *doc = this->doc_;
   GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> &display = *this->display_;
-  
+
+  // Get UTC timestamp to check for stale data
+  DateTime utc_timestamp = parseTimestamp("timestamp_utc");
+  DateTime local_timestamp = parseTimestamp("timestamp_local");
+
+  if (doc == nullptr || doc->isNull() || !doc->operator[]("nodes").is<JsonObject>())
+  {
+    // force refresh
+  }
+  else
+  {
+    if (local_timestamp.ok())
+    {
+      Serial.printf("Local time: %s\n", local_timestamp.format("%A %d %B %Y").c_str());
+      std::string display_date = local_timestamp.niceDate();
+      model_.setDateTime(display_date);
+    }
+    else
+    {
+      model_.setDateTime("(Date unknown)");
+    }
+
+    // Get location data from response config section if available
+    double latitude = 48.866667;
+    double longitude = 2.333333;
+    int utc_offset_seconds = 0;
+    if (doc->operator[]("config").is<JsonObject>())
+    {
+      JsonObject config = doc->operator[]("config").as<JsonObject>();
+      if (config["location"].is<JsonObject>())
+      {
+        JsonObject location = config["location"].as<JsonObject>();
+        if (location["latitude"].is<JsonString>())
+        {
+          latitude = location["latitude"].as<String>().toDouble();
+        }
+        if (location["longitude"].is<JsonString>())
+        {
+          longitude = location["longitude"].as<String>().toDouble();
+        }
+        if (location["utc_offset_seconds"].is<JsonInteger>())
+        {
+          utc_offset_seconds = location["utc_offset_seconds"].as<int>();
+        }
+      }
+    }
+    Serial.printf("Location: lat %.6f lon %.6f UTC offset %d seconds\n", latitude, longitude, utc_offset_seconds);
+
+    SunAndMoon sunAndMoon(local_timestamp.year(), local_timestamp.month(), local_timestamp.day(),
+                          local_timestamp.hour(), local_timestamp.minute(), local_timestamp.second(),
+                          latitude, longitude, utc_offset_seconds);
+    model_.setSunInfo(sunAndMoon.getSunrise(), sunAndMoon.getSunTransit(), sunAndMoon.getSunset());
+    model_.setMoonInfo(sunAndMoon.getMoonPhase(), std::string(1, sunAndMoon.getMoonPhaseLetter()), sunAndMoon.getMoonRise(), sunAndMoon.getMoonTransit(), sunAndMoon.getMoonSet());
+
+    JsonObject nodes = doc->operator[]("nodes");
+    model_.addNodesData(nodes);
+
+    Controller c = Controller(model_);
+    Serial.printf("Refresh needed according to controller: %s\n", c.needRefresh() ? "yes" : "no");
+
+    if (!c.needRefresh())
+    {
+      return;
+    }
+  }
+
   display.init(115200);
   Serial.println("E-Paper display initialized");
 
@@ -376,61 +441,23 @@ void NodeApp::updateDisplay()
     }
     else
     {
-      // Get UTC timestamp to check for stale data
-      DateTime utc_timestamp = parseTimestamp("timestamp_utc");
-      DateTime local_timestamp = parseTimestamp("timestamp_local");
+      Serial.printf("Local time: %s\n", local_timestamp.format("%A %d %B %Y").c_str());
+      std::string display_date = local_timestamp.niceDate();
+      model_.setDateTime(display_date);
+      u8g2_.printf("%s  ", model_.getDateTime().c_str());
 
-      if (local_timestamp.ok())
-      {
-        Serial.printf("Local time: %s\n", local_timestamp.format("%A %d %B %Y").c_str());
-        std::string display_date = local_timestamp.niceDate();
-        model_.setDateTime(display_date);
-        u8g2_.printf("%s  ", display_date.c_str());
+      u8g2_.println();
+      u8g2_.println();
 
-        Controller c = Controller(model_);
-        Serial.printf("Refresh needed according to controller: %s\n", c.needRefresh() ? "yes" : "no");
+      u8g2_.printf("Sun:  %s  %s  %s\n", model_.getSunRise().c_str(), model_.getSunTransit().c_str(), model_.getSunSet().c_str());
+      u8g2_.printf("Moon: %s  %s  %s  ", model_.getMoonRise().c_str(), model_.getMoonTransit().c_str(), model_.getMoonSet().c_str());
+      moonPhase();
+      u8g2_.println();
+      u8g2_.printf("      %s\n", model_.getMoonPhase().c_str());
 
-        u8g2_.println();
-        u8g2_.println();
-
-        // Get location data from response config section if available
-        double latitude = 48.866667;
-        double longitude = 2.333333;
-        int utc_offset_seconds = 0;
-        if (doc->operator[]("config").is<JsonObject>()) {
-          JsonObject config = doc->operator[]("config").as<JsonObject>();
-          if (config["location"].is<JsonObject>()) {
-            JsonObject location = config["location"].as<JsonObject>();
-            if (location["latitude"].is<JsonString>()) {
-              latitude = location["latitude"].as<String>().toDouble();
-            }
-            if (location["longitude"].is<JsonString>()) {
-              longitude = location["longitude"].as<String>().toDouble();
-            }
-            if (location["utc_offset_seconds"].is<JsonInteger>()) {
-              utc_offset_seconds = location["utc_offset_seconds"].as<int>();
-            }
-          }
-        }
-        Serial.printf("Location: lat %.6f lon %.6f UTC offset %d seconds\n", latitude, longitude, utc_offset_seconds);
-        
-        SunAndMoon sunAndMoon(local_timestamp.year(), local_timestamp.month(), local_timestamp.day(),
-                              local_timestamp.hour(), local_timestamp.minute(), local_timestamp.second(),
-                              latitude, longitude, utc_offset_seconds);
-        u8g2_.printf("Sun:  %s  %s  %s\n", sunAndMoon.getSunrise().c_str(), sunAndMoon.getSunTransit().c_str(), sunAndMoon.getSunset().c_str());
-        u8g2_.printf("Moon: %s  %s  %s  ", sunAndMoon.getMoonRise().c_str(), sunAndMoon.getMoonTransit().c_str(), sunAndMoon.getMoonSet().c_str());
-        moonPhase(sunAndMoon.getMoonPhaseLetter());
-        u8g2_.println();
-        u8g2_.printf("      %s\n", sunAndMoon.getMoonPhase().c_str());
-      }
-      else
-      {
-        u8g2_.println("(Date unknown)");
-      }
       u8g2_.println();
 
       JsonObject nodes = doc->operator[]("nodes");
-
       for (JsonPair node : nodes)
       {
         JsonObject nodeData = node.value().as<JsonObject>();
@@ -474,7 +501,7 @@ void NodeApp::displayDeviceMeasurements(JsonObject &measurements_v2, const std::
     }
     if (device_map["humidity"].is<JsonString>())
     {
-        u8g2_.printf(" %.1f%% ", float(device_map["humidity"]));
+      u8g2_.printf(" %.1f%% ", float(device_map["humidity"]));
     }
     if (device_map["pressure"].is<JsonString>())
     {
