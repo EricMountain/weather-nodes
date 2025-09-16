@@ -34,13 +34,14 @@ Controller::Controller(Model &current) : current_(current)
     if (needRefresh_)
     {
         Serial.println("Current model differs from last displayed model, need refresh");
+        // Only write if we refresh the screen - otherwise display and persisted data may
+        // diverge without leading to a refresh
+        writeData();
     }
     else
     {
         Serial.println("Current model matches last displayed model, no refresh needed");
     }
-
-    writeData();
 }
 
 void Controller::writeData()
