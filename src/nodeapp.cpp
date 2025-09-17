@@ -14,7 +14,7 @@
 #include "fonts/moon_phases_48pt.h"
 
 #include <LittleFS.h>
-#include "data-controller.h"
+#include "controller.h"
 #endif
 
 #if defined(HAS_BME680) || defined(HAS_SHT31D)
