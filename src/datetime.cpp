@@ -1,6 +1,8 @@
 #include "datetime.h"
 
 #include <ctime>
+#include <fmt/core.h>
+#include <Arduino.h>
 
 
 DateTime::DateTime()
@@ -9,7 +11,7 @@ DateTime::DateTime()
     memset(&timeinfo, 0, sizeof(timeinfo));
 }
 
-DateTime::DateTime(String timestamp)
+DateTime::DateTime(std::string timestamp)
 {
     memset(&timeinfo, 0, sizeof(timeinfo));
     // NB: %z breaks day of week calculation and TZ offset is not parsed

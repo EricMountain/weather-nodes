@@ -79,6 +79,8 @@ private:
   U8G2_FOR_ADAFRUIT_GFX u8g2_;
   const uint8_t *defaultFont = u8g2_font_inb24_mf;
   Model model_;
+  DateTime utc_timestamp_;
+  DateTime local_timestamp_;
 #endif
 
   std::map<std::string, Sensor*> sensors_;
@@ -92,20 +94,21 @@ private:
   void registerSensors();
   void setupWiFi();
   void moonPhase();
-  void printBatteryLevel(float battery_percentage);
   DateTime parseTimestamp(const String &timestamp_key);
-  DateTime parseTimestampString(const String &timestamp, const String &timestamp_key);
+  DateTime parseTimestampString(const std::string &timestamp, const String &timestamp_key);
   std::string buildPayload();
   void formatMeasurementsPayload(std::vector<std::string> &device_measurements, std::string &measurements_v2);
   std::string formatStatusPayload(std::vector<std::pair<std::string, std::string>> &status);
   void doPost(WiFiClientSecure &client);
 #ifdef HAS_DISPLAY
   void doGet(WiFiClientSecure &client);
+  bool buildDisplayModel();
   void displayNodeHeader(JsonPair &node, JsonObject &nodeData, DateTime &utc_timestamp);
   void displayBadStatuses(JsonObject &nodeData);
   void displayNodeMeasurements(JsonObject &nodeData);
   void displayDeviceMeasurements(JsonObject &measurements_v2, const std::string &device, JsonObject &nodeData);
   std::pair<bool, std::pair<float, float>>getDeviceMinMax(JsonObject &nodeData, const std::string &device, const std::string &measurement);
+  void printBatteryLevel(JsonString battery_level);
 #endif
 };
 

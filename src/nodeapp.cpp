@@ -331,74 +331,92 @@ void NodeApp::moonPhase()
   u8g2_.setFont(defaultFont);
 }
 
+// Returns true if the screen is to be refreshed
+bool NodeApp::buildDisplayModel()
+{
+  JsonDocument *doc = this->doc_;
+
+  // Force refresh if we have no data
+  if (doc == nullptr || doc->isNull() || !doc->operator[]("nodes").is<JsonObject>())
+  {
+    // TODO: should build model all the same and use it to do the display
+    // Don’t need to force display refresh in that case
+    return true;
+  }
+
+  // Get UTC timestamp to check for stale data
+  utc_timestamp_ = parseTimestamp("timestamp_utc");
+  local_timestamp_ = parseTimestamp("timestamp_local");
+
+  if (local_timestamp_.ok())
+  {
+    Serial.printf("Local time: %s\n", local_timestamp_.format("%A %d %B %Y").c_str());
+    std::string display_date = local_timestamp_.niceDate();
+    model_.setDateTime(display_date);
+  }
+  else
+  {
+    model_.setDateTime("(Date unknown)");
+  }
+
+  // Get location data from response config section if available
+  double latitude = 48.866667;
+  double longitude = 2.333333;
+  int utc_offset_seconds = 0;
+  if (doc->operator[]("config").is<JsonObject>())
+  {
+    JsonObject config = doc->operator[]("config").as<JsonObject>();
+    if (config["location"].is<JsonObject>())
+    {
+      JsonObject location = config["location"].as<JsonObject>();
+      if (location["latitude"].is<JsonString>())
+      {
+        latitude = location["latitude"].as<String>().toDouble();
+      }
+      if (location["longitude"].is<JsonString>())
+      {
+        longitude = location["longitude"].as<String>().toDouble();
+      }
+      if (location["utc_offset_seconds"].is<JsonInteger>())
+      {
+        utc_offset_seconds = location["utc_offset_seconds"].as<int>();
+      }
+    }
+  }
+  Serial.printf("Location: lat %.6f lon %.6f UTC offset %d seconds\n", latitude, longitude, utc_offset_seconds);
+
+  SunAndMoon sunAndMoon(local_timestamp_.year(), local_timestamp_.month(), local_timestamp_.day(),
+                        local_timestamp_.hour(), local_timestamp_.minute(), local_timestamp_.second(),
+                        latitude, longitude, utc_offset_seconds);
+  model_.setSunInfo(sunAndMoon.getSunrise(), sunAndMoon.getSunTransit(), sunAndMoon.getSunset());
+  model_.setMoonInfo(sunAndMoon.getMoonPhase(), std::string(1, sunAndMoon.getMoonPhaseLetter()), sunAndMoon.getMoonRise(), sunAndMoon.getMoonTransit(), sunAndMoon.getMoonSet());
+
+  JsonObject nodes = doc->operator[]("nodes");
+  // TODO make this do the loop below instead of what it does now
+  model_.addNodesData(nodes);
+
+  for (JsonPair node : nodes)
+  {
+    model_.addNode(node, utc_timestamp_);
+    // JsonObject nodeData = node.value().as<JsonObject>();
+    // displayNodeHeader(node, nodeData, utc_timestamp_);
+    // displayNodeMeasurements(nodeData);
+  }
+
+  Controller c = Controller(model_);
+  Serial.printf("Refresh needed according to controller: %s\n", c.needRefresh() ? "yes" : "no");
+
+  return c.needRefresh();
+}
+
 void NodeApp::updateDisplay()
 {
   JsonDocument *doc = this->doc_;
   GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> &display = *this->display_;
 
-  // Get UTC timestamp to check for stale data
-  DateTime utc_timestamp = parseTimestamp("timestamp_utc");
-  DateTime local_timestamp = parseTimestamp("timestamp_local");
-
-  if (doc == nullptr || doc->isNull() || !doc->operator[]("nodes").is<JsonObject>())
+  if (!buildDisplayModel())
   {
-    // force refresh
-  }
-  else
-  {
-    if (local_timestamp.ok())
-    {
-      Serial.printf("Local time: %s\n", local_timestamp.format("%A %d %B %Y").c_str());
-      std::string display_date = local_timestamp.niceDate();
-      model_.setDateTime(display_date);
-    }
-    else
-    {
-      model_.setDateTime("(Date unknown)");
-    }
-
-    // Get location data from response config section if available
-    double latitude = 48.866667;
-    double longitude = 2.333333;
-    int utc_offset_seconds = 0;
-    if (doc->operator[]("config").is<JsonObject>())
-    {
-      JsonObject config = doc->operator[]("config").as<JsonObject>();
-      if (config["location"].is<JsonObject>())
-      {
-        JsonObject location = config["location"].as<JsonObject>();
-        if (location["latitude"].is<JsonString>())
-        {
-          latitude = location["latitude"].as<String>().toDouble();
-        }
-        if (location["longitude"].is<JsonString>())
-        {
-          longitude = location["longitude"].as<String>().toDouble();
-        }
-        if (location["utc_offset_seconds"].is<JsonInteger>())
-        {
-          utc_offset_seconds = location["utc_offset_seconds"].as<int>();
-        }
-      }
-    }
-    Serial.printf("Location: lat %.6f lon %.6f UTC offset %d seconds\n", latitude, longitude, utc_offset_seconds);
-
-    SunAndMoon sunAndMoon(local_timestamp.year(), local_timestamp.month(), local_timestamp.day(),
-                          local_timestamp.hour(), local_timestamp.minute(), local_timestamp.second(),
-                          latitude, longitude, utc_offset_seconds);
-    model_.setSunInfo(sunAndMoon.getSunrise(), sunAndMoon.getSunTransit(), sunAndMoon.getSunset());
-    model_.setMoonInfo(sunAndMoon.getMoonPhase(), std::string(1, sunAndMoon.getMoonPhaseLetter()), sunAndMoon.getMoonRise(), sunAndMoon.getMoonTransit(), sunAndMoon.getMoonSet());
-
-    JsonObject nodes = doc->operator[]("nodes");
-    model_.addNodesData(nodes);
-
-    Controller c = Controller(model_);
-    Serial.printf("Refresh needed according to controller: %s\n", c.needRefresh() ? "yes" : "no");
-
-    if (!c.needRefresh())
-    {
-      return;
-    }
+    return;
   }
 
   display.init(115200);
@@ -441,9 +459,6 @@ void NodeApp::updateDisplay()
     }
     else
     {
-      Serial.printf("Local time: %s\n", local_timestamp.format("%A %d %B %Y").c_str());
-      std::string display_date = local_timestamp.niceDate();
-      model_.setDateTime(display_date);
       u8g2_.printf("%s  ", model_.getDateTime().c_str());
 
       u8g2_.println();
@@ -461,7 +476,7 @@ void NodeApp::updateDisplay()
       for (JsonPair node : nodes)
       {
         JsonObject nodeData = node.value().as<JsonObject>();
-        displayNodeHeader(node, nodeData, utc_timestamp);
+        displayNodeHeader(node, nodeData, utc_timestamp_);
         displayNodeMeasurements(nodeData);
         u8g2_.println();
       }
@@ -538,61 +553,24 @@ std::pair<bool, std::pair<float, float>> NodeApp::getDeviceMinMax(JsonObject &no
 
 void NodeApp::displayNodeHeader(JsonPair &node, JsonObject &nodeData, DateTime &utc_timestamp)
 {
-  String displayName = node.key().c_str();
-  if (nodeData["display_name"].is<JsonString>())
-    displayName = nodeData["display_name"].as<String>();
-  u8g2_.printf("%s", displayName.c_str());
+  JsonObject node_data = model_.getNodeData()[node.key()].as<JsonObject>();
 
-  if (nodeData["measurements_v2"].is<JsonObject>())
-  {
-    JsonObject measurements_v2 = nodeData["measurements_v2"].as<JsonObject>();
-    if (measurements_v2["battery"].is<JsonObject>())
-    {
-      JsonObject battery = measurements_v2["battery"].as<JsonObject>();
-      if (battery["battery_percentage"].is<JsonString>())
-      {
-        float battery_percentage = float(battery["battery_percentage"]);
-        printBatteryLevel(battery_percentage);
-      }
-    }
-  }
+  std::string display_name = node_data["display_name"].as<String>().c_str();
+  u8g2_.printf("%s", display_name.c_str());
+
+  printBatteryLevel(node_data["battery_level"].as<JsonString>());
 
   displayBadStatuses(nodeData);
 
-  if (utc_timestamp.ok())
+  std::string node_stale = node_data["stale_state"].as<String>().c_str();
+  if (node_stale != "")
   {
-    if (nodeData["timestamp_utc"].is<JsonString>())
-    {
-      String measurements_timestamp_utc = nodeData["timestamp_utc"].as<String>();
-      struct tm tm_node_utc;
-      DateTime node_utc_dt = parseTimestampString(measurements_timestamp_utc, displayName + "/timestamp_utc");
-      if (node_utc_dt.ok())
-      {
-        double diff = utc_timestamp.diff(node_utc_dt);
-        if (diff < 0)
-        {
-          u8g2_.printf(" Time travel %.0f\"!", -diff);
-        }
-        else if (diff > MAX_STALE_SECONDS)
-        {
-          u8g2_.printf(" %.0f' old", diff / 60);
-        }
-      }
-      else
-      {
-        u8g2_.printf(" (%s)", measurements_timestamp_utc.c_str());
-        Serial.printf("Bad timestamp: %s\n", measurements_timestamp_utc.c_str());
-      }
-    }
-  }
-  else
-  {
-    u8g2_.printf(" (No reference time)");
+    u8g2_.printf(" %s", node_stale.c_str());
   }
   u8g2_.println();
 }
 
-void NodeApp::displayBadStatuses(ArduinoJson::V742PB22::JsonObject &nodeData)
+void NodeApp::displayBadStatuses(JsonObject &nodeData)
 {
   // Display status entries that are not "ok"
   if (nodeData["status"].is<JsonObject>())
@@ -617,14 +595,14 @@ DateTime NodeApp::parseTimestamp(const String &timestamp_key)
 
   if (doc->operator[](timestamp_key).is<JsonString>())
   {
-    String timestamp = doc->operator[](timestamp_key).as<String>();
+    std::string timestamp = doc->operator[](timestamp_key).as<String>().c_str();
 
     dt = parseTimestampString(timestamp, timestamp_key);
   }
   return dt;
 }
 
-DateTime NodeApp::parseTimestampString(const String &timestamp, const String &timestamp_key)
+DateTime NodeApp::parseTimestampString(const std::string &timestamp, const String &timestamp_key)
 {
   DateTime dt(timestamp);
   if (!dt.ok())
@@ -634,23 +612,11 @@ DateTime NodeApp::parseTimestampString(const String &timestamp, const String &ti
   return dt;
 }
 
-void NodeApp::printBatteryLevel(float battery_percentage)
+void NodeApp::printBatteryLevel(JsonString battery_percentage)
 {
-  // List of characters for battery indicator, from empty to full
-  char battery_chars[] = {'0', '5', '6', '7', '8', '9', ':', ';', '<'};
-  int num_levels = sizeof(battery_chars) / sizeof(battery_chars[0]);
-  float level = battery_percentage / 100.0 * (num_levels - 1);
-
-  if (level < 0)
-    level = 0;
-  if (level >= num_levels)
-    level = num_levels - 1;
-  int char_offset = round(level);
-  Serial.printf("Battery percentage: %.1f%%, level: %.1f, char_offset: %d\n", battery_percentage, level, char_offset);
-
   u8g2_.print(" ");
   u8g2_.setFont(u8g2_font_battery24_tr);
-  u8g2_.print(battery_chars[char_offset]);
+  u8g2_.print(battery_percentage.c_str());
   u8g2_.setFont(defaultFont);
 }
 #endif

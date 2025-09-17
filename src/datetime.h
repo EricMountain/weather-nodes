@@ -2,15 +2,14 @@
 #define DATETIME_H
 
 #include <string>
-#include <fmt/core.h>
 #include <time.h>
-#include <Arduino.h>
+#include <cstring>
 
 class DateTime
 {
 public:
     DateTime();
-    DateTime(String timestamp);
+    DateTime(std::string timestamp);
     DateTime(time_t timestamp)
     {
         struct tm *tm_info = gmtime(&timestamp);
@@ -40,7 +39,7 @@ public:
     }
 
 private:
-    String timestamp_;
+    std::string timestamp_;
     struct tm timeinfo;
     int year_;
     int month_;

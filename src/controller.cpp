@@ -1,6 +1,7 @@
+#include "controller.h"
+
 #include <LittleFS.h>
 
-#include "controller.h"
 
 Controller::Controller(Model &current) : current_(current)
 {

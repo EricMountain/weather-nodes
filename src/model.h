@@ -5,8 +5,9 @@
 #include <sstream>
 #include <algorithm>
 
-
 #include <ArduinoJson.h>
+
+#include "datetime.h"
 
 class Model
 {
@@ -27,6 +28,12 @@ public:
     std::string getMoonPhase() const;
     char getMoonPhaseLetter() const;
     void addNodesData(JsonObject nodes);
+    void addNode(JsonPair &node, DateTime &utc_timestamp);
+    void addNodeMeasurementsV2(JsonObject &raw_node_data, JsonObject &new_node);
+    void addNodeStaleState(DateTime &utc_timestamp, JsonObject &raw_node_data, JsonObject &new_node);
+    void addNodeStatusSection(JsonObject &raw_node_data, JsonObject &new_node);
+    void addNodeBatteryLevel(JsonObject &raw_node_data, JsonString &battery_level, JsonObject &new_node);
+    JsonObject getNodeData() const;
     std::string toJsonString() const;
     bool fromJsonString(const std::string &json_str);
     bool operator==(const Model &other) const;
@@ -36,4 +43,5 @@ private:
     JsonDocument *doc_;
     bool jsonLoadOK_ = false;
     std::string get(std::string key, std::string subkey) const;
+    char batteryLevelToChar(float battery_percentage);
 };
