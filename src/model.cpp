@@ -86,40 +86,62 @@ char Model::getMoonPhaseLetter() const
     return get("moon", "phase_letter")[0];
 }
 
+JsonObject Model::getNodeData() const
+{
+    if ((*doc_)["nodes"].is<JsonObject>())
+    {
+        return (*doc_)["nodes"].as<JsonObject>();
+    }
+    return JsonObject();
+}
+
+void Model::addNodes(JsonObject rawNodes, DateTime &utc_timestamp)
+{
+    JsonObject new_nodes = (*doc_)["nodes"].to<JsonObject>();
+    for (JsonPair node : rawNodes)
+    {
+        addNode(node, utc_timestamp);
+    }
+}
+
 void Model::addNode(JsonPair &raw_node, DateTime &utc_timestamp)
 {
-    JsonObject new_node = JsonObject();
+    JsonObject new_nodes = (*doc_)["nodes"].as<JsonObject>();
+
+    JsonString node_name = raw_node.key();
+    JsonObject new_node = new_nodes[node_name].to<JsonObject>();
 
     JsonObject raw_node_data = raw_node.value().as<JsonObject>();
 
-    JsonString battery_level = JsonString();
-    JsonString node_name = raw_node.key();
     JsonString displayName = node_name;
     if (raw_node_data["display_name"].is<JsonString>())
         displayName = raw_node_data["display_name"].as<JsonString>();
     new_node["display_name"] = displayName;
 
-    addNodeBatteryLevel(raw_node_data, battery_level, new_node);
+    addNodeBatteryLevel(raw_node_data, new_node);
     addNodeStatusSection(raw_node_data, new_node);
     addNodeStaleState(utc_timestamp, raw_node_data, new_node);
     addNodeMeasurementsV2(raw_node_data, new_node);
-
-    (*doc_)["nodes"][node_name] = new_node;
 }
 
-void Model::addNodeMeasurementsV2(ArduinoJson::V742PB22::JsonObject &raw_node_data, ArduinoJson::V742PB22::JsonObject &new_node)
+void Model::addNodeMeasurementsV2(JsonObject &raw_node_data, JsonObject &new_node)
 {
     // Copy measurements_v2 if it exists, round values to one decimal place, ignore wifi
     // and battery sections
     if (raw_node_data["measurements_v2"].is<JsonObject>())
     {
+        JsonObject new_measurements = new_node["measurements_v2"].to<JsonObject>();
         JsonObject measurements_v2 = raw_node_data["measurements_v2"].as<JsonObject>();
-        for (JsonPair measurement : measurements_v2)
+        for (JsonPair device : measurements_v2)
         {
-            if (measurement.key() != "wifi" && measurement.key() != "battery")
+            if (device.key() != "wifi" && device.key() != "battery")
             {
-                double value = measurement.value().as<JsonFloat>();
-                new_node["measurements_v2"][measurement.key()] = fmt::format(R"({:.1f})", value);
+                JsonObject new_device = new_measurements[device.key()].to<JsonObject>();
+                for (JsonPair metric : device.value().as<JsonObject>())
+                {
+                    double value = metric.value().as<JsonFloat>();
+                    new_device[metric.key()] = fmt::format(R"({:.1f})", value);
+                }
             }
         }
     }
@@ -144,7 +166,7 @@ void Model::addNodeStaleState(DateTime &utc_timestamp, JsonObject &raw_node_data
                 }
                 else if (diff > MAX_STALE_SECONDS)
                 {
-                    node_stale = fmt::format("{:.0f}ʼ old", diff / 60);
+                    node_stale = fmt::format("{:.0f}' old", diff / 60);
                 }
             }
             else
@@ -158,7 +180,7 @@ void Model::addNodeStaleState(DateTime &utc_timestamp, JsonObject &raw_node_data
     {
         node_stale = "(No reference time)";
     }
-    new_node["stale_data"] = node_stale;
+    new_node["stale_state"] = node_stale;
 }
 
 void Model::addNodeStatusSection(ArduinoJson::V742PB22::JsonObject &raw_node_data, ArduinoJson::V742PB22::JsonObject &new_node)
@@ -169,7 +191,7 @@ void Model::addNodeStatusSection(ArduinoJson::V742PB22::JsonObject &raw_node_dat
     }
 }
 
-void Model::addNodeBatteryLevel(JsonObject &raw_node_data, JsonString &battery_level, JsonObject &new_node)
+void Model::addNodeBatteryLevel(JsonObject &raw_node_data, JsonObject &new_node)
 {
     if (raw_node_data["measurements_v2"].is<JsonObject>())
     {
@@ -180,61 +202,11 @@ void Model::addNodeBatteryLevel(JsonObject &raw_node_data, JsonString &battery_l
             if (battery["battery_percentage"].is<JsonString>())
             {
                 float battery_percentage = float(battery["battery_percentage"]);
-                battery_level = JsonString(std::string{batteryLevelToChar(battery_percentage)}.c_str());
+                JsonString battery_level = JsonString(std::string{batteryLevelToChar(battery_percentage)}.c_str());
                 new_node["battery_level"] = battery_level;
             }
         }
     }
-}
-
-JsonObject Model::getNodeData() const
-{
-    if ((*doc_)["nodes"].is<JsonObject>())
-    {
-        return (*doc_)["nodes"].as<JsonObject>();
-    }
-    return JsonObject();
-}
-
-void Model::addNodesData(JsonObject rawNodes)
-{
-    for (JsonPair node : rawNodes)
-    {
-        JsonObject nodeData = node.value().as<JsonObject>();
-
-        if (nodeData["timestamp_utc"].is<JsonString>())
-        {
-            nodeData.remove("timestamp_utc");
-        }
-
-        if (nodeData["measurements_v2"].is<JsonObject>())
-        {
-            JsonObject measurements_v2 = nodeData["measurements_v2"].as<JsonObject>();
-
-            // Eliminate Wifi because it fluctuates and we’re not really interested in
-            // battery changes to the point of updating the display. Temperature alone
-            // will be enough to drive that.
-            if (measurements_v2["wifi"].is<JsonObject>())
-            {
-                measurements_v2.remove("wifi");
-            }
-            // if (measurements_v2["battery"].is<JsonObject>()) {
-            //     measurements_v2.remove("battery");
-            // }
-
-            // Round everything else to one tenth precision
-            for (JsonPair device : measurements_v2)
-            {
-                JsonObject metrics = device.value().as<JsonObject>();
-                for (JsonPair metric : metrics)
-                {
-                    double value = metric.value().as<JsonFloat>();
-                    metrics[metric.key()] = fmt::format(R"({:.1f})", value);
-                }
-            }
-        }
-    }
-    (*doc_)["nodes"] = rawNodes;
 }
 
 std::string Model::toJsonString() const
@@ -252,7 +224,86 @@ bool Model::fromJsonString(const std::string &json_str)
 
 bool Model::operator==(const Model &other) const
 {
-    return toJsonString() == other.toJsonString();
+    // return toJsonString() = = other.toJsonString();
+
+    // Implement a deep comparison without serializing to string
+    // return (*doc_) == (*(other.doc_));
+
+    // Implement a deep comparison by comparing the JSON structure and values, float values compared with a tolerance
+    Serial.println("Comparing models...");
+    if (doc_->size() != other.doc_->size())
+        return false;
+    // Compare each key-value pair
+    for (JsonPair kvp : (*doc_).as<JsonObject>())
+    {
+        const char *key = kvp.key().c_str();
+        if (!(other.doc_)->operator[](key).is<JsonVariant>())
+        {
+            Serial.printf("Key '%s' not found in other model\n", key);
+            return false;
+        }
+        JsonVariant v1 = kvp.value();
+        JsonVariant v2 = (*other.doc_)[key];
+        if (v1.is<JsonObject>() && v2.is<JsonObject>())
+        {
+            // Recursively compare objects
+            Model subModel1;
+            Model subModel2;
+            subModel1.doc_->set(v1);
+            subModel2.doc_->set(v2);
+            if (!(subModel1 == subModel2))
+                return false;
+        }
+        else if (v1.is<JsonArray>() && v2.is<JsonArray>())
+        {
+            // Recursively compare arrays
+            Model subModel1;
+            Model subModel2;
+            subModel1.doc_->set(v1);
+            subModel2.doc_->set(v2);
+            if (!(subModel1 == subModel2))
+                return false;
+        }
+        else if (v1.is<JsonString>() && v2.is<JsonString>())
+        {
+            if (v1.as<std::string>() != v2.as<std::string>())
+                return false;
+        }
+        else if (v1.is<JsonFloat>() && v2.is<JsonFloat>())
+        {
+            float f1 = v1.as<float>();
+            float f2 = v2.as<float>();
+            // Allow a small tolerance for float comparison
+            if (fabs(f1 - f2) > 0.1)
+            {
+                Serial.printf("Float values differ: %.3f vs %.3f, fabs: %.3f\n", f1, f2, fabs(f1 - f2));
+                return false;
+            }
+        }
+        else if (v1.is<JsonInteger>() && v2.is<JsonInteger>())
+        {
+            if (v1.as<int>() != v2.as<int>())
+            {
+                Serial.printf("Integer values differ: %d vs %d\n", v1.as<int>(), v2.as<int>());
+                return false;
+            }
+        }
+        else if (v1.is<bool>() && v2.is<bool>())
+        {
+            if (v1.as<bool>() != v2.as<bool>())
+                return false;
+        }
+        else if (v1.isNull() && v2.isNull())
+        {
+            // Both are null, considered equal
+        }
+        else
+        {
+            // Types differ or unsupported type
+            return false;
+        }
+    }
+    return true;
 }
 
 bool Model::operator!=(const Model &other) const

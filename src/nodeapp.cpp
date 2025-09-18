@@ -393,15 +393,7 @@ bool NodeApp::buildDisplayModel()
 
   JsonObject nodes = doc->operator[]("nodes");
   // TODO make this do the loop below instead of what it does now
-  model_.addNodesData(nodes);
-
-  for (JsonPair node : nodes)
-  {
-    model_.addNode(node, utc_timestamp_);
-    // JsonObject nodeData = node.value().as<JsonObject>();
-    // displayNodeHeader(node, nodeData, utc_timestamp_);
-    // displayNodeMeasurements(nodeData);
-  }
+  model_.addNodes(nodes, utc_timestamp_);
 
   Controller c = Controller(model_);
   Serial.printf("Refresh needed according to controller: %s\n", c.needRefresh() ? "yes" : "no");

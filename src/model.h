@@ -27,12 +27,12 @@ public:
     std::string getMoonTransit() const;
     std::string getMoonPhase() const;
     char getMoonPhaseLetter() const;
-    void addNodesData(JsonObject nodes);
+    void addNodes(JsonObject nodes, DateTime &utc_timestamp);
     void addNode(JsonPair &node, DateTime &utc_timestamp);
     void addNodeMeasurementsV2(JsonObject &raw_node_data, JsonObject &new_node);
     void addNodeStaleState(DateTime &utc_timestamp, JsonObject &raw_node_data, JsonObject &new_node);
     void addNodeStatusSection(JsonObject &raw_node_data, JsonObject &new_node);
-    void addNodeBatteryLevel(JsonObject &raw_node_data, JsonString &battery_level, JsonObject &new_node);
+    void addNodeBatteryLevel(JsonObject &raw_node_data, JsonObject &new_node);
     JsonObject getNodeData() const;
     std::string toJsonString() const;
     bool fromJsonString(const std::string &json_str);
