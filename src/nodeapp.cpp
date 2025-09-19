@@ -175,6 +175,43 @@ std::string NodeApp::buildPayload()
   std::string wifi_fmt = fmt::format(R"("wifi": {{"wifi_dbm": {:.0f}}})", wifi_measurements["wifi_dbm"].value);
   device_measurements.push_back(wifi_fmt);
 
+  registerResultsBME680(status, device_measurements);
+  registerResultsBattery(status, device_measurements);
+  registerResultsSHT31D(status, device_measurements);
+
+  std::string measurements_v2;
+  formatMeasurementsPayload(device_measurements, measurements_v2);
+
+  std::string status_str = formatStatusPayload(status);
+  std::string payload = fmt::format(R"({{{}, {}}})",
+                                    measurements_v2,
+                                    status_str);
+
+  Serial.printf("POST data: %s\n", payload.c_str());
+  return payload;
+}
+
+void NodeApp::registerResultsSHT31D(std::vector<std::pair<std::string, std::string>> &status, std::vector<std::string> &device_measurements)
+{
+#ifdef HAS_SHT31D
+  if (sensors_.find("sht31d") == sensors_.end() || !sensors_["sht31d"]->ok())
+  {
+    status.push_back(std::pair<std::string, std::string>{"sht31d", "error"});
+  }
+  else
+  {
+    status.push_back(std::pair<std::string, std::string>{"sht31d", "ok"});
+    std::map<std::string, Measurement> measurements = sensors_["sht31d"]->read();
+    std::string sht31d_fmt = fmt::format(R"("sht31d": {{"temperature": {:.2f}, "humidity": {:.2f}}})",
+                                         measurements["temperature"].value,
+                                         measurements["humidity"].value);
+    device_measurements.push_back(sht31d_fmt);
+  }
+#endif
+}
+
+void NodeApp::registerResultsBME680(std::vector<std::pair<std::string, std::string>> &status, std::vector<std::string> &device_measurements)
+{
 #ifdef HAS_BME680
   if (sensors_.find("bme680") == sensors_.end() || !sensors_["bme680"]->ok())
   {
@@ -191,42 +228,29 @@ std::string NodeApp::buildPayload()
     device_measurements.push_back(bme_fmt);
   }
 #endif
+}
+
+void NodeApp::registerResultsBattery(std::vector<std::pair<std::string, std::string>> &status, std::vector<std::string> &device_measurements)
+{
 #ifdef HAS_BATTERY
-  std::map<std::string, Measurement> battery_measurements = sensors_["battery"]->read();
-  std::string battery_fmt = fmt::format(R"("battery": {{"battery_voltage": {:.2f}, "battery_percentage": {:.2f}}})",
-                                        battery_measurements["battery_voltage"].value,
-                                        battery_measurements["battery_percentage"].value);
-  device_measurements.push_back(battery_fmt);
-#endif
-#ifdef HAS_SHT31D
-  if (sensors_.find("sht31d") == sensors_.end() || !sensors_["sht31d"]->ok())
+  if (sensors_.find("battery") == sensors_.end() || !sensors_["battery"]->ok())
   {
-    status.push_back(std::pair<std::string, std::string>{"sht31d", "error"});
+    status.push_back(std::pair<std::string, std::string>{"battery", "error"});
   }
   else
   {
-    status.push_back(std::pair<std::string, std::string>{"sht31d", "ok"});
-    std::map<std::string, Measurement> measurements = sensors_["sht31d"]->read();
-    std::string sht31d_fmt = fmt::format(R"("sht31d": {{"temperature": {:.2f}, "humidity": {:.2f}}})",
-                                         measurements["temperature"].value,
-                                         measurements["humidity"].value);
-    device_measurements.push_back(sht31d_fmt);
+    status.push_back(std::pair<std::string, std::string>{"battery", "ok"});
+    std::map<std::string, Measurement> measurements = sensors_["battery"]->read();
+    // Example: {"battery": {"voltage": 4.12, "percent": 87}}
+    std::string battery_fmt = fmt::format(R"("battery": {{"voltage": {:.2f}, "percent": {:.0f}}})",
+                                          measurements["voltage"].value,
+                                          measurements["percent"].value);
+    device_measurements.push_back(battery_fmt);
   }
 #endif
-
-  std::string measurements_v2;
-  formatMeasurementsPayload(device_measurements, measurements_v2);
-
-  std::string status_str = formatStatusPayload(status);
-  std::string payload = fmt::format(R"({{{}, {}}})",
-                                    measurements_v2,
-                                    status_str);
-
-  Serial.printf("POST data: %s\n", payload.c_str());
-  return payload;
 }
 
-void NodeApp::formatMeasurementsPayload(std::vector<std::__cxx11::string> &device_measurements, std::__cxx11::string &measurements_v2)
+void NodeApp::formatMeasurementsPayload(std::vector<std::string> &device_measurements, std::string &measurements_v2)
 {
   measurements_v2 = fmt::format(R"("measurements_v2": {{)");
   bool first = true;
@@ -246,7 +270,7 @@ void NodeApp::formatMeasurementsPayload(std::vector<std::__cxx11::string> &devic
   Serial.println(measurements_v2.c_str());
 }
 
-std::string NodeApp::formatStatusPayload(std::vector<std::pair<std::__cxx11::string, std::__cxx11::string>> &status)
+std::string NodeApp::formatStatusPayload(std::vector<std::pair<std::string, std::string>> &status)
 {
   std::string status_str = "\"status\": {}";
   if (!status.empty())

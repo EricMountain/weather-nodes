@@ -97,6 +97,9 @@ private:
   DateTime parseTimestamp(const String &timestamp_key);
   DateTime parseTimestampString(const std::string &timestamp, const String &timestamp_key);
   std::string buildPayload();
+  void registerResultsBME680(std::vector<std::pair<std::string, std::string>> &status, std::vector<std::string> &device_measurements);
+  void registerResultsBattery(std::vector<std::pair<std::string, std::string>> &status, std::vector<std::string> &device_measurements);
+  void registerResultsSHT31D(std::vector<std::pair<std::string, std::string>> &status, std::vector<std::string> &device_measurements);
   void formatMeasurementsPayload(std::vector<std::string> &device_measurements, std::string &measurements_v2);
   std::string formatStatusPayload(std::vector<std::pair<std::string, std::string>> &status);
   void doPost(WiFiClientSecure &client);
