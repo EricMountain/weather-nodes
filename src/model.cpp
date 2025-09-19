@@ -224,16 +224,9 @@ bool Model::fromJsonString(const std::string &json_str)
 
 bool Model::operator==(const Model &other) const
 {
-    // return toJsonString() = = other.toJsonString();
-
-    // Implement a deep comparison without serializing to string
-    // return (*doc_) == (*(other.doc_));
-
-    // Implement a deep comparison by comparing the JSON structure and values, float values compared with a tolerance
-    Serial.println("Comparing models...");
     if (doc_->size() != other.doc_->size())
         return false;
-    // Compare each key-value pair
+
     for (JsonPair kvp : (*doc_).as<JsonObject>())
     {
         const char *key = kvp.key().c_str();

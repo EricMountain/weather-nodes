@@ -392,7 +392,6 @@ bool NodeApp::buildDisplayModel()
   model_.setMoonInfo(sunAndMoon.getMoonPhase(), std::string(1, sunAndMoon.getMoonPhaseLetter()), sunAndMoon.getMoonRise(), sunAndMoon.getMoonTransit(), sunAndMoon.getMoonSet());
 
   JsonObject nodes = doc->operator[]("nodes");
-  // TODO make this do the loop below instead of what it does now
   model_.addNodes(nodes, utc_timestamp_);
 
   Controller c = Controller(model_);
