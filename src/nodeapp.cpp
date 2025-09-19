@@ -130,7 +130,7 @@ void NodeApp::registerSensors()
 void NodeApp::doApiCalls()
 {
   WiFiClientSecure client;
-  
+
   client.setCACert(rootCACerts);
   doPost(client);
 #ifdef HAS_DISPLAY
@@ -148,6 +148,7 @@ void NodeApp::doPost(WiFiClientSecure &client)
   {
     Serial.println("[HTTPS] POST...");
     std::string payload = buildPayload();
+    // TODO: implement retries with exponential backoff
     int httpCode = httpPost.POST(String(payload.c_str()));
     // httpCode is negative on error
     if (httpCode > 0)
@@ -299,6 +300,7 @@ void NodeApp::doGet(WiFiClientSecure &client)
 {
   JsonDocument *doc = nullptr;
 
+  // TODO: implement retries with exponential backoff
   HTTPClient httpGet;
   httpGet.begin(client, GET_URL);
   httpGet.addHeader("x-api-key", API_KEY);
@@ -346,10 +348,8 @@ void NodeApp::displaySunAndMoon()
 // Returns true if the screen is to be refreshed
 bool NodeApp::buildDisplayModel()
 {
-  JsonDocument *doc = this->doc_;
-
   // Force refresh if we have no data
-  if (doc == nullptr || doc->isNull() || !(*doc)["nodes"].is<JsonObject>())
+  if (doc_ == nullptr || doc_->isNull() || !(*doc_)["nodes"].is<JsonObject>())
   {
     // TODO: should build model all the same and use it to do the display
     // Don’t need to force display refresh in that case
@@ -359,20 +359,17 @@ bool NodeApp::buildDisplayModel()
   utc_timestamp_ = parseTimestamp("timestamp_utc");
   local_timestamp_ = parseTimestamp("timestamp_local");
 
+  std::string display_date = "(Date unknown)";
   if (local_timestamp_.ok())
   {
     Serial.printf("Local time: %s\n", local_timestamp_.format("%A %d %B %Y").c_str());
-    std::string display_date = local_timestamp_.niceDate();
-    model_.setDateTime(display_date);
+    display_date = local_timestamp_.niceDate();
   }
-  else
-  {
-    model_.setDateTime("(Date unknown)");
-  }
+  model_.setDateTime(display_date);
 
   calculateSunAndMoon();
 
-  model_.addNodes((*doc)["nodes"], utc_timestamp_);
+  model_.addNodes((*doc_)["nodes"], utc_timestamp_);
 
   Controller c = Controller(model_);
   return c.needRefresh();
