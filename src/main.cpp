@@ -1,8 +1,7 @@
 #include "nodeapp.h"
 #include "secrets.h"
 
-void setup()
-{
+void setup() {
   NodeApp app(WIFI_SSID, WIFI_PASSWORD);
   app.setup();
   app.doApiCalls();
@@ -12,7 +11,6 @@ void setup()
   app.goToSleep();
 }
 
-void loop()
-{
+void loop() {
   // Nothing
 }
