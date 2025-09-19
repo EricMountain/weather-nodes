@@ -130,8 +130,7 @@ void NodeApp::registerSensors()
 void NodeApp::doApiCalls()
 {
   WiFiClientSecure client;
-  JsonDocument *doc = nullptr;
-
+  
   client.setCACert(rootCACerts);
   doPost(client);
 #ifdef HAS_DISPLAY
