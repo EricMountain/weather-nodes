@@ -140,7 +140,7 @@ void Model::addNodeMeasurementsV2(JsonObject &raw_node_data, JsonObject &new_nod
                 for (JsonPair metric : device.value().as<JsonObject>())
                 {
                     double value = metric.value().as<JsonFloat>();
-                    new_device[metric.key()] = fmt::format(R"({:.1f})", value);
+                    new_device[metric.key()] = value;
                 }
             }
         }
@@ -245,7 +245,10 @@ bool Model::operator==(const Model &other) const
             subModel1.doc_->set(v1);
             subModel2.doc_->set(v2);
             if (!(subModel1 == subModel2))
+            {
+                Serial.printf("Map sub-models differ: %s vs %s\n", subModel1.toJsonString().c_str(), subModel2.toJsonString().c_str());
                 return false;
+            }
         }
         else if (v1.is<JsonArray>() && v2.is<JsonArray>())
         {
@@ -255,12 +258,18 @@ bool Model::operator==(const Model &other) const
             subModel1.doc_->set(v1);
             subModel2.doc_->set(v2);
             if (!(subModel1 == subModel2))
+            {
+                Serial.printf("Array sub-models differ: %s vs %s\n", subModel1.toJsonString().c_str(), subModel2.toJsonString().c_str());
                 return false;
+            }
         }
         else if (v1.is<JsonString>() && v2.is<JsonString>())
         {
             if (v1.as<std::string>() != v2.as<std::string>())
+            {
+                Serial.printf("String values differ: %s vs %s\n", v1.as<std::string>().c_str(), v2.as<std::string>().c_str());
                 return false;
+            }
         }
         else if (v1.is<JsonFloat>() && v2.is<JsonFloat>())
         {
@@ -284,7 +293,10 @@ bool Model::operator==(const Model &other) const
         else if (v1.is<bool>() && v2.is<bool>())
         {
             if (v1.as<bool>() != v2.as<bool>())
+            {
+                Serial.printf("Boolean values differ: %s vs %s\n", v1.as<bool>() ? "true" : "false", v2.as<bool>() ? "true" : "false");
                 return false;
+            }
         }
         else if (v1.isNull() && v2.isNull())
         {
@@ -293,6 +305,7 @@ bool Model::operator==(const Model &other) const
         else
         {
             // Types differ or unsupported type
+            Serial.printf("Types differ or unsupported type for key '%s'\n", key);
             return false;
         }
     }
