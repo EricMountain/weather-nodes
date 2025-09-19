@@ -39,11 +39,6 @@ void NodeApp::setup()
   setupSerial();
   setupWiFi();
   registerSensors();
-
-#ifdef HAS_DISPLAY
-  display_ = new GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT>(GxEPD2_750_T7(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY));
-  Serial.println("Display initialized");
-#endif
 }
 
 void NodeApp::setupSerial()
@@ -86,7 +81,12 @@ void NodeApp::goToSleep()
   Serial.printf("Entering deep sleep for %d seconds...\n", SLEEP_SECONDS);
   esp_sleep_enable_timer_wakeup(SLEEP_SECONDS * 1000000ULL); // microseconds
 #ifdef HAS_DISPLAY
-  this->display_->hibernate(); // Save even more power (if supported by display)
+  if (display_ != nullptr)
+  {
+    display_->hibernate(); // Save even more power (if supported by display)
+    delete display_;
+    display_ = nullptr;
+  }
 #endif
 #ifndef HAS_BATTERY
   delay(100); // Let serial print
@@ -416,22 +416,22 @@ void NodeApp::calculateSunAndMoon()
 
 void NodeApp::updateDisplay()
 {
-  GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> &display = *this->display_;
+  display_ = new GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT>(GxEPD2_750_T7(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY));
 
   if (!buildDisplayModel())
   {
     return;
   }
 
-  display.init(115200);
+  (*display_).init(115200);
   Serial.println("E-Paper display initialized");
 
-  display.setRotation(0); // Landscape
+  (*display_).setRotation(0); // Landscape
 
-  u8g2_.begin(display);
+  u8g2_.begin(*display_);
 
-  display.setFullWindow();
-  display.firstPage();
+  (*display_).setFullWindow();
+  (*display_).firstPage();
   do
   {
     u8g2_.setFontMode(0);
@@ -479,7 +479,7 @@ void NodeApp::updateDisplay()
         u8g2_.println();
       }
     }
-  } while (display.nextPage());
+  } while ((*display_).nextPage());
 }
 
 void NodeApp::displayNodeMeasurements(JsonObject &nodeData)
