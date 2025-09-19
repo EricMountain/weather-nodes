@@ -412,12 +412,13 @@ void NodeApp::calculateSunAndMoon()
 
 void NodeApp::updateDisplay()
 {
-  display_ = new GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT>(GxEPD2_750_T7(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY));
-
+  // Check if refresh is needed
   if (!buildDisplayModel())
   {
     return;
   }
+
+  display_ = new GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT>(GxEPD2_750_T7(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY));
 
   (*display_).init(115200);
   Serial.println("E-Paper display initialized");
