@@ -93,7 +93,7 @@ private:
   void setupSerial();
   void registerSensors();
   void setupWiFi();
-  void moonPhase();
+  void displaySunAndMoon();
   DateTime parseTimestamp(const String &timestamp_key);
   DateTime parseTimestampString(const std::string &timestamp, const String &timestamp_key);
   std::string buildPayload();

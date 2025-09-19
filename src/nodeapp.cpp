@@ -331,11 +331,17 @@ void NodeApp::doGet(WiFiClientSecure &client)
 #endif
 
 #ifdef HAS_DISPLAY
-void NodeApp::moonPhase()
+void NodeApp::displaySunAndMoon()
 {
+  u8g2_.printf("Sun:  %s  %s  %s\n", model_.getSunRise().c_str(), model_.getSunTransit().c_str(), model_.getSunSet().c_str());
+  u8g2_.printf("Moon: %s  %s  %s  ", model_.getMoonRise().c_str(), model_.getMoonTransit().c_str(), model_.getMoonSet().c_str());
+
   u8g2_.setFont(moon_phases_48pt);
   u8g2_.print(model_.getMoonPhaseLetter());
   u8g2_.setFont(defaultFont);
+  u8g2_.println();
+
+  u8g2_.printf("      %s\n", model_.getMoonPhase().c_str());
 }
 
 // Returns true if the screen is to be refreshed
@@ -458,16 +464,10 @@ void NodeApp::updateDisplay()
     else
     {
       u8g2_.printf("%s  ", model_.getDateTime().c_str());
-
       u8g2_.println();
       u8g2_.println();
 
-      u8g2_.printf("Sun:  %s  %s  %s\n", model_.getSunRise().c_str(), model_.getSunTransit().c_str(), model_.getSunSet().c_str());
-      u8g2_.printf("Moon: %s  %s  %s  ", model_.getMoonRise().c_str(), model_.getMoonTransit().c_str(), model_.getMoonSet().c_str());
-      moonPhase();
-      u8g2_.println();
-      u8g2_.printf("      %s\n", model_.getMoonPhase().c_str());
-
+      displaySunAndMoon();
       u8g2_.println();
 
       JsonObject nodes = (*doc_)["nodes"];
