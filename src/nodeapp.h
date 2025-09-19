@@ -113,7 +113,7 @@ private:
   void displayNodeMeasurements(JsonObject &nodeData);
   void displayDeviceMeasurements(JsonObject &measurements_v2, const std::string &device, JsonObject &nodeData);
   std::pair<bool, std::pair<float, float>>getDeviceMinMax(JsonObject &nodeData, const std::string &device, const std::string &measurement);
-  void printBatteryLevel(JsonString battery_level);
+  void displayBatteryLevel(JsonString battery_level);
 #endif
 };
 

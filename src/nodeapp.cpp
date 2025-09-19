@@ -558,8 +558,7 @@ void NodeApp::displayNodeHeader(JsonPair &node, JsonObject &nodeData, DateTime &
   std::string display_name = node_data["display_name"].as<String>().c_str();
   u8g2_.printf("%s", display_name.c_str());
 
-  printBatteryLevel(node_data["battery_level"].as<JsonString>());
-
+  displayBatteryLevel(node_data["battery_level"].as<JsonString>());
   displayBadStatuses(nodeData);
 
   std::string node_stale = node_data["stale_state"].as<String>().c_str();
@@ -611,7 +610,7 @@ DateTime NodeApp::parseTimestampString(const std::string &timestamp, const Strin
   return dt;
 }
 
-void NodeApp::printBatteryLevel(JsonString level)
+void NodeApp::displayBatteryLevel(JsonString level)
 {
   u8g2_.print(" ");
   u8g2_.setFont(u8g2_font_battery24_tr);
