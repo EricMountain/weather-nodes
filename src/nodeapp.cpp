@@ -98,7 +98,7 @@ void NodeApp::registerSensors()
 {
 #ifdef HAS_BME680
   sensors_["bme680"] = new BME680Sensor();
-  if (!(this->sensors_["bme680"])->init())
+  if (!(sensors_["bme680"])->init())
   {
     Serial.println("Failed to initialize BME680 sensor");
   }
