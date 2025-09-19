@@ -580,12 +580,11 @@ void NodeApp::displayBadStatuses(JsonObject &nodeData)
 
 DateTime NodeApp::parseTimestamp(const String &timestamp_key)
 {
-  JsonDocument *doc = this->doc_;
   DateTime dt;
 
-  if (doc->operator[](timestamp_key).is<JsonString>())
+  if (doc_->operator[](timestamp_key).is<JsonString>())
   {
-    std::string timestamp = doc->operator[](timestamp_key).as<String>().c_str();
+    std::string timestamp = doc_->operator[](timestamp_key).as<String>().c_str();
 
     dt = parseTimestampString(timestamp, timestamp_key);
   }
