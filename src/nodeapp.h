@@ -66,6 +66,7 @@ public:
 
   void setup();
   void updateDisplay();
+  void displayNodes();
   void setJsonDoc(JsonDocument *d) { doc_ = d; }
   void setBmeOK(bool ok) { bmeOK_ = ok; }
   void goToSleep();

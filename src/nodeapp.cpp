@@ -470,16 +470,21 @@ void NodeApp::updateDisplay()
       displaySunAndMoon();
       u8g2_.println();
 
-      JsonObject nodes = (*doc_)["nodes"];
-      for (JsonPair node : nodes)
-      {
-        JsonObject nodeData = node.value().as<JsonObject>();
-        displayNodeHeader(node, nodeData, utc_timestamp_);
-        displayNodeMeasurements(nodeData);
-        u8g2_.println();
-      }
+      displayNodes();
     }
   } while ((*display_).nextPage());
+}
+
+void NodeApp::displayNodes()
+{
+  JsonObject nodes = (*doc_)["nodes"];
+  for (JsonPair node : nodes)
+  {
+    JsonObject nodeData = node.value().as<JsonObject>();
+    displayNodeHeader(node, nodeData, utc_timestamp_);
+    displayNodeMeasurements(nodeData);
+    u8g2_.println();
+  }
 }
 
 void NodeApp::displayNodeMeasurements(JsonObject &nodeData)
