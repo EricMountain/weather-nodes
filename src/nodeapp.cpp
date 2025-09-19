@@ -64,7 +64,7 @@ void NodeApp::setupWiFi()
 
   while (WiFi.status() != WL_CONNECTED)
   {
-    delay(500);
+    delay(500 / (attempts < 1 ? 1 : attempts));
     Serial.print(".");
     if (--attempts <= 0)
     {
