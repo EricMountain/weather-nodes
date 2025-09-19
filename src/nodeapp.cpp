@@ -402,7 +402,6 @@ bool NodeApp::buildDisplayModel()
 
 void NodeApp::updateDisplay()
 {
-  JsonDocument *doc = this->doc_;
   GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> &display = *this->display_;
 
   if (!buildDisplayModel())
@@ -430,7 +429,7 @@ void NodeApp::updateDisplay()
     u8g2_.setCursor(0, 50);
 
     // TODO: need to distinguish GET failure vs partial response
-    if (doc == nullptr || doc->isNull() || !doc->operator[]("nodes").is<JsonObject>())
+    if (doc_ == nullptr || doc_->isNull() || !doc_->operator[]("nodes").is<JsonObject>())
     {
       u8g2_.println("Failed to get data - local sensor only");
       if (!sensors_["bme680"]->ok())
@@ -463,7 +462,7 @@ void NodeApp::updateDisplay()
 
       u8g2_.println();
 
-      JsonObject nodes = doc->operator[]("nodes");
+      JsonObject nodes = doc_->operator[]("nodes");
       for (JsonPair node : nodes)
       {
         JsonObject nodeData = node.value().as<JsonObject>();
