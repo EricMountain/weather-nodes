@@ -295,10 +295,6 @@ void NodeApp::doGet(WiFiClientSecure &client)
       delete doc;
       doc = nullptr;
     }
-    else
-    {
-      Serial.println(F("JSON parsed successfully"));
-    }
   }
   else
   {
