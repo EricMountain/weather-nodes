@@ -59,7 +59,6 @@ void NodeApp::setupSerial()
       break;
     }
   }
-  Serial.println("Booting...");
 }
 
 void NodeApp::setupWiFi()
@@ -143,7 +142,6 @@ void NodeApp::doApiCalls()
 
 void NodeApp::doPost(WiFiClientSecure &client)
 {
-  Serial.println("Doing POST...");
 #ifdef HAS_DISPLAY
   if (!sensors_["bme680"]->ok())
   {
