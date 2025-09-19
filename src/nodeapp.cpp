@@ -47,7 +47,7 @@ void NodeApp::setupSerial()
   Serial.begin(115200);
   while (!Serial)
   {
-    delay(10); // Wait for serial monitor connection
+    delay(100 / (attempts < 1 ? 1 : attempts)); // Wait for serial monitor connection
     if (--attempts <= 0)
     {
       Serial.println("Gave up waiting for serial monitor, continuing... (so this shouldn't appear...)");
@@ -68,7 +68,7 @@ void NodeApp::setupWiFi()
     Serial.print(".");
     if (--attempts <= 0)
     {
-      Serial.println("Failed to connect to WiFi, retrying later, going to sleep...");
+      Serial.println("\nFailed to connect to WiFi, retrying later, going to sleep...");
       goToSleep();
     }
   }
