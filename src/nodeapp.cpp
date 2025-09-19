@@ -602,11 +602,11 @@ DateTime NodeApp::parseTimestampString(const std::string &timestamp, const Strin
   return dt;
 }
 
-void NodeApp::printBatteryLevel(JsonString battery_percentage)
+void NodeApp::printBatteryLevel(JsonString level)
 {
   u8g2_.print(" ");
   u8g2_.setFont(u8g2_font_battery24_tr);
-  u8g2_.print(battery_percentage.c_str());
+  u8g2_.print(level.c_str());
   u8g2_.setFont(defaultFont);
 }
 #endif
