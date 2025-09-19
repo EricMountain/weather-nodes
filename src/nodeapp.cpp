@@ -437,7 +437,7 @@ void NodeApp::updateDisplay()
     u8g2_.setCursor(0, 50);
 
     // TODO: need to distinguish GET failure vs partial response
-  if (doc_ == nullptr || doc_->isNull() || !(*doc_)["nodes"].is<JsonObject>())
+    if (doc_ == nullptr || doc_->isNull() || !(*doc_)["nodes"].is<JsonObject>())
     {
       u8g2_.println("Failed to get data - local sensor only");
       if (!sensors_["bme680"]->ok())
@@ -470,7 +470,7 @@ void NodeApp::updateDisplay()
 
       u8g2_.println();
 
-  JsonObject nodes = (*doc_)["nodes"];
+      JsonObject nodes = (*doc_)["nodes"];
       for (JsonPair node : nodes)
       {
         JsonObject nodeData = node.value().as<JsonObject>();
