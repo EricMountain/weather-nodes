@@ -142,17 +142,6 @@ void NodeApp::doApiCalls()
 
 void NodeApp::doPost(WiFiClientSecure &client)
 {
-#ifdef HAS_DISPLAY
-  if (!sensors_["bme680"]->ok())
-  {
-    Serial.println("Skipping POST because BME680 is not available");
-    return;
-  }
-  else
-  {
-    Serial.println("BME680 is available");
-  }
-#endif
   HTTPClient httpPost;
   httpPost.addHeader("x-api-key", API_KEY);
   Serial.println("[HTTPS] begin...");
