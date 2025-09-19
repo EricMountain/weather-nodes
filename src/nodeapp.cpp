@@ -344,14 +344,13 @@ bool NodeApp::buildDisplayModel()
   JsonDocument *doc = this->doc_;
 
   // Force refresh if we have no data
-  if (doc == nullptr || doc->isNull() || !doc->operator[]("nodes").is<JsonObject>())
+  if (doc == nullptr || doc->isNull() || !(*doc)["nodes"].is<JsonObject>())
   {
     // TODO: should build model all the same and use it to do the display
     // Don’t need to force display refresh in that case
     return true;
   }
 
-  // Get UTC timestamp to check for stale data
   utc_timestamp_ = parseTimestamp("timestamp_utc");
   local_timestamp_ = parseTimestamp("timestamp_local");
 
@@ -366,13 +365,23 @@ bool NodeApp::buildDisplayModel()
     model_.setDateTime("(Date unknown)");
   }
 
+  calculateSunAndMoon();
+
+  model_.addNodes((*doc)["nodes"], utc_timestamp_);
+
+  Controller c = Controller(model_);
+  return c.needRefresh();
+}
+
+void NodeApp::calculateSunAndMoon()
+{
   // Get location data from response config section if available
   double latitude = 48.866667;
   double longitude = 2.333333;
   int utc_offset_seconds = 0;
-  if (doc->operator[]("config").is<JsonObject>())
+  if ((*doc_)["config"].is<JsonObject>())
   {
-    JsonObject config = doc->operator[]("config").as<JsonObject>();
+    JsonObject config = (*doc_)["config"].as<JsonObject>();
     if (config["location"].is<JsonObject>())
     {
       JsonObject location = config["location"].as<JsonObject>();
@@ -397,14 +406,6 @@ bool NodeApp::buildDisplayModel()
                         latitude, longitude, utc_offset_seconds);
   model_.setSunInfo(sunAndMoon.getSunrise(), sunAndMoon.getSunTransit(), sunAndMoon.getSunset());
   model_.setMoonInfo(sunAndMoon.getMoonPhase(), std::string(1, sunAndMoon.getMoonPhaseLetter()), sunAndMoon.getMoonRise(), sunAndMoon.getMoonTransit(), sunAndMoon.getMoonSet());
-
-  JsonObject nodes = doc->operator[]("nodes");
-  model_.addNodes(nodes, utc_timestamp_);
-
-  Controller c = Controller(model_);
-  Serial.printf("Refresh needed according to controller: %s\n", c.needRefresh() ? "yes" : "no");
-
-  return c.needRefresh();
 }
 
 void NodeApp::updateDisplay()
@@ -436,7 +437,7 @@ void NodeApp::updateDisplay()
     u8g2_.setCursor(0, 50);
 
     // TODO: need to distinguish GET failure vs partial response
-    if (doc_ == nullptr || doc_->isNull() || !doc_->operator[]("nodes").is<JsonObject>())
+  if (doc_ == nullptr || doc_->isNull() || !(*doc_)["nodes"].is<JsonObject>())
     {
       u8g2_.println("Failed to get data - local sensor only");
       if (!sensors_["bme680"]->ok())
@@ -469,7 +470,7 @@ void NodeApp::updateDisplay()
 
       u8g2_.println();
 
-      JsonObject nodes = doc_->operator[]("nodes");
+  JsonObject nodes = (*doc_)["nodes"];
       for (JsonPair node : nodes)
       {
         JsonObject nodeData = node.value().as<JsonObject>();
@@ -589,9 +590,9 @@ DateTime NodeApp::parseTimestamp(const String &timestamp_key)
 {
   DateTime dt;
 
-  if (doc_->operator[](timestamp_key).is<JsonString>())
+  if ((*doc_)[timestamp_key].is<JsonString>())
   {
-    std::string timestamp = doc_->operator[](timestamp_key).as<String>().c_str();
+    std::string timestamp = (*doc_)[timestamp_key].as<String>().c_str();
 
     dt = parseTimestampString(timestamp, timestamp_key);
   }

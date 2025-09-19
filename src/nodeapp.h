@@ -106,6 +106,7 @@ private:
 #ifdef HAS_DISPLAY
   void doGet(WiFiClientSecure &client);
   bool buildDisplayModel();
+  void calculateSunAndMoon();
   void displayNodeHeader(JsonPair &node, JsonObject &nodeData, DateTime &utc_timestamp);
   void displayBadStatuses(JsonObject &nodeData);
   void displayNodeMeasurements(JsonObject &nodeData);
