@@ -1,2 +1,5 @@
 BasedOnStyle: Google
 IndentWidth: 2
+# There’s some weird bug in Arduino macro definitions that means some include files
+# need to be ordered carefully. Can’t let clang-format muck around with this
+SortIncludes: false

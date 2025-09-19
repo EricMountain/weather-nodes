@@ -1,9 +1,9 @@
 #include "datetime.h"
 
-#include <Arduino.h>
 #include <fmt/core.h>
 
 #include <ctime>
+#include <Arduino.h>
 
 DateTime::DateTime()
     : timestamp_(""),

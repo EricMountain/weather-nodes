@@ -1,8 +1,6 @@
-
-#include "model.h"
-
 #include <fmt/core.h>
 
+#include "model.h"
 #include "config.h"
 
 Model::Model() {
