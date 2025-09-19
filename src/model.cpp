@@ -274,11 +274,14 @@ bool Model::operator==(const Model &other) const
         else if (v1.is<JsonFloat>() && v2.is<JsonFloat>())
         {
             float f1 = v1.as<float>();
+            float f1_rounded = round(f1 * 10) / 10.0;
             float f2 = v2.as<float>();
-            // Allow a small tolerance for float comparison
-            if (fabs(f1 - f2) > 0.1)
+            float f2_rounded = round(f2 * 10) / 10.0;
+            // Compare rounded values as they match what is displayed
+            if (fabs(f1_rounded - f2_rounded) > 0.11)
             {
-                Serial.printf("Float values differ: %.3f vs %.3f, fabs: %.3f\n", f1, f2, fabs(f1 - f2));
+                Serial.printf("Float values differ: %.3f(%.1f) vs %.3f(%.1f), fabs: %.3f\n", f1, f1_rounded, f2, f2_rounded,
+                    fabs(f1_rounded - f2_rounded));
                 return false;
             }
         }
