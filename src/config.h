@@ -22,6 +22,10 @@
 #define HAS_BATTERY
 #endif
 
+#ifdef PROTOTYPE_NODE
+#define HAS_SHT31D
+#endif
+
 #ifdef HAS_BATTERY
 // Rough estimate of battery life is 10 days per minute of sleep
 #define SLEEP_SECONDS 60 * 10
