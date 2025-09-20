@@ -405,7 +405,7 @@ void NodeApp::updateDisplay() {
     u8g2_.setBackgroundColor(GxEPD_WHITE);
     u8g2_.setFont(defaultFont);
 
-    u8g2_.setCursor(0, 50);
+    u8g2_.setCursor(0, 24);
 
     // TODO: need to distinguish GET failure vs partial response
     if (doc_ == nullptr || doc_->isNull() ||
