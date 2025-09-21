@@ -65,7 +65,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         "timestamp_utc": serializer.serialize(timestamp_utc),
     }
 
-    for key in ["status", "measurements_v2"]:
+    for key in ["status", "measurements_v2", "version"]:
         if key in input:
             item[key] = serializer.serialize(input[key])
 
