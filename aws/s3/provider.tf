@@ -19,3 +19,9 @@ provider "aws" {
   region = "eu-north-1"
   profile = "eric"
 }
+
+provider "aws" {
+  alias  = "paris"
+  region = "eu-west-3"
+  profile = "eric"
+}
