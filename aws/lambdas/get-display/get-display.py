@@ -31,10 +31,10 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         )
         if "Item" not in api_key_response:
             return {"statusCode": 401, "body": "Unauthorized: Invalid API key"}
-        api_key_response_item = api_key_response["Item"]
+        api_key_response_item = dynamo_to_python(api_key_response["Item"])
         if "device_id" not in api_key_response_item:
             return {"statusCode": 401, "body": "Unauthorized: Device ID not found"}
-        device_id = deserializer.deserialize(api_key_response_item["device_id"])
+        device_id = api_key_response_item["device_id"]
     except Exception as e:
         return {"statusCode": 500, "body": f"Error checking API key: {str(e)}"}
 
@@ -51,7 +51,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     # Get device config
     device_config_response = dynamodb.get_item(
         TableName="device_configs",
-        Key={"device_id": api_key_response_item["device_id"]},
+        Key={"device_id": api_key_response["Item"]["device_id"]},
     )
     if "Item" in device_config_response:
         device_config = dynamo_to_python(device_config_response["Item"])
