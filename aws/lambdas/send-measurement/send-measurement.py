@@ -93,12 +93,20 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         )
         raise
 
+    response = {
+        "device_id": device_id,
+    }
+
+    if "ota_updates" in api_key_response_item and "version" in input:
+        if input["version"] != response["ota_updates"]["current_version"]:
+            response["ota_updates"] = deserializer.deserialize(api_key_response_item["ota_updates"])
+
     return {
         "statusCode": 200,
         "headers": {
             "Content-Type": "text/plain",
         },
-        "body": "Saved measurement: " + str(item),
+        "body": str(response),
     }
 
 

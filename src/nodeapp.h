@@ -12,6 +12,10 @@
 #include <ArduinoJson.h>
 // #endif
 
+#ifdef OTA_UPDATE_ENABLED
+#include <Update.h>
+#endif
+
 #include <WiFiClientSecure.h>
 
 #include "config.h"
@@ -27,6 +31,7 @@
 #include <U8g2_for_Adafruit_GFX.h>
 
 #include "fonts/u8g2_font_battery24_tr.h"
+
 #include "model.h"
 
 // Pin mapping for many ESP32 dev boards and Waveshare 7.5in V2 SPI displays:

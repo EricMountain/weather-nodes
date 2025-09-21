@@ -34,10 +34,13 @@
 #include "battery.h"
 #endif
 
+#include "version.h"
+
 void NodeApp::setup() {
   setupSerial();
   setupWiFi();
   registerSensors();
+  Serial.printf("Weather Node git commit: %s\n", GIT_COMMIT_HASH);
 }
 
 void NodeApp::setupSerial() {
@@ -155,6 +158,7 @@ std::string NodeApp::buildPayload() {
   std::vector<std::pair<std::string, std::string>> status;
   std::vector<std::string> device_measurements;
 
+  // TODO: register WiFi quality as a sensor
   std::map<std::string, Measurement> wifi_measurements =
       sensors_["wifi"]->read();
   std::string wifi_fmt = fmt::format(R"("wifi": {{"wifi_dbm": {:.0f}}})",
@@ -169,8 +173,11 @@ std::string NodeApp::buildPayload() {
   formatMeasurementsPayload(device_measurements, measurements_v2);
 
   std::string status_str = formatStatusPayload(status);
+
+  std::string version = fmt::format(R"("version": "{}")", GIT_COMMIT_HASH);
+
   std::string payload =
-      fmt::format(R"({{{}, {}}})", measurements_v2, status_str);
+      fmt::format(R"({{{}, {}, {}}})", measurements_v2, status_str, version);
 
   Serial.printf("POST data: %s\n", payload.c_str());
   return payload;
