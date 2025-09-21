@@ -4,6 +4,10 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 
+#ifdef OTA_UPDATE_ENABLED
+#include <Update.h>
+#endif
+
 #include "certs.h"
 #include "config.h"
 #include "secrets.h"
@@ -567,5 +571,51 @@ void NodeApp::displayBatteryLevel(JsonString level) {
   u8g2_.setFont(u8g2_font_battery24_tr);
   u8g2_.print(level.c_str());
   u8g2_.setFont(defaultFont);
+}
+#endif
+
+#ifdef OTA_UPDATE_ENABLED
+void NodeApp::performOTA(const char *firmware_url) {
+  WiFiClientSecure client;
+  client.setCACert(rootCACerts);  // Use your S3 bucket's CA cert
+
+  HTTPClient https;
+  Serial.printf("Starting OTA from: %s\n", firmware_url);
+
+  if (https.begin(client, firmware_url)) {
+    int httpCode = https.GET();
+    if (httpCode == HTTP_CODE_OK) {
+      int contentLength = https.getSize();
+      bool canBegin = Update.begin(contentLength);
+      if (canBegin) {
+        WiFiClient *stream = https.getStreamPtr();
+        size_t written = Update.writeStream(*stream);
+        if (written == contentLength) {
+          Serial.println("OTA written successfully. Rebooting...");
+          if (Update.end()) {
+            if (Update.isFinished()) {
+              Serial.println("Update successfully completed. Rebooting.");
+              ESP.restart();
+            } else {
+              Serial.println("Update not finished? Something went wrong!");
+            }
+          } else {
+            Serial.printf("Update.end() error: %s\n", Update.errorString());
+          }
+        } else {
+          Serial.printf("OTA written only %u/%u bytes. Aborting.\n", written,
+                        contentLength);
+        }
+      } else {
+        Serial.println("Not enough space to begin OTA");
+      }
+    } else {
+      Serial.printf("HTTP GET failed, error: %s\n",
+                    https.errorToString(httpCode).c_str());
+    }
+    https.end();
+  } else {
+    Serial.println("Unable to connect to OTA server");
+  }
 }
 #endif

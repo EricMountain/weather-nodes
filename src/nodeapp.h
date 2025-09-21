@@ -12,10 +12,6 @@
 #include <ArduinoJson.h>
 // #endif
 
-#ifdef OTA_UPDATE_ENABLED
-#include <Update.h>
-#endif
-
 #include <WiFiClientSecure.h>
 
 #include "config.h"
@@ -133,6 +129,9 @@ class NodeApp {
       JsonObject &nodeData, const std::string &device,
       const std::string &measurement);
   void displayBatteryLevel(JsonString battery_level);
+#endif
+#ifdef OTA_UPDATE_ENABLED
+  void NodeApp::performOTA(const char *firmware_url);
 #endif
 };
 
