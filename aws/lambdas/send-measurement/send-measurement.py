@@ -96,6 +96,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
     response = {
         "device_id": device_id,
+        "status": "ok",
     }
 
     check_for_ota_update(api_key_response_item, input, response)
@@ -112,7 +113,7 @@ def check_for_ota_update(api_key_response_item, input, response):
     if "ota_update" in api_key_response_item and "version" in input:
         ota_update = api_key_response_item["ota_update"]
         if "target_version" in ota_update and input["version"] != ota_update["target_version"]:
-            response["ota_update"] = ota_update
+            response["ota_update"] = {}
             s3 = boto3.client("s3", config=Config(signature_version="s3v4"), region_name="eu-north-1")
             try:
                 presigned_url = s3.generate_presigned_url(
@@ -127,8 +128,6 @@ def check_for_ota_update(api_key_response_item, input, response):
             except ClientError as e:
                 logger.error(f"Error generating presigned URL: {e}")
                 response["ota_update"] = {"error": "Could not generate download URL"}
-        else:
-            response["ota_update"] = {"message": "No update available"}
 
 def dynamo_to_python(dynamo_object: dict) -> dict:
     deserializer = TypeDeserializer()
