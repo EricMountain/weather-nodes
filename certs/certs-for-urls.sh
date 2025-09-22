@@ -5,7 +5,7 @@
 set -euox pipefail
 
 d=data
-grep _URL ../src/secrets.h | awk -F\" '{print $2}' | while read -r url; do
+grep https:// ../src/secrets.h | awk -F\" '{print $2}' | while read -r url; do
   echo "Fetching cert for $url"
   # strip url down to host
   host=$(echo $url | awk -F/ '{print $3}')

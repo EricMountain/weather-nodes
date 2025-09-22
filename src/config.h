@@ -24,6 +24,7 @@
 
 #ifdef PROTOTYPE_NODE
 #define HAS_SHT31D
+#define OTA_UPDATE_ENABLED
 #endif
 
 #ifdef HAS_BATTERY

@@ -27,6 +27,7 @@
 #include <U8g2_for_Adafruit_GFX.h>
 
 #include "fonts/u8g2_font_battery24_tr.h"
+
 #include "model.h"
 
 // Pin mapping for many ESP32 dev boards and Waveshare 7.5in V2 SPI displays:
@@ -128,6 +129,10 @@ class NodeApp {
       JsonObject &nodeData, const std::string &device,
       const std::string &measurement);
   void displayBatteryLevel(JsonString battery_level);
+#endif
+#ifdef OTA_UPDATE_ENABLED
+  void handlePostResponse(String response);
+  void updateFirmware(const char *firmware_url);
 #endif
 };
 

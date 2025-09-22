@@ -4,6 +4,10 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 
+#ifdef OTA_UPDATE_ENABLED
+#include <Update.h>
+#endif
+
 #include "certs.h"
 #include "config.h"
 #include "secrets.h"
@@ -34,10 +38,13 @@
 #include "battery.h"
 #endif
 
+#include "version.h"
+
 void NodeApp::setup() {
   setupSerial();
   setupWiFi();
   registerSensors();
+  Serial.printf("Weather Node git commit: %s\n", GIT_COMMIT_HASH);
 }
 
 void NodeApp::setupSerial() {
@@ -142,6 +149,9 @@ void NodeApp::doPost(WiFiClientSecure &client) {
       Serial.printf("[HTTPS] POST... code: %d\n", httpCode);
       String payload = httpPost.getString();
       Serial.println(payload);
+#ifdef OTA_UPDATE_ENABLED
+      handlePostResponse(payload);
+#endif
     } else {
       Serial.printf("[HTTPS] POST... failed, error: %s\n",
                     httpPost.errorToString(httpCode).c_str());
@@ -155,6 +165,7 @@ std::string NodeApp::buildPayload() {
   std::vector<std::pair<std::string, std::string>> status;
   std::vector<std::string> device_measurements;
 
+  // TODO: register WiFi quality as a sensor
   std::map<std::string, Measurement> wifi_measurements =
       sensors_["wifi"]->read();
   std::string wifi_fmt = fmt::format(R"("wifi": {{"wifi_dbm": {:.0f}}})",
@@ -169,8 +180,11 @@ std::string NodeApp::buildPayload() {
   formatMeasurementsPayload(device_measurements, measurements_v2);
 
   std::string status_str = formatStatusPayload(status);
+
+  std::string version = fmt::format(R"("version": "{}")", GIT_COMMIT_HASH);
+
   std::string payload =
-      fmt::format(R"({{{}, {}}})", measurements_v2, status_str);
+      fmt::format(R"({{{}, {}, {}}})", measurements_v2, status_str, version);
 
   Serial.printf("POST data: %s\n", payload.c_str());
   return payload;
@@ -560,5 +574,70 @@ void NodeApp::displayBatteryLevel(JsonString level) {
   u8g2_.setFont(u8g2_font_battery24_tr);
   u8g2_.print(level.c_str());
   u8g2_.setFont(defaultFont);
+}
+#endif
+
+#ifdef OTA_UPDATE_ENABLED
+void NodeApp::handlePostResponse(String response) {
+  JsonDocument doc = JsonDocument();
+  DeserializationError error = deserializeJson(doc, response);
+  if (error) {
+    Serial.print(F("JSON parse failed: "));
+    Serial.println(error.f_str());
+    return;
+  }
+
+  if (doc["ota_update"].is<JsonObject>()) {
+    JsonObject ota_update = doc["ota_update"].as<JsonObject>();
+    String url = ota_update["url"] | "";
+    if (url.length() > 0) {
+      updateFirmware(url.c_str());
+    }
+  }
+}
+
+void NodeApp::updateFirmware(const char *firmware_url) {
+  WiFiClientSecure client;
+  client.setCACert(rootCACerts);
+
+  HTTPClient https;
+  Serial.printf("Starting OTA from: %s\n", firmware_url);
+
+  if (https.begin(client, firmware_url)) {
+    int httpCode = https.GET();
+    if (httpCode == HTTP_CODE_OK) {
+      int contentLength = https.getSize();
+      bool canBegin = Update.begin(contentLength);
+      if (canBegin) {
+        Serial.printf("Starting download. OTA size: %u bytes\n", contentLength);
+        WiFiClient *stream = https.getStreamPtr();
+        size_t written = Update.writeStream(*stream);
+        if (written == contentLength) {
+          Serial.println(F("OTA written successfully. Rebooting..."));
+          if (Update.end()) {
+            if (Update.isFinished()) {
+              Serial.println(F("Update successfully completed. Rebooting."));
+              ESP.restart();
+            } else {
+              Serial.println(F("Update not finished? Something went wrong!"));
+            }
+          } else {
+            Serial.printf("Update.end() error: %s\n", Update.errorString());
+          }
+        } else {
+          Serial.printf("OTA written only %u/%u bytes. Aborting.\n", written,
+                        contentLength);
+        }
+      } else {
+        Serial.println(F("Not enough space to begin OTA"));
+      }
+    } else {
+      Serial.print(F("HTTP GET failed, error: "));
+      Serial.printf("%s\n", https.errorToString(httpCode).c_str());
+    }
+    https.end();
+  } else {
+    Serial.println(F("Unable to connect to OTA server"));
+  }
 }
 #endif

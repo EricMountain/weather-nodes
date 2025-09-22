@@ -9,6 +9,7 @@ from decimal import Decimal
 import boto3
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 from botocore.exceptions import ClientError
+from botocore.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +34,10 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         )
         if "Item" not in api_key_response:
             return {"statusCode": 401, "body": "Unauthorized: Invalid API key"}
-        api_key_response_item = api_key_response["Item"]
+        api_key_response_item = dynamo_to_python(api_key_response["Item"])
         if "device_id" not in api_key_response_item:
             return {"statusCode": 401, "body": "Unauthorized: Device ID not found"}
-        device_id = deserializer.deserialize(api_key_response_item["device_id"])
+        device_id = api_key_response_item["device_id"]
     except Exception as e:
         return {"statusCode": 500, "body": f"Error checking API key: {str(e)}"}
 
@@ -58,13 +59,26 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
     input = json.loads(body, parse_float=Decimal)
 
+    # Prepare the response
+    response = {
+        "device_id": device_id,
+        "status": "ok",
+    }
+
+    check_for_ota_update(api_key_response_item, input, response)
+    if "ota_update" in response:
+        if "status" not in input:
+            input["status"] = {}
+        input["status"]["firmware_up_to_date"] = "no"
+
+    # Prepare the measurements record to store
     timestamp_utc = datetime.now(timezone.utc).isoformat(timespec="seconds")
     item = {
         "device_id": serializer.serialize(device_id),
         "timestamp_utc": serializer.serialize(timestamp_utc),
     }
 
-    for key in ["status", "measurements_v2"]:
+    for key in ["status", "measurements_v2", "version"]:
         if key in input:
             item[key] = serializer.serialize(input[key])
 
@@ -93,14 +107,35 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         )
         raise
 
+
+
     return {
         "statusCode": 200,
         "headers": {
             "Content-Type": "text/plain",
         },
-        "body": "Saved measurement: " + str(item),
+        "body": str(response),
     }
 
+def check_for_ota_update(api_key_response_item, input, response):
+    if "ota_update" in api_key_response_item and "version" in input:
+        ota_update = api_key_response_item["ota_update"]
+        if "target_version" in ota_update and input["version"] != ota_update["target_version"]:
+            response["ota_update"] = {}
+            s3 = boto3.client("s3", config=Config(signature_version="s3v4"), region_name="eu-north-1")
+            try:
+                presigned_url = s3.generate_presigned_url(
+                    "get_object",
+                    Params={
+                        "Bucket": ota_update["s3_bucket"],
+                        "Key": ota_update["s3_key"],
+                    },
+                    ExpiresIn=3600, # seconds
+                )
+                response["ota_update"]["url"] = presigned_url
+            except ClientError as e:
+                logger.error(f"Error generating presigned URL: {e}")
+                response["ota_update"] = {"error": "Could not generate download URL"}
 
 def dynamo_to_python(dynamo_object: dict) -> dict:
     deserializer = TypeDeserializer()
