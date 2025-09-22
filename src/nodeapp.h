@@ -131,7 +131,8 @@ class NodeApp {
   void displayBatteryLevel(JsonString battery_level);
 #endif
 #ifdef OTA_UPDATE_ENABLED
-  void performOTA(const char *firmware_url);
+  void handlePostResponse(String response);
+  void updateFirmware(const char *firmware_url);
 #endif
 };
 

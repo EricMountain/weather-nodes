@@ -149,6 +149,9 @@ void NodeApp::doPost(WiFiClientSecure &client) {
       Serial.printf("[HTTPS] POST... code: %d\n", httpCode);
       String payload = httpPost.getString();
       Serial.println(payload);
+#ifdef OTA_UPDATE_ENABLED
+      handlePostResponse(payload);
+#endif
     } else {
       Serial.printf("[HTTPS] POST... failed, error: %s\n",
                     httpPost.errorToString(httpCode).c_str());
@@ -575,7 +578,26 @@ void NodeApp::displayBatteryLevel(JsonString level) {
 #endif
 
 #ifdef OTA_UPDATE_ENABLED
-void NodeApp::performOTA(const char *firmware_url) {
+void NodeApp::handlePostResponse(String response) {
+  JsonDocument doc = JsonDocument();
+  DeserializationError error = deserializeJson(doc, response);
+  if (error) {
+    Serial.print(F("JSON parse failed: "));
+    Serial.println(error.f_str());
+    return;
+  }
+
+  if (doc["ota_update"].is<JsonObject>()) {
+    JsonObject ota_update = doc["ota_update"].as<JsonObject>();
+    String url = ota_update["url"] | "";
+    if (url.length() > 0) {
+      Serial.println("OTA update available, performing update...");
+      updateFirmware(url.c_str());
+    }
+  }
+}
+
+void NodeApp::updateFirmware(const char *firmware_url) {
   WiFiClientSecure client;
   client.setCACert(rootCACerts);  // Use your S3 bucket's CA cert
 
