@@ -591,7 +591,6 @@ void NodeApp::handlePostResponse(String response) {
     JsonObject ota_update = doc["ota_update"].as<JsonObject>();
     String url = ota_update["url"] | "";
     if (url.length() > 0) {
-      Serial.println("OTA update available, performing update...");
       updateFirmware(url.c_str());
     }
   }
@@ -599,7 +598,7 @@ void NodeApp::handlePostResponse(String response) {
 
 void NodeApp::updateFirmware(const char *firmware_url) {
   WiFiClientSecure client;
-  client.setCACert(rootCACerts);  // Use your S3 bucket's CA cert
+  client.setCACert(rootCACerts);
 
   HTTPClient https;
   Serial.printf("Starting OTA from: %s\n", firmware_url);
@@ -610,16 +609,17 @@ void NodeApp::updateFirmware(const char *firmware_url) {
       int contentLength = https.getSize();
       bool canBegin = Update.begin(contentLength);
       if (canBegin) {
+        Serial.printf("Starting download. OTA size: %u bytes\n", contentLength);
         WiFiClient *stream = https.getStreamPtr();
         size_t written = Update.writeStream(*stream);
         if (written == contentLength) {
-          Serial.println("OTA written successfully. Rebooting...");
+          Serial.println(F("OTA written successfully. Rebooting..."));
           if (Update.end()) {
             if (Update.isFinished()) {
-              Serial.println("Update successfully completed. Rebooting.");
+              Serial.println(F("Update successfully completed. Rebooting."));
               ESP.restart();
             } else {
-              Serial.println("Update not finished? Something went wrong!");
+              Serial.println(F("Update not finished? Something went wrong!"));
             }
           } else {
             Serial.printf("Update.end() error: %s\n", Update.errorString());
@@ -629,15 +629,15 @@ void NodeApp::updateFirmware(const char *firmware_url) {
                         contentLength);
         }
       } else {
-        Serial.println("Not enough space to begin OTA");
+        Serial.println(F("Not enough space to begin OTA"));
       }
     } else {
-      Serial.printf("HTTP GET failed, error: %s\n",
-                    https.errorToString(httpCode).c_str());
+      Serial.print(F("HTTP GET failed, error: "));
+      Serial.printf("%s\n", https.errorToString(httpCode).c_str());
     }
     https.end();
   } else {
-    Serial.println("Unable to connect to OTA server");
+    Serial.println(F("Unable to connect to OTA server"));
   }
 }
 #endif
