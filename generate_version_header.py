@@ -1,19 +1,10 @@
 #!/usr/bin/env python3
 
-import subprocess
+# import subprocess
 import datetime
 
+from git import get_git_commit
 
-def get_git_commit():
-    try:
-        short = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode().strip()
-        full = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip()
-        if subprocess.check_output(['git', 'status', '--porcelain']).strip():
-            short += "-dirty"
-            full += "-dirty"
-        return short, full
-    except:
-        return "unknown", "unknown"
 
 def generate_version_header():
     short_hash, full_hash = get_git_commit()
@@ -45,13 +36,3 @@ def generate_version_header():
         
 
 short_hash = generate_version_header()
-    
-Import("env")
-
-env.AddCustomTarget(
-    name="publish_ota",
-    title="Publish OTA",
-    dependencies="$BUILD_DIR/${PROGNAME}.bin",
-    actions=f"aws --profile eric s3 cp $SOURCE s3://enry-weather-nodes-fmw-update/{env['PIOENV']}-{short_hash}.bin --region eu-north-1",
-    always_build=True,
-)
