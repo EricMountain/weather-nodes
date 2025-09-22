@@ -59,6 +59,19 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
     input = json.loads(body, parse_float=Decimal)
 
+    # Prepare the response
+    response = {
+        "device_id": device_id,
+        "status": "ok",
+    }
+
+    check_for_ota_update(api_key_response_item, input, response)
+    if "ota_update" in response:
+        if "status" not in input:
+            input["status"] = {}
+        input["status"]["firmware_up_to_date"] = "no"
+
+    # Prepare the measurements record to store
     timestamp_utc = datetime.now(timezone.utc).isoformat(timespec="seconds")
     item = {
         "device_id": serializer.serialize(device_id),
@@ -94,12 +107,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         )
         raise
 
-    response = {
-        "device_id": device_id,
-        "status": "ok",
-    }
 
-    check_for_ota_update(api_key_response_item, input, response)
 
     return {
         "statusCode": 200,
