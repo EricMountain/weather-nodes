@@ -1,15 +1,6 @@
 # Weather Nodes Graphs Lambda
 
-This lambda function generates interactive HTML pages with graphs from historical weather measurement data.
-
-## Features
-
-- **Interactive Web Interface**: HTML page with controls for selecting date ranges, metrics, and devices
-- **Real-time Graphing**: Uses D3.js to create interactive line charts
-- **API Key Authentication**: Secure access using existing API key infrastructure
-- **Multiple Metrics Support**: Temperature, humidity, pressure, battery voltage, WiFi signal strength
-- **Device Selection**: Choose which devices to include in graphs
-- **Responsive Design**: Works on desktop and mobile devices
+This lambda function generates interactive HTML pages with graphs from historical measurement data.
 
 ## Usage
 
@@ -20,26 +11,6 @@ This lambda function generates interactive HTML pages with graphs from historica
    ```
    https://your-lambda-url.amazonaws.com/?api_key=YOUR_API_KEY
    ```
-
-### Using the Interface
-
-1. **Date Range**: Select start and end dates/times for the data you want to visualize
-2. **Metric**: Choose from available metrics:
-   - Temperature (°C)
-   - Humidity (%)
-   - Pressure (hPa)
-   - Battery Voltage (V)
-   - WiFi Signal (dBm)
-3. **Devices**: Select which devices to include in the graph
-4. **Generate Graph**: Click the button to fetch data and display the interactive graph
-
-### Graph Features
-
-- **Interactive**: Hover over data points to see detailed information
-- **Multi-device**: Display data from multiple devices on the same graph
-- **Color-coded**: Each device/sensor combination has its own color
-- **Legend**: Shows which color represents which device/sensor
-- **Zoomable**: Use D3.js built-in zoom and pan features
 
 ## API Endpoints
 
@@ -64,25 +35,6 @@ Returns JSON data for graph generation.
 - `end_date`: ISO 8601 datetime string (UTC)
 - `metric`: Metric name (temperature, humidity, pressure, battery, wifi_dbm)
 - `devices[]`: Array of device IDs to include
-
-**Response:**
-```json
-{
-  "success": true,
-  "metric": "temperature",
-  "data": {
-    "device_id_1": [
-      {
-        "timestamp": "2023-10-01T12:00:00Z",
-        "value": 25.5,
-        "device_name": "bme680"
-      }
-    ]
-  },
-  "start_date": "2023-10-01T00:00:00Z",
-  "end_date": "2023-10-01T23:59:59Z"
-}
-```
 
 ## Deployment
 
@@ -131,17 +83,6 @@ The lambda integrates with the existing weather nodes infrastructure:
 2. **"No data found"**: Check that the selected date range contains measurements
 3. **Graph not displaying**: Check browser console for JavaScript errors
 4. **Slow loading**: Large date ranges may take longer to process
-
-### Logs
-
-Enable CloudWatch logging by uncommenting the IAM policy attachment in the Terraform configuration:
-
-```terraform
-resource "aws_iam_role_policy_attachment" "graphs_lambda_attach_lambda_basic_execution" {
-  role       = aws_iam_role.iam_for_graphs_lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-```
 
 ## Future Enhancements
 
