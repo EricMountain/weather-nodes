@@ -8,3 +8,4 @@
 * Better index or structure the data for graph queries?
 * Add tests for the lambdas
 * Add tests for the ESP32 code
+* Make graphs adapt to small screens
