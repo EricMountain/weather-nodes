@@ -604,9 +604,8 @@ def generate_html_interface(available_devices: List[Dict[str, str]] = None) -> s
                         .attr('class', `dot dot-${{deviceId}}-${{deviceName}}`)
                         .attr('cx', d => xScale(d.date))
                         .attr('cy', d => yScale(d.value))
-                        .attr('r', 3)
+                        .attr('r', 1)
                         .style('fill', color)
-                        .style('stroke', '#fff')
                         .on('mouseover', function(event, d) {{
                             tooltip.transition()
                                 .duration(200)
