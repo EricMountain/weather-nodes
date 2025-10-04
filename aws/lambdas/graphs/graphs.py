@@ -85,7 +85,7 @@ def handle_post_request(event: Dict[str, Any], device_id: str) -> Dict[str, Any]
         start_date = params.get("start_date", [""])[0]
         end_date = params.get("end_date", [""])[0]
         metric = params.get("metric", ["temperature"])[0]
-        selected_devices = params.get("devices", [])
+        selected_devices = params.get("devices", [])[0].split(',')
         
         if not start_date or not end_date:
             return {"statusCode": 400, "body": "start_date and end_date are required"}
