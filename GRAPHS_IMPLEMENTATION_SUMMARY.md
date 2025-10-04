@@ -13,25 +13,27 @@ I have successfully implemented a comprehensive lambda function that generates i
 ## Architecture
 
 ### Lambda Function
+
 - **Language**: Python 3.13
 - **Runtime**: AWS Lambda with ARM64 architecture
 - **Timeout**: 30 seconds
 - **Memory**: Default (128MB, auto-scaling)
 
 ### Key Features
-1. **Dual Interface**: 
+
+1. **Dual Interface**:
    - GET requests return interactive HTML interface
    - POST requests return JSON data for graphs
 
-2. **Authentication**: 
+2. **Authentication**:
    - Uses existing `api_keys` DynamoDB table
    - Validates API key and retrieves associated device_id
 
-3. **Device Discovery**: 
+3. **Device Discovery**:
    - Automatically populates available devices from `device_configs` table
    - Restricts access to authorized devices only
 
-4. **Data Processing**: 
+4. **Data Processing**:
    - Queries `measurements` table for specified date ranges
    - Supports multiple metrics: temperature, humidity, pressure, battery, WiFi signal
    - Handles multiple devices and sensors per device
@@ -42,23 +44,10 @@ I have successfully implemented a comprehensive lambda function that generates i
    - Responsive design that works on desktop and mobile
    - Legend showing which color represents which device/sensor
 
-## Files Created
-
-```
-aws/lambdas/
-├── graphs/
-│   ├── graphs.py              # Main lambda function
-│   ├── requirements.txt       # Python dependencies
-│   └── README.md             # Detailed usage documentation
-├── graphs-lambda.tf          # Terraform infrastructure configuration
-├── build-graphs-lambda.sh    # Build script for packaging
-├── test-graphs-lambda.py     # Local testing script
-└── DEPLOYMENT.md            # Deployment guide
-```
-
 ## Technical Implementation
 
 ### Backend (Python Lambda)
+
 - **API Key Validation**: Checks against DynamoDB `api_keys` table
 - **Device Authorization**: Uses `device_configs` to determine available devices
 - **Data Retrieval**: Queries `measurements` table with date range filters
@@ -66,20 +55,22 @@ aws/lambdas/
 - **Error Handling**: Comprehensive error handling with informative messages
 
 ### Frontend (HTML/JavaScript)
+
 - **Modern UI**: Clean, responsive interface with form controls
 - **D3.js Integration**: Professional-grade data visualization library
-- **Interactive Charts**: 
+- **Interactive Charts**:
   - Hover tooltips with precise values and timestamps
   - Smooth line interpolation
   - Automatic axis scaling and labeling
   - Color-coded legend
-- **User Experience**: 
+- **User Experience**:
   - Default 24-hour time range
   - Real-time loading indicators
   - Error message display
   - Form validation
 
 ### Infrastructure (Terraform)
+
 - **Lambda Function**: Properly configured with ARM64 architecture
 - **IAM Permissions**: Minimal required permissions for DynamoDB access
 - **Function URL**: Direct HTTPS access with CORS configuration
@@ -96,39 +87,19 @@ aws/lambdas/
 ## Usage Examples
 
 ### Accessing the Interface
-```
+
+```text
 https://your-lambda-url/?api_key=YOUR_API_KEY
 ```
 
 ### Direct API Usage
+
 ```bash
 curl -X POST https://your-lambda-url/ \
   -H "X-API-Key: YOUR_API_KEY" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "start_date=2023-10-01T00:00:00Z&end_date=2023-10-01T23:59:59Z&metric=temperature&devices=device1"
 ```
-
-## Testing
-
-The implementation includes comprehensive testing:
-- **Unit Tests**: Mock-based testing for core functionality
-- **Integration Tests**: Ready for deployment testing
-- **Manual Testing**: Interactive web interface testing
-
-Test results show:
-- ✅ API key validation working correctly
-- ✅ Method validation (GET/POST) working correctly  
-- ✅ HTML interface generation working correctly
-- ✅ Error handling working correctly
-
-## Deployment
-
-The solution is ready for immediate deployment:
-
-1. **Terraform Validation**: ✅ Configuration validated successfully
-2. **Build Process**: ✅ Build script created and tested
-3. **Dependencies**: ✅ Only uses boto3 (included in Lambda runtime)
-4. **Documentation**: ✅ Comprehensive guides provided
 
 ## Performance Considerations
 
@@ -151,9 +122,3 @@ The solution is ready for immediate deployment:
 - **Efficient Architecture**: Minimal compute time and memory usage
 - **DynamoDB Optimization**: Uses efficient query patterns
 - **CDN Resources**: D3.js loaded from public CDN
-
-## Conclusion
-
-This implementation provides a production-ready, secure, and user-friendly solution for visualizing historical weather data. It integrates seamlessly with your existing infrastructure while providing modern, interactive data visualization capabilities.
-
-The solution is scalable, maintainable, and follows AWS best practices for serverless applications.

@@ -8,29 +8,36 @@ This lambda function generates interactive HTML pages with graphs from historica
 
 1. Get your API key from the existing weather nodes system
 2. Access the lambda URL with your API key as a query parameter:
-   ```
+
+   ```text
    https://your-lambda-url.amazonaws.com/?api_key=YOUR_API_KEY
    ```
 
 ## API Endpoints
 
 ### GET /
+
 Returns the HTML interface for interactive graph generation.
 
 **Headers:**
+
 - `X-API-Key`: Valid API key
 
 **Response:**
+
 - HTML page with graph interface
 
 ### POST /
+
 Returns JSON data for graph generation.
 
 **Headers:**
+
 - `X-API-Key`: Valid API key
 - `Content-Type`: application/x-www-form-urlencoded
 
 **Body Parameters:**
+
 - `start_date`: ISO 8601 datetime string (UTC)
 - `end_date`: ISO 8601 datetime string (UTC)
 - `metric`: Metric name (temperature, humidity, pressure, battery, wifi_dbm)
@@ -38,12 +45,8 @@ Returns JSON data for graph generation.
 
 ## Deployment
 
-1. Build the lambda package:
-   ```bash
-   ./build-graphs-lambda.sh
-   ```
+1. Deploy using Terraform:
 
-2. Deploy using Terraform:
    ```bash
    terraform plan
    terraform apply
