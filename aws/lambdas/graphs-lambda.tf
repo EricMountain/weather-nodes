@@ -33,15 +33,6 @@ resource "aws_lambda_function" "graphs_lambda" {
 resource "aws_lambda_function_url" "graphs_lambda_url" {
   function_name      = aws_lambda_function.graphs_lambda.function_name
   authorization_type = "NONE"
-
-  cors {
-    allow_credentials = false
-    allow_origins     = ["*"]
-    allow_methods     = ["GET", "POST"]
-    allow_headers     = ["date", "keep-alive", "x-api-key", "content-type"]
-    expose_headers    = ["date", "keep-alive"]
-    max_age          = 86400
-  }
 }
 
 output "graphs_lambda_url" {
