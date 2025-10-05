@@ -287,30 +287,37 @@ std::string NodeApp::formatStatusPayload(
 #ifdef HAS_DISPLAY
 void NodeApp::doGet(WiFiClientSecure &client) {
   JsonDocument *doc = nullptr;
+  int attempts = 3;
 
-  // TODO: implement retries with exponential backoff
-  HTTPClient httpGet;
-  httpGet.begin(client, GET_URL);
-  httpGet.addHeader("x-api-key", API_KEY);
-  int httpCode = httpGet.GET();
-  if (httpCode > 0) {
-    Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
-    String payload = httpGet.getString();
-    Serial.println(payload);
+  while (attempts-- > 0) {
+    HTTPClient httpGet;
+    httpGet.begin(client, GET_URL);
+    httpGet.addHeader("x-api-key", API_KEY);
+    int httpCode = httpGet.GET();
+    if (httpCode > 0) {
+      Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
+      String payload = httpGet.getString();
+      Serial.println(payload);
 
-    doc = new JsonDocument();
-    DeserializationError error = deserializeJson(*doc, payload);
-    if (error) {
-      Serial.print(F("JSON parse failed: "));
-      Serial.println(error.f_str());
-      delete doc;
-      doc = nullptr;
+      doc = new JsonDocument();
+      DeserializationError error = deserializeJson(*doc, payload);
+      if (error) {
+        Serial.print(F("JSON parse failed: "));
+        Serial.println(error.f_str());
+        delete doc;
+        doc = nullptr;
+      }
+    } else {
+      Serial.printf("[HTTPS] GET... failed, error: %s\n",
+                    httpGet.errorToString(httpCode).c_str());
     }
-  } else {
-    Serial.printf("[HTTPS] GET... failed, error: %s\n",
-                  httpGet.errorToString(httpCode).c_str());
+    httpGet.end();
+
+    if (doc != nullptr) {
+      break;
+    }
+    delay(1000 * (4 - attempts));  // Wait longer for each retry
   }
-  httpGet.end();
 
   doc_ = doc;
 }
