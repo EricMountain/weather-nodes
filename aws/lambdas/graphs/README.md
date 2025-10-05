@@ -54,8 +54,6 @@ Returns JSON data for graph generation.
 
 ## Architecture
 
-The lambda integrates with the existing weather nodes infrastructure:
-
 - **DynamoDB Tables**:
   - `api_keys`: For authentication
   - `device_configs`: For device configuration and available nodes
@@ -73,25 +71,33 @@ The lambda integrates with the existing weather nodes infrastructure:
 - Device access limited by API key configuration
 - No sensitive data exposed in client-side code
 
-## Dependencies
-
-- `boto3`: AWS SDK for Python (included in Lambda runtime)
-- `d3.js`: Loaded from CDN for client-side graphing
-
 ## Troubleshooting
 
 ### Common Issues
 
-1. **"API key missing" error**: Ensure the `X-API-Key` header is included in requests
-2. **"No data found"**: Check that the selected date range contains measurements
-3. **Graph not displaying**: Check browser console for JavaScript errors
-4. **Slow loading**: Large date ranges may take longer to process
+1. **Lambda deployment fails**
+   - Check AWS credentials and permissions
+   - Verify Terraform configuration syntax
+   - Ensure no conflicting resources exist
 
-## Future Enhancements
+2. **"API key missing" error**
+   - Ensure API key is included in URL parameters or X-API-Key header
+   - Verify API key exists in DynamoDB `api_keys` table
 
-- Export graphs as PNG/SVG
-- Aggregation options (hourly, daily averages)
-- Statistical overlays (min/max, averages)
-- Multiple metric display on same graph
-- Custom date range presets
-- Real-time data updates
+3. **No data displayed**
+   - Check that measurements exist for the selected time range
+   - Verify device IDs are correct
+   - Check DynamoDB table permissions
+
+4. **JavaScript errors**
+   - Ensure D3.js CDN is accessible
+   - Check browser console for specific errors
+   - Verify CORS configuration allows your domain
+
+## Testing
+
+### 1. Basic functionality test
+
+```bash
+python3 test-graphs-lambda.py
+```
