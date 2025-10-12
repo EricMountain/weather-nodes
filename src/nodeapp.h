@@ -96,9 +96,9 @@ class NodeApp {
   void registerSensors();
   void setupWiFi();
   void displaySunAndMoon();
-  DateTime parseTimestamp(const String &timestamp_key);
-  DateTime parseTimestampString(const std::string &timestamp,
-                                const String &timestamp_key);
+  DateTime parseTimestampValue(const String &timestamp_key);
+  DateTime parseTimestamp(const std::string &timestamp,
+                          const String &timestamp_key);
   std::string buildPayload();
   void registerResultsBME680(
       std::vector<std::pair<std::string, std::string>> &status,

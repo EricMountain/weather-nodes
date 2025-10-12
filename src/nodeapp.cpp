@@ -347,8 +347,8 @@ bool NodeApp::buildDisplayModel() {
     return true;
   }
 
-  utc_timestamp_ = parseTimestamp("timestamp_utc");
-  local_timestamp_ = parseTimestamp("timestamp_local");
+  utc_timestamp_ = parseTimestampValue("timestamp_utc");
+  local_timestamp_ = parseTimestampValue("timestamp_local");
 
   std::string display_date = "(Date unknown)";
   if (local_timestamp_.ok()) {
@@ -555,19 +555,19 @@ void NodeApp::displayBadStatuses(JsonObject &nodeData) {
   }
 }
 
-DateTime NodeApp::parseTimestamp(const String &timestamp_key) {
+DateTime NodeApp::parseTimestampValue(const String &timestamp_key) {
   DateTime dt;
 
   if ((*doc_)[timestamp_key].is<JsonString>()) {
     std::string timestamp = (*doc_)[timestamp_key].as<String>().c_str();
 
-    dt = parseTimestampString(timestamp, timestamp_key);
+    dt = parseTimestamp(timestamp, timestamp_key);
   }
   return dt;
 }
 
-DateTime NodeApp::parseTimestampString(const std::string &timestamp,
-                                       const String &timestamp_key) {
+DateTime NodeApp::parseTimestamp(const std::string &timestamp,
+                                 const String &timestamp_key) {
   DateTime dt(timestamp);
   if (!dt.ok()) {
     Serial.printf("Failed to parse %s: %s\n", timestamp_key.c_str(),
