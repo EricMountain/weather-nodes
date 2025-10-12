@@ -15,11 +15,13 @@
 #ifdef INDOOR_DISPLAY_NODE
 #define HAS_DISPLAY
 #define HAS_BME680
+#define OTA_UPDATE_ENABLED
 #endif
 
 #ifdef OUTDOOR_NODE
 #define HAS_SHT31D
 #define HAS_BATTERY
+#define OTA_UPDATE_ENABLED
 #endif
 
 #ifdef PROTOTYPE_NODE
