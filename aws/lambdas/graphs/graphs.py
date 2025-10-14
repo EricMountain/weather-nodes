@@ -3,7 +3,8 @@ import json
 import logging
 from urllib.parse import parse_qs
 
-from utils.auth import extract_api_key, authenticate_api_key
+#from aws.lambdas.auth.auth import extract_api_key, authenticate_api_key
+import auth
 from utils.data import get_available_devices, get_measurements_data
 from utils.html import generate_html_interface
 
@@ -20,9 +21,9 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method = request.get("method")
     
     # API key authentication
-    api_key = extract_api_key(event)
-    is_valid, device_id, error_message = authenticate_api_key(api_key)
-    
+    api_key = auth.extract_api_key(event)
+    is_valid, device_id, error_message = auth.authenticate_api_key(api_key)
+
     if not is_valid:
         if "API key missing" in error_message:
             return {"statusCode": 400, "body": error_message}

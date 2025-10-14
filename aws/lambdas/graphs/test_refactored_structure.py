@@ -7,6 +7,8 @@ This script demonstrates the modular structure and tests individual components.
 import sys
 import os
 
+import auth
+
 # Add the current directory to the path so we can import our modules
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -45,7 +47,7 @@ def test_modular_structure():
     
     try:
         # These will fail without boto3, but we can test the import structure
-        from utils import auth, data, dynamodb, html
+        from utils import data, dynamodb, html
         print("✓ All utility modules can be imported")
     except ImportError as e:
         if "boto3" in str(e):
