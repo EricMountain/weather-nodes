@@ -55,8 +55,11 @@ def generate_html_interface(available_devices: Optional[List[Dict[str, str]]] = 
     # Load and format template
     html_template = load_template('index.html')
     
-    return html_template.format(
-        css_content=css_content,
-        js_content=js_content,
-        device_checkboxes=device_checkboxes
+    # Replace template placeholders (including those in comments)
+    return html_template.replace(
+        '/* {css_content} */', css_content
+    ).replace(
+        '/* {js_content} */', js_content
+    ).replace(
+        '{device_checkboxes}', device_checkboxes
     )
