@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Nodes - Historical Data Graphs</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        {css_content}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather Nodes - Historical Data Graphs</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="start-date">Start Date:</label>
+                <input type="datetime-local" id="start-date" required>
+            </div>
+            
+            <div class="control-group">
+                <label for="end-date">End Date:</label>
+                <input type="datetime-local" id="end-date" required>
+            </div>
+            
+            <div class="control-group">
+                <label for="metric">Metric:</label>
+                <select id="metric">
+                    <option value="temperature">Temperature (°C)</option>
+                    <option value="humidity">Humidity (%)</option>
+                    <option value="pressure">Pressure (hPa)</option>
+                    <option value="battery_voltage">Battery Voltage (V)</option>
+                    <option value="battery_percentage">Battery Percentage (%)</option>
+                    <option value="wifi_dbm">WiFi Signal (dBm)</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>Devices:</label>
+                <div id="device-selection" class="device-selection">
+                    {device_checkboxes}
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <button id="generate-graph" onclick="generateGraph()">Generate Graph</button>
+            </div>
+        </div>
+        
+        <div id="chart"></div>
+    </div>
+
+    <script>
+        {js_content}
+    </script>
+</body>
+</html>

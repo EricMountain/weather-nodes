@@ -1,6 +1,102 @@
 # Weather Nodes Graphs Lambda
 
-This lambda function generates interactive HTML pages with graphs from historical measurement data.
+This Lambda function provides an interactive web interface for visualizing historical weather measurement data with charts and graphs.
+
+## Modules Overview
+
+### `graphs.py`
+
+Main Lambda handler that:
+
+- Handles GET requests (returns HTML interface)
+- Handles POST requests (returns JSON data for charts)
+- Coordinates authentication and data retrieval
+
+### `utils/auth.py`
+
+Authentication utilities:
+
+- `extract_api_key()` - Extract API key from headers or query params
+- `authenticate_api_key()` - Validate API key against DynamoDB
+
+### `utils/data.py`
+
+Data processing utilities:
+
+- `get_available_devices()` - Get devices available for a given API key
+- `get_measurements_data()` - Query measurements from DynamoDB
+- `process_measurements_for_metric()` - Extract specific metrics from measurements
+
+### `utils/dynamodb.py`
+
+DynamoDB utilities:
+
+- `dynamo_to_python()` - Convert DynamoDB items to Python dictionaries
+- `python_to_dynamo()` - Convert Python dictionaries to DynamoDB items
+
+### `utils/html.py`
+
+HTML rendering utilities:
+
+- `generate_html_interface()` - Generate complete HTML page
+- `load_static_file()` - Load CSS/JS files
+- `load_template()` - Load HTML templates
+- `generate_device_checkboxes()` - Generate device selection HTML
+
+### `static/styles.css`
+
+CSS styles for the web interface including:
+
+- Responsive layout
+- Chart styling
+- Form controls
+- Error and loading states
+
+### `static/charts.js`
+
+JavaScript for interactive charts:
+
+- D3.js-based chart rendering
+- Data fetching and processing
+- User interaction handling
+- Date/time utilities
+
+### `templates/index.html`
+
+HTML template for the main interface with placeholders for:
+
+- CSS content injection
+- JavaScript content injection
+- Device checkbox generation
+
+## API Usage
+
+### GET Request
+
+Returns the HTML interface for viewing graphs.
+
+### POST Request
+
+Returns JSON data for chart generation. Expects form data:
+
+- `start_date` - ISO format start date
+- `end_date` - ISO format end date  
+- `metric` - Metric type (temperature, humidity, pressure, etc.)
+- `devices` - Comma-separated device IDs
+
+## Dependencies
+
+- boto3 - AWS SDK
+- botocore - AWS core library
+
+## Authentication
+
+Requires API key provided either:
+
+- In `X-API-Key` header
+- As `api_key` query parameter
+
+The API key must exist in the `api_keys` DynamoDB table and be associated with a valid `device_id`.
 
 ## Usage
 
