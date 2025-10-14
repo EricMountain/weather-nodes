@@ -3,10 +3,9 @@ import json
 import logging
 from urllib.parse import parse_qs
 
-#from aws.lambdas.auth.auth import extract_api_key, authenticate_api_key
-import auth
-from utils.data import get_available_devices, get_measurements_data
-from utils.html import generate_html_interface
+from auth import extract_api_key, authenticate_api_key
+from datahelper import get_available_devices, get_measurements_data
+from htmlhelper import generate_html_interface
 
 logger = logging.getLogger(__name__)
 
@@ -16,14 +15,15 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     Lambda handler for generating HTML pages with interactive graphs from historical measurements.
     Supports querying by date range, metric type, and device selection.
     """
+    logger.warning(f"Received event: {json.dumps(event)}")
     ctx = event.get("requestContext") or {}
     request = ctx.get("http") or {}
     method = request.get("method")
     
     # API key authentication
-    api_key = auth.extract_api_key(event)
-    is_valid, device_id, error_message = auth.authenticate_api_key(api_key)
-
+    api_key = extract_api_key(event)
+    is_valid, device_id, error_message = authenticate_api_key(api_key)
+    logger.warning(f"API key validation result: is_valid={is_valid}, device_id={device_id}, error_message={error_message}")
     if not is_valid:
         if "API key missing" in error_message:
             return {"statusCode": 400, "body": error_message}
@@ -31,7 +31,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return {"statusCode": 401, "body": error_message}
         else:
             return {"statusCode": 500, "body": error_message}
-
+    logger.warning(f"method={method}, device_id={device_id}")
     if method == "GET":
         return handle_get_request(event, device_id)
     elif method == "POST":

@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import logging
 import boto3
 from botocore.exceptions import ClientError
-from .dynamodb import dynamo_to_python
+from dynamodb import dynamo_to_python
 
 logger = logging.getLogger(__name__)
 dynamodb = boto3.client("dynamodb")

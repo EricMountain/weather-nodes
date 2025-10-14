@@ -8,22 +8,24 @@ import os
 def load_static_file(filename: str) -> str:
     """Load content from a static file"""
     try:
-        static_dir = os.path.join(os.path.dirname(__file__), '..', 'static')
+        static_dir = os.path.join(os.path.dirname(__file__), 'static')
         file_path = os.path.join(static_dir, filename)
         with open(file_path, 'r', encoding='utf-8') as f:
             return f.read()
     except FileNotFoundError:
+        # TODO: Log error and throw exception
         return ""
 
 
 def load_template(template_name: str) -> str:
     """Load content from a template file"""
     try:
-        template_dir = os.path.join(os.path.dirname(__file__), '..', 'templates')
+        template_dir = os.path.join(os.path.dirname(__file__), 'templates')
         template_path = os.path.join(template_dir, template_name)
         with open(template_path, 'r', encoding='utf-8') as f:
             return f.read()
     except FileNotFoundError:
+        # TODO: Log error and throw exception
         return ""
 
 
