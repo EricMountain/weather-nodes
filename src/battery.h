@@ -28,9 +28,11 @@ class BatterySensor : public Sensor {
   std::map<std::string, Measurement> read() override {
     std::map<std::string, Measurement> data;
     float voltage = getBatteryVoltage();
-    float percentage = getBatteryPercentage();
-    data["battery_voltage"] = {voltage, "V"};
-    data["battery_percentage"] = {percentage, "%"};
+    float percent = getBatteryPercent();
+    Serial.printf("In read(): Battery voltage: %.2f V, percent: %.0f%%\n",
+                  voltage, percent);
+    data["voltage"] = {voltage, "V"};
+    data["percent"] = {percent, "%"};
     return data;
   }
 
@@ -46,7 +48,7 @@ class BatterySensor : public Sensor {
     return batteryVoltage;
   }
 
-  float getBatteryPercentage() {
+  float getBatteryPercent() {
     float voltage = getBatteryVoltage();
     if (voltage >= 4.2) return 100.0;
     if (voltage <= 3.3) return 0.0;
