@@ -20,7 +20,6 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     request = ctx.get("http") or {}
     method = request.get("method")
     
-    # API key authentication
     api_key = extract_api_key(event)
     is_valid, device_id, error_message = authenticate_api_key(api_key)
 
