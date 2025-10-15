@@ -639,8 +639,8 @@ void NodeApp::updateFirmware(const char *firmware_url) {
         Serial.println(F("Not enough space to begin OTA"));
       }
     } else {
-      Serial.print(F("HTTP GET failed, error: "));
-      Serial.printf("%s\n", https.errorToString(httpCode).c_str());
+      Serial.print(F("OTA HTTPS GET failed, error: "));
+      Serial.printf("%d %s\n", httpCode, https.errorToString(httpCode).c_str());
     }
     https.end();
   } else {
