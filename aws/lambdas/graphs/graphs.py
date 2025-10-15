@@ -21,7 +21,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method = request.get("method")
     
     api_key = extract_api_key(event)
-    is_valid, device_id, error_message = authenticate_api_key(api_key)
+    is_valid, device_id, error_message, _ = authenticate_api_key(api_key)
 
     if not is_valid:
         if "API key missing" in error_message:

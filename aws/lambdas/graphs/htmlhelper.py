@@ -1,6 +1,7 @@
 """
 HTML rendering utilities for the graphs lambda.
 """
+
 from typing import Dict, List, Optional
 import os
 

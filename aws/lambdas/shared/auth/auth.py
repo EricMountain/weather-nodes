@@ -23,7 +23,7 @@ def extract_api_key(event: Dict[str, Any]) -> Optional[str]:
     return api_key
 
 
-def authenticate_api_key(api_key: str) -> Tuple[bool, Optional[str], str]:
+def authenticate_api_key(api_key: str) -> Tuple[bool, Optional[str], str, Optional[str]]:
     """
     Authenticate API key and return (is_valid, device_id, error_message)
     
@@ -31,7 +31,7 @@ def authenticate_api_key(api_key: str) -> Tuple[bool, Optional[str], str]:
         Tuple of (is_valid: bool, device_id: Optional[str], error_message: str)
     """
     if not api_key:
-        return False, None, "API key missing"
+        return False, None, "API key missing", None
     
     try:
         api_key_response = dynamodb.get_item(
@@ -39,15 +39,15 @@ def authenticate_api_key(api_key: str) -> Tuple[bool, Optional[str], str]:
         )
         
         if "Item" not in api_key_response:
-            return False, None, "Unauthorized: Invalid API key"
-        
+            return False, None, "Unauthorized: Invalid API key", None
+
         api_key_response_item = dynamo_to_python(api_key_response["Item"])
         
         if "device_id" not in api_key_response_item:
-            return False, None, "Unauthorized: Device ID not found"
-        
+            return False, None, "Unauthorized: Device ID not found", None
+
         device_id = api_key_response_item["device_id"]
-        return True, device_id, ""
+        return True, device_id, "", api_key_response_item
         
     except Exception as e:
-        return False, None, f"Error checking API key: {str(e)}"
+        return False, None, f"Error checking API key: {str(e)}", None

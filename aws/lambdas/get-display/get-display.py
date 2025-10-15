@@ -9,6 +9,7 @@ from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 from botocore.exceptions import ClientError
 
 from auth import extract_api_key, authenticate_api_key
+from dynamodb import dynamo_to_python
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method = request.get("method")
 
     api_key = extract_api_key(event)
-    is_valid, device_id, error_message = authenticate_api_key(api_key)
+    is_valid, device_id, error_message, _ = authenticate_api_key(api_key)
 
     if not is_valid:
         if "API key missing" in error_message:
@@ -190,12 +191,3 @@ def addMinMaxToResponse(nodes, node_device_id, now_utc):
                 "min": str(measurement_value["min"]),
                 "max": str(measurement_value["max"]),
             }
-
-def dynamo_to_python(dynamo_object: dict) -> dict:
-    deserializer = TypeDeserializer()
-    return {k: deserializer.deserialize(v) for k, v in dynamo_object.items()}
-
-
-def python_to_dynamo(python_object: dict) -> dict:
-    serializer = TypeSerializer()
-    return {k: serializer.serialize(v) for k, v in python_object.items()}

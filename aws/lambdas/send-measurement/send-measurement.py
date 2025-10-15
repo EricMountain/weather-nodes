@@ -11,6 +11,9 @@ from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 from botocore.exceptions import ClientError
 from botocore.config import Config
 
+from auth import extract_api_key, authenticate_api_key
+from dynamodb import dynamo_to_python
+
 logger = logging.getLogger(__name__)
 
 dynamodb = boto3.client("dynamodb")
@@ -23,23 +26,16 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     request = ctx.get("http") or {}
     method = request.get("method")
 
-    device_id = None
-    headers = event.get("headers") or {}
-    api_key = headers.get("x-api-key") or headers.get("X-API-Key")
-    if not api_key:
-        return {"statusCode": 400, "body": "API key missing"}
-    try:
-        api_key_response = dynamodb.get_item(
-            TableName="api_keys", Key={"api_key": {"S": api_key}}
-        )
-        if "Item" not in api_key_response:
-            return {"statusCode": 401, "body": "Unauthorized: Invalid API key"}
-        api_key_response_item = dynamo_to_python(api_key_response["Item"])
-        if "device_id" not in api_key_response_item:
-            return {"statusCode": 401, "body": "Unauthorized: Device ID not found"}
-        device_id = api_key_response_item["device_id"]
-    except Exception as e:
-        return {"statusCode": 500, "body": f"Error checking API key: {str(e)}"}
+    api_key = extract_api_key(event)
+    is_valid, device_id, error_message, api_key_response_item = authenticate_api_key(api_key)
+
+    if not is_valid:
+        if "API key missing" in error_message:
+            return {"statusCode": 400, "body": error_message}
+        elif "Invalid API key" in error_message:
+            return {"statusCode": 401, "body": error_message}
+        else:
+            return {"statusCode": 500, "body": error_message}
 
     if method != "POST":
         return {
@@ -136,12 +132,3 @@ def check_for_ota_update(api_key_response_item, input, response):
             except ClientError as e:
                 logger.error(f"Error generating presigned URL: {e}")
                 response["ota_update"] = {"error": "Could not generate download URL"}
-
-def dynamo_to_python(dynamo_object: dict) -> dict:
-    deserializer = TypeDeserializer()
-    return {k: deserializer.deserialize(v) for k, v in dynamo_object.items()}
-
-
-def python_to_dynamo(python_object: dict) -> dict:
-    serializer = TypeSerializer()
-    return {k: serializer.serialize(v) for k, v in python_object.items()}

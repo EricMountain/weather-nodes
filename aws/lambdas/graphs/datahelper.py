@@ -1,11 +1,13 @@
 """
 Data processing utilities for measurements.
 """
+
 from typing import Dict, Any, List
 from datetime import datetime, timezone
 import logging
 import boto3
 from botocore.exceptions import ClientError
+
 from dynamodb import dynamo_to_python
 
 logger = logging.getLogger(__name__)
@@ -15,7 +17,6 @@ dynamodb = boto3.client("dynamodb")
 def get_available_devices(device_id: str) -> List[Dict[str, str]]:
     """Get list of devices available for the given device_id"""
     try:
-        # Get device config
         device_config_response = dynamodb.get_item(
             TableName="device_configs",
             Key={"device_id": {"S": device_id}},
