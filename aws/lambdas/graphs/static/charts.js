@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Chart dimensions
 const margin = {top: 20, right: 80, bottom: 50, left: 60};
-const width = 1000 - margin.left - margin.right;
+let width = document.getElementById('chart').offsetWidth - margin.left - margin.right;
 const height = 500 - margin.top - margin.bottom;
 
 // Color scale for different devices
@@ -250,3 +250,13 @@ function getApiKeyFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('api_key') || '';
 }
+
+// Update the width dynamically on window resize
+document.addEventListener('DOMContentLoaded', () => {
+    const updateWidth = () => {
+        width = document.getElementById('chart').offsetWidth - margin.left - margin.right;
+        // Update the chart dimensions dynamically here if needed
+    };
+    window.addEventListener('resize', updateWidth);
+    updateWidth(); // Initial call to set the width
+});
