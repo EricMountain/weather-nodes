@@ -238,9 +238,8 @@ void NodeApp::registerResultsBattery(
     status.push_back(std::pair<std::string, std::string>{"battery", "ok"});
     std::map<std::string, Measurement> measurements =
         sensors_["battery"]->read();
-    // Example: {"battery": {"voltage": 4.12, "percent": 87}}
     std::string battery_fmt = fmt::format(
-        R"("battery": {{"voltage": {:.2f}, "percent": {:.0f}}})",
+        R"("battery": {{"battery_voltage": {:.2f}, "battery_percentage": {:.0f}}})",
         measurements["voltage"].value, measurements["percent"].value);
     device_measurements.push_back(battery_fmt);
   }
