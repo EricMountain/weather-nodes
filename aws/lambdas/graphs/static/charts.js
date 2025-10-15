@@ -202,7 +202,7 @@ function drawChart(data) {
     // Add legend
     const legend = g.append('g')
         .attr('class', 'legend')
-        .attr('transform', `translate(${width + 10}, 20)`);
+        .attr('transform', `translate(10, 0)`);
     
     let legendY = 0;
     deviceNames.forEach(deviceId => {
