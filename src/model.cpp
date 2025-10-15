@@ -156,10 +156,10 @@ void Model::addNodeBatteryLevel(JsonObject &raw_node_data,
         raw_node_data["measurements_v2"].as<JsonObject>();
     if (measurements_v2["battery"].is<JsonObject>()) {
       JsonObject battery = measurements_v2["battery"].as<JsonObject>();
-      if (battery["battery_percentage"].is<JsonString>()) {
-        float battery_percentage = float(battery["battery_percentage"]);
+      if (battery["percent"].is<JsonString>()) {
+        float battery_percent = float(battery["percent"].as<JsonFloat>());
         JsonString battery_level = JsonString(
-            std::string{batteryLevelToChar(battery_percentage)}.c_str());
+            std::string{batteryLevelToChar(battery_percent)}.c_str());
         new_node["battery_level"] = battery_level;
       }
     }
