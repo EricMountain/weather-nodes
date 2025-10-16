@@ -1,3 +1,5 @@
+#include <vector>
+
 #include "epd_view.h"
 
 #include "fonts/moon_phases_48pt.h"
@@ -20,7 +22,7 @@ void EPDView::cleanup() {
   }
 }
 
-bool EPDView::buildModel(const JsonDocument* doc,
+bool EPDView::buildModel(JsonDocument* doc,
                          const std::map<std::string, Sensor*>& sensors) {
   doc_ = doc;
   sensors_ = sensors;

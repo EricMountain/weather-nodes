@@ -19,7 +19,7 @@ class DisplayView {
    * Build the display model from JSON data and sensors.
    * Returns true if display should be refreshed, false otherwise.
    */
-  virtual bool buildModel(const JsonDocument* doc,
+  virtual bool buildModel(JsonDocument* doc,
                           const std::map<std::string, Sensor*>& sensors) = 0;
 
   /**

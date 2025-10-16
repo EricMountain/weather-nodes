@@ -31,10 +31,10 @@ class EPDView : public DisplayView {
   GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT>* display_;
   U8G2_FOR_ADAFRUIT_GFX u8g2_;
   const uint8_t* defaultFont = u8g2_font_inb24_mf;
-  DisplayModel model_;
+  Model model_;
   DateTime utc_timestamp_;
   DateTime local_timestamp_;
-  const JsonDocument* doc_;
+  JsonDocument* doc_;
   std::map<std::string, Sensor*> sensors_;
   bool needs_refresh_;
 
@@ -61,7 +61,7 @@ class EPDView : public DisplayView {
   EPDView();
   ~EPDView() override;
 
-  bool buildModel(const JsonDocument* doc,
+  bool buildModel(JsonDocument* doc,
                   const std::map<std::string, Sensor*>& sensors) override;
   void render() override;
   bool needsRefresh() const override { return needs_refresh_; }
