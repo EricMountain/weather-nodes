@@ -4,7 +4,9 @@
 #include <map>
 #include <string>
 
+#include "controller.h"
 #include "datetime.h"
+#include "model.h"
 #include "sensor.h"
 
 /**
@@ -21,7 +23,7 @@ class DisplayView {
    * Returns true if display should be refreshed, false otherwise.
    */
   virtual bool buildModel(JsonDocument* doc,
-                          const std::map<std::string, Sensor*>& sensors) = 0;
+                          const std::map<std::string, Sensor*>& sensors);
 
   /**
    * Render the model to the display hardware.
@@ -40,6 +42,11 @@ class DisplayView {
 
  protected:
   JsonDocument* doc_ = nullptr;
+  Model model_;
+  DateTime utc_timestamp_;
+  DateTime local_timestamp_;
+  std::map<std::string, Sensor*> sensors_;
+  bool needs_refresh_ = true;
 
   /**
    * Parse a timestamp value from the JSON document.

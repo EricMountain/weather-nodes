@@ -1,5 +1,26 @@
 #include "display_view.h"
 
+bool DisplayView::buildModel(JsonDocument* doc,
+                             const std::map<std::string, Sensor*>& sensors) {
+  doc_ = doc;
+  sensors_ = sensors;
+
+  // Force refresh if we have no data
+  if (doc_ == nullptr || doc_->isNull() || !(*doc_)["nodes"].is<JsonObject>()) {
+    needs_refresh_ = true;
+    return true;
+  }
+
+  utc_timestamp_ = parseTimestampValue("timestamp_utc");
+  local_timestamp_ = parseTimestampValue("timestamp_local");
+
+  model_.buildFromJson(doc_, utc_timestamp_, local_timestamp_);
+
+  Controller c = Controller(model_);
+  needs_refresh_ = c.needRefresh();
+  return needs_refresh_;
+}
+
 DateTime DisplayView::parseTimestampValue(const String& timestamp_key) {
   DateTime dt;
 
