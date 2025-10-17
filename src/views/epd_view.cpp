@@ -173,8 +173,8 @@ std::pair<bool, std::pair<float, float>> EPDView::getDeviceMinMax(
             device_min_max[measurement].as<JsonObject>();
         min = float(measurement_min_max["min"]);
         max = float(measurement_min_max["max"]);
+        found = true;
       }
-      found = true;
     }
   }
 
