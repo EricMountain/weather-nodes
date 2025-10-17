@@ -5,11 +5,7 @@
 #include "fonts/moon_phases_48pt.h"
 
 EPDView::EPDView()
-    : display_(nullptr),
-      u8g2_(),
-      model_(),
-      doc_(nullptr),
-      needs_refresh_(true) {}
+    : display_(nullptr), u8g2_(), model_(), needs_refresh_(true) {}
 
 EPDView::~EPDView() { cleanup(); }
 
@@ -35,7 +31,6 @@ bool EPDView::buildModel(JsonDocument* doc,
   utc_timestamp_ = parseTimestampValue("timestamp_utc");
   local_timestamp_ = parseTimestampValue("timestamp_local");
 
-  // Delegate to Model for building the model structure
   model_.buildFromJson(doc_, utc_timestamp_, local_timestamp_);
 
   Controller c = Controller(model_);
@@ -206,26 +201,6 @@ std::pair<bool, std::pair<float, float>> EPDView::getDeviceMinMax(
   }
 
   return std::make_pair(found, std::make_pair(min, max));
-}
-
-DateTime EPDView::parseTimestampValue(const String& timestamp_key) {
-  DateTime dt;
-
-  if ((*doc_)[timestamp_key].is<JsonString>()) {
-    std::string timestamp = (*doc_)[timestamp_key].as<String>().c_str();
-    dt = parseTimestamp(timestamp, timestamp_key);
-  }
-  return dt;
-}
-
-DateTime EPDView::parseTimestamp(const std::string& timestamp,
-                                 const String& timestamp_key) {
-  DateTime dt(timestamp);
-  if (!dt.ok()) {
-    Serial.printf("Failed to parse %s: %s\n", timestamp_key.c_str(),
-                  timestamp.c_str());
-  }
-  return dt;
 }
 
 void EPDView::displayBatteryLevel(JsonString level) {

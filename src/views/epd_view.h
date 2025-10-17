@@ -34,7 +34,6 @@ class EPDView : public DisplayView {
   Model model_;
   DateTime utc_timestamp_;
   DateTime local_timestamp_;
-  JsonDocument* doc_;
   std::map<std::string, Sensor*> sensors_;
   bool needs_refresh_;
 
@@ -51,9 +50,6 @@ class EPDView : public DisplayView {
   std::pair<bool, std::pair<float, float>> getDeviceMinMax(
       JsonObject& nodeData, const std::string& device,
       const std::string& measurement);
-  DateTime parseTimestampValue(const String& timestamp_key);
-  DateTime parseTimestamp(const std::string& timestamp,
-                          const String& timestamp_key);
   void displayLocalSensorData();
 
  public:

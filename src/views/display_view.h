@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 
+#include "datetime.h"
 #include "sensor.h"
 
 /**
@@ -36,4 +37,18 @@ class DisplayView {
    * Cleanup display resources (e.g., put display to sleep).
    */
   virtual void cleanup() = 0;
+
+ protected:
+  JsonDocument* doc_ = nullptr;
+
+  /**
+   * Parse a timestamp value from the JSON document.
+   */
+  DateTime parseTimestampValue(const String& timestamp_key);
+
+  /**
+   * Parse a timestamp string into a DateTime object.
+   */
+  DateTime parseTimestamp(const std::string& timestamp,
+                          const String& timestamp_key);
 };
