@@ -32,7 +32,6 @@ class EPDView : public DisplayView {
   U8G2_FOR_ADAFRUIT_GFX u8g2_;
   const uint8_t* defaultFont = u8g2_font_inb24_mf;
 
-  // Helper methods for rendering
   void displaySunAndMoon();
   void displayNodes();
   void displayNodeHeader(JsonPair& node, JsonObject& nodeData);
