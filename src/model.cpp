@@ -284,13 +284,8 @@ char Model::batteryLevelToChar(float battery_percentage) {
   return battery_chars[char_offset];
 }
 
-bool Model::buildFromJson(JsonDocument *doc, DateTime utc_timestamp,
+void Model::buildFromJson(JsonDocument *doc, DateTime utc_timestamp,
                           DateTime local_timestamp) {
-  // Force refresh if we have no data
-  if (doc == nullptr || doc->isNull() || !(*doc)["nodes"].is<JsonObject>()) {
-    return true;
-  }
-
   std::string display_date = "(Date unknown)";
   if (local_timestamp.ok()) {
     Serial.printf("Local time: %s\n",
@@ -301,8 +296,6 @@ bool Model::buildFromJson(JsonDocument *doc, DateTime utc_timestamp,
 
   calculateSunAndMoon(local_timestamp, doc);
   addNodes((*doc)["nodes"], utc_timestamp);
-
-  return true;
 }
 
 void Model::calculateSunAndMoon(DateTime local_timestamp, JsonDocument *doc) {

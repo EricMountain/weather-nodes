@@ -51,6 +51,5 @@ class EPDView : public DisplayView {
   ~EPDView() override;
 
   void render() override;
-  bool needsRefresh() const override { return needs_refresh_; }
   void cleanup() override;
 };

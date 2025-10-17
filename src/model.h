@@ -41,7 +41,7 @@ class Model {
   bool fromJsonString(const std::string &json_str);
   bool operator==(const Model &other) const;
   bool operator!=(const Model &other) const;
-  bool buildFromJson(JsonDocument *doc, DateTime utc_timestamp,
+  void buildFromJson(JsonDocument *doc, DateTime utc_timestamp,
                      DateTime local_timestamp);
   void calculateSunAndMoon(DateTime local_timestamp, JsonDocument *doc);
 

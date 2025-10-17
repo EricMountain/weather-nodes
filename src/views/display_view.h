@@ -31,11 +31,6 @@ class DisplayView {
   virtual void render() = 0;
 
   /**
-   * Check if display needs to be refreshed based on model changes.
-   */
-  virtual bool needsRefresh() const = 0;
-
-  /**
    * Cleanup display resources (e.g., put display to sleep).
    */
   virtual void cleanup() = 0;
@@ -46,7 +41,6 @@ class DisplayView {
   DateTime utc_timestamp_;
   DateTime local_timestamp_;
   std::map<std::string, Sensor*> sensors_;
-  bool needs_refresh_ = true;
 
   /**
    * Parse a timestamp value from the JSON document.
