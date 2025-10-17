@@ -17,6 +17,7 @@
 #include <LittleFS.h>
 
 #include "views/epd_view.h"
+#include "views/epd_view_2.h"
 #endif
 
 #if defined(HAS_BME680) || defined(HAS_SHT31D)
@@ -135,7 +136,7 @@ void NodeApp::doApiCalls() {
   client.stop();
 }
 
-void NodeApp::doPost(WiFiClientSecure &client) {
+void NodeApp::doPost(WiFiClientSecure& client) {
   HTTPClient httpPost;
   httpPost.addHeader("x-api-key", API_KEY);
   Serial.println("[HTTPS] begin...");
@@ -191,8 +192,8 @@ std::string NodeApp::buildPayload() {
 }
 
 void NodeApp::registerResultsSHT31D(
-    std::vector<std::pair<std::string, std::string>> &status,
-    std::vector<std::string> &device_measurements) {
+    std::vector<std::pair<std::string, std::string>>& status,
+    std::vector<std::string>& device_measurements) {
 #ifdef HAS_SHT31D
   if (sensors_.find("sht31d") == sensors_.end() || !sensors_["sht31d"]->ok()) {
     status.push_back(std::pair<std::string, std::string>{"sht31d", "error"});
@@ -209,8 +210,8 @@ void NodeApp::registerResultsSHT31D(
 }
 
 void NodeApp::registerResultsBME680(
-    std::vector<std::pair<std::string, std::string>> &status,
-    std::vector<std::string> &device_measurements) {
+    std::vector<std::pair<std::string, std::string>>& status,
+    std::vector<std::string>& device_measurements) {
 #ifdef HAS_BME680
   if (sensors_.find("bme680") == sensors_.end() || !sensors_["bme680"]->ok()) {
     status.push_back(std::pair<std::string, std::string>{"bme680", "error"});
@@ -228,8 +229,8 @@ void NodeApp::registerResultsBME680(
 }
 
 void NodeApp::registerResultsBattery(
-    std::vector<std::pair<std::string, std::string>> &status,
-    std::vector<std::string> &device_measurements) {
+    std::vector<std::pair<std::string, std::string>>& status,
+    std::vector<std::string>& device_measurements) {
 #ifdef HAS_BATTERY
   if (sensors_.find("battery") == sensors_.end() ||
       !sensors_["battery"]->ok()) {
@@ -247,11 +248,11 @@ void NodeApp::registerResultsBattery(
 }
 
 void NodeApp::formatMeasurementsPayload(
-    std::vector<std::string> &device_measurements,
-    std::string &measurements_v2) {
+    std::vector<std::string>& device_measurements,
+    std::string& measurements_v2) {
   measurements_v2 = fmt::format(R"("measurements_v2": {{)");
   bool first = true;
-  for (const auto &measurement : device_measurements) {
+  for (const auto& measurement : device_measurements) {
     if (first) {
       first = false;
     } else {
@@ -264,12 +265,12 @@ void NodeApp::formatMeasurementsPayload(
 }
 
 std::string NodeApp::formatStatusPayload(
-    std::vector<std::pair<std::string, std::string>> &status) {
+    std::vector<std::pair<std::string, std::string>>& status) {
   std::string status_str = "\"status\": {}";
   if (!status.empty()) {
     status_str = fmt::format(R"("status": {{)");
     bool first = true;
-    for (const auto &s : status) {
+    for (const auto& s : status) {
       if (first) {
         first = false;
       } else {
@@ -284,8 +285,8 @@ std::string NodeApp::formatStatusPayload(
 }
 
 #ifdef HAS_DISPLAY
-void NodeApp::doGet(WiFiClientSecure &client) {
-  JsonDocument *doc = nullptr;
+void NodeApp::doGet(WiFiClientSecure& client) {
+  JsonDocument* doc = nullptr;
   int attempts = 3;
 
   while (attempts-- > 0) {
@@ -353,7 +354,7 @@ void NodeApp::handlePostResponse(String response) {
   }
 }
 
-void NodeApp::updateFirmware(const char *firmware_url) {
+void NodeApp::updateFirmware(const char* firmware_url) {
   WiFiClientSecure client;
   client.setCACert(rootCACerts);
 
@@ -367,7 +368,7 @@ void NodeApp::updateFirmware(const char *firmware_url) {
       bool canBegin = Update.begin(contentLength);
       if (canBegin) {
         Serial.printf("Starting download. OTA size: %u bytes\n", contentLength);
-        WiFiClient *stream = https.getStreamPtr();
+        WiFiClient* stream = https.getStreamPtr();
         size_t written = Update.writeStream(*stream);
         if (written == contentLength) {
           Serial.println(F("OTA written successfully. Rebooting..."));

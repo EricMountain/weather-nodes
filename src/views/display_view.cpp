@@ -17,6 +17,7 @@ bool DisplayView::buildModel(JsonDocument* doc,
 
   Controller c = Controller(model_);
   return c.needRefresh();
+  // return true;
 }
 
 DateTime DisplayView::parseTimestampValue(const String& timestamp_key) {
