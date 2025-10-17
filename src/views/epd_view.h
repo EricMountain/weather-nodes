@@ -54,7 +54,6 @@ class EPDView : public DisplayView {
   DateTime parseTimestampValue(const String& timestamp_key);
   DateTime parseTimestamp(const std::string& timestamp,
                           const String& timestamp_key);
-  void calculateSunAndMoon();
   void displayLocalSensorData();
 
  public:

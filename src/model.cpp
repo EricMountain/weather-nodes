@@ -2,6 +2,7 @@
 
 #include "model.h"
 #include "config.h"
+#include "sunandmoon.h"
 
 Model::Model() {
   doc_ = new JsonDocument();
@@ -281,4 +282,60 @@ char Model::batteryLevelToChar(float battery_percentage) {
                 battery_percentage, level, char_offset);
 
   return battery_chars[char_offset];
+}
+
+bool Model::buildFromJson(JsonDocument *doc, DateTime utc_timestamp,
+                          DateTime local_timestamp) {
+  // Force refresh if we have no data
+  if (doc == nullptr || doc->isNull() || !(*doc)["nodes"].is<JsonObject>()) {
+    return true;
+  }
+
+  std::string display_date = "(Date unknown)";
+  if (local_timestamp.ok()) {
+    Serial.printf("Local time: %s\n",
+                  local_timestamp.format("%A %d %B %Y").c_str());
+    display_date = local_timestamp.niceDate();
+  }
+  setDateTime(display_date);
+
+  calculateSunAndMoon(local_timestamp, doc);
+  addNodes((*doc)["nodes"], utc_timestamp);
+
+  return true;
+}
+
+void Model::calculateSunAndMoon(DateTime local_timestamp, JsonDocument *doc) {
+  // Get location data from response config section if available
+  double latitude = 48.866667;
+  double longitude = 2.333333;
+  int utc_offset_seconds = 0;
+  if ((*doc)["config"].is<JsonObject>()) {
+    JsonObject config = (*doc)["config"].as<JsonObject>();
+    if (config["location"].is<JsonObject>()) {
+      JsonObject location = config["location"].as<JsonObject>();
+      if (location["latitude"].is<JsonString>()) {
+        latitude = location["latitude"].as<String>().toDouble();
+      }
+      if (location["longitude"].is<JsonString>()) {
+        longitude = location["longitude"].as<String>().toDouble();
+      }
+      if (location["utc_offset_seconds"].is<JsonInteger>()) {
+        utc_offset_seconds = location["utc_offset_seconds"].as<int>();
+      }
+    }
+  }
+  Serial.printf("Location: lat %.6f lon %.6f UTC offset %d seconds\n", latitude,
+                longitude, utc_offset_seconds);
+
+  SunAndMoon sunAndMoon(local_timestamp.year(), local_timestamp.month(),
+                        local_timestamp.day(), local_timestamp.hour(),
+                        local_timestamp.minute(), local_timestamp.second(),
+                        latitude, longitude, utc_offset_seconds);
+  setSunInfo(sunAndMoon.getSunrise(), sunAndMoon.getSunTransit(),
+             sunAndMoon.getSunset());
+  setMoonInfo(sunAndMoon.getMoonPhase(),
+              std::string(1, sunAndMoon.getMoonPhaseLetter()),
+              sunAndMoon.getMoonRise(), sunAndMoon.getMoonTransit(),
+              sunAndMoon.getMoonSet());
 }

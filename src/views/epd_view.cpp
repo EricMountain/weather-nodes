@@ -3,7 +3,6 @@
 #include "epd_view.h"
 
 #include "fonts/moon_phases_48pt.h"
-#include "sunandmoon.h"
 
 EPDView::EPDView()
     : display_(nullptr),
@@ -36,55 +35,12 @@ bool EPDView::buildModel(JsonDocument* doc,
   utc_timestamp_ = parseTimestampValue("timestamp_utc");
   local_timestamp_ = parseTimestampValue("timestamp_local");
 
-  std::string display_date = "(Date unknown)";
-  if (local_timestamp_.ok()) {
-    Serial.printf("Local time: %s\n",
-                  local_timestamp_.format("%A %d %B %Y").c_str());
-    display_date = local_timestamp_.niceDate();
-  }
-  model_.setDateTime(display_date);
-
-  calculateSunAndMoon();
-  model_.addNodes((*doc_)["nodes"], utc_timestamp_);
+  // Delegate to Model for building the model structure
+  model_.buildFromJson(doc_, utc_timestamp_, local_timestamp_);
 
   Controller c = Controller(model_);
   needs_refresh_ = c.needRefresh();
   return needs_refresh_;
-}
-
-void EPDView::calculateSunAndMoon() {
-  // Get location data from response config section if available
-  double latitude = 48.866667;
-  double longitude = 2.333333;
-  int utc_offset_seconds = 0;
-  if ((*doc_)["config"].is<JsonObject>()) {
-    JsonObject config = (*doc_)["config"].as<JsonObject>();
-    if (config["location"].is<JsonObject>()) {
-      JsonObject location = config["location"].as<JsonObject>();
-      if (location["latitude"].is<JsonString>()) {
-        latitude = location["latitude"].as<String>().toDouble();
-      }
-      if (location["longitude"].is<JsonString>()) {
-        longitude = location["longitude"].as<String>().toDouble();
-      }
-      if (location["utc_offset_seconds"].is<JsonInteger>()) {
-        utc_offset_seconds = location["utc_offset_seconds"].as<int>();
-      }
-    }
-  }
-  Serial.printf("Location: lat %.6f lon %.6f UTC offset %d seconds\n", latitude,
-                longitude, utc_offset_seconds);
-
-  SunAndMoon sunAndMoon(local_timestamp_.year(), local_timestamp_.month(),
-                        local_timestamp_.day(), local_timestamp_.hour(),
-                        local_timestamp_.minute(), local_timestamp_.second(),
-                        latitude, longitude, utc_offset_seconds);
-  model_.setSunInfo(sunAndMoon.getSunrise(), sunAndMoon.getSunTransit(),
-                    sunAndMoon.getSunset());
-  model_.setMoonInfo(sunAndMoon.getMoonPhase(),
-                     std::string(1, sunAndMoon.getMoonPhaseLetter()),
-                     sunAndMoon.getMoonRise(), sunAndMoon.getMoonTransit(),
-                     sunAndMoon.getMoonSet());
 }
 
 void EPDView::render() {
