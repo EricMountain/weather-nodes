@@ -52,8 +52,7 @@ void NodeApp::setupSerial() {
   int attempts = 20;
   Serial.begin(115200);
   while (!Serial) {
-    delay(100 /
-          (attempts < 1 ? 1 : attempts));  // Wait for serial monitor connection
+    delay(100 / (attempts < 1 ? 1 : attempts));
     if (--attempts <= 0) {
       Serial.println(
           "Gave up waiting for serial monitor, continuing... (so this "
