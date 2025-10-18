@@ -131,12 +131,11 @@ void EPDView2::displayBadStatuses(JsonObject& nodeData, int node_count,
 
   u8g2_.setFont(smallFont);
 
-  // Display status entries that are not "ok"
   if (nodeData["status"].is<JsonObject>()) {
     JsonObject status = nodeData["status"].as<JsonObject>();
     for (JsonPair kvp : status) {
       String value = kvp.value().as<String>();
-      if (value != "ok" || true) {
+      if (value != "ok") {
         row_offset += row_height;
         row++;
         u8g2_.setCursor(column * column_width, row_offset);
