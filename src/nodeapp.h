@@ -25,7 +25,7 @@
 
 class NodeApp {
  public:
-  NodeApp(const char *ssid, const char *password)
+  NodeApp(const char* ssid, const char* password)
       : ssid_(ssid),
         password_(password)
 #ifdef HAS_DISPLAY
@@ -39,21 +39,21 @@ class NodeApp {
 
   void setup();
   void updateDisplay();
-  void setJsonDoc(JsonDocument *d) { doc_ = d; }
+  void setJsonDoc(JsonDocument* d) { doc_ = d; }
   void setBmeOK(bool ok) { bmeOK_ = ok; }
   void goToSleep();
   void doApiCalls();
 
  private:
-  const char *ssid_;
-  const char *password_;
+  const char* ssid_;
+  const char* password_;
 #ifdef HAS_DISPLAY
-  DisplayView *view_;
+  DisplayView* view_;
 #endif
 
-  std::map<std::string, Sensor *> sensors_;
+  std::map<std::string, Sensor*> sensors_;
 
-  JsonDocument *doc_;
+  JsonDocument* doc_;
 
   // TODO remove
   bool bmeOK_;
@@ -63,25 +63,28 @@ class NodeApp {
   void setupWiFi();
   std::string buildPayload();
   void registerResultsBME680(
-      std::vector<std::pair<std::string, std::string>> &status,
-      std::vector<std::string> &device_measurements);
+      std::vector<std::pair<std::string, std::string>>& status,
+      std::vector<std::string>& device_measurements);
   void registerResultsBattery(
-      std::vector<std::pair<std::string, std::string>> &status,
-      std::vector<std::string> &device_measurements);
+      std::vector<std::pair<std::string, std::string>>& status,
+      std::vector<std::string>& device_measurements);
   void registerResultsSHT31D(
-      std::vector<std::pair<std::string, std::string>> &status,
-      std::vector<std::string> &device_measurements);
-  void formatMeasurementsPayload(std::vector<std::string> &device_measurements,
-                                 std::string &measurements_v2);
+      std::vector<std::pair<std::string, std::string>>& status,
+      std::vector<std::string>& device_measurements);
+  void registerResultsWiFi(
+      std::vector<std::pair<std::string, std::string>>& status,
+      std::vector<std::string>& device_measurements);
+  void formatMeasurementsPayload(std::vector<std::string>& device_measurements,
+                                 std::string& measurements_v2);
   std::string formatStatusPayload(
-      std::vector<std::pair<std::string, std::string>> &status);
-  void doPost(WiFiClientSecure &client);
+      std::vector<std::pair<std::string, std::string>>& status);
+  void doPost(WiFiClientSecure& client);
 #ifdef HAS_DISPLAY
-  void doGet(WiFiClientSecure &client);
+  void doGet(WiFiClientSecure& client);
 #endif
 #ifdef OTA_UPDATE_ENABLED
   void handlePostResponse(String response);
-  void updateFirmware(const char *firmware_url);
+  void updateFirmware(const char* firmware_url);
 #endif
 };
 

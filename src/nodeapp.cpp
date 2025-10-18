@@ -166,13 +166,7 @@ std::string NodeApp::buildPayload() {
   std::vector<std::pair<std::string, std::string>> status;
   std::vector<std::string> device_measurements;
 
-  // TODO: register WiFi quality as a sensor
-  std::map<std::string, Measurement> wifi_measurements =
-      sensors_["wifi"]->read();
-  std::string wifi_fmt = fmt::format(R"("wifi": {{"wifi_dbm": {:.0f}}})",
-                                     wifi_measurements["wifi_dbm"].value);
-  device_measurements.push_back(wifi_fmt);
-
+  registerResultsWiFi(status, device_measurements);
   registerResultsBME680(status, device_measurements);
   registerResultsBattery(status, device_measurements);
   registerResultsSHT31D(status, device_measurements);
@@ -245,6 +239,20 @@ void NodeApp::registerResultsBattery(
     device_measurements.push_back(battery_fmt);
   }
 #endif
+}
+
+void NodeApp::registerResultsWiFi(
+    std::vector<std::pair<std::string, std::string>>& status,
+    std::vector<std::string>& device_measurements) {
+  if (sensors_.find("wifi") == sensors_.end() || !sensors_["wifi"]->ok()) {
+    status.push_back(std::pair<std::string, std::string>{"wifi", "error"});
+  } else {
+    status.push_back(std::pair<std::string, std::string>{"wifi", "ok"});
+    std::map<std::string, Measurement> measurements = sensors_["wifi"]->read();
+    std::string wifi_fmt = fmt::format(R"("wifi": {{"wifi_dbm": {:.0f}}})",
+                                       measurements["wifi_dbm"].value);
+    device_measurements.push_back(wifi_fmt);
+  }
 }
 
 void NodeApp::formatMeasurementsPayload(
