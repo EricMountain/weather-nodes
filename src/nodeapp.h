@@ -7,11 +7,7 @@
 #include <string>
 #include <vector>
 
-// TODO: eliminate this dependency for outdoor nodes, or actually use it
-// #ifdef HAS_DISPLAY
 #include <ArduinoJson.h>
-// #endif
-
 #include <WiFiClientSecure.h>
 
 #include "config.h"
