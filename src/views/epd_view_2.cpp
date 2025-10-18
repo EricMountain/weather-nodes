@@ -145,7 +145,7 @@ void EPDView2::displayBadStatuses(JsonObject& nodeData, int node_count,
   }
 
   // Display HTTP POST error code as a special case
-  if (http_post_error_code_ != 0) {
+  if (http_post_error_code_ != 200) {
     row_offset += row_height;
     row++;
     u8g2_.setCursor(column * column_width, row_offset);

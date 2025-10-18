@@ -5,13 +5,8 @@ bool DisplayView::buildModel(JsonDocument* doc,
   doc_ = doc;
   sensors_ = sensors;
 
-  // Force render if we have no data or if there's a POST error
+  // Only build model if we have a valid document
   if (doc_ == nullptr || doc_->isNull() || !(*doc_)["nodes"].is<JsonObject>()) {
-    return true;
-  }
-
-  // Force render if HTTP POST failed
-  if (http_post_error_code_ != 0) {
     return true;
   }
 
@@ -21,7 +16,7 @@ bool DisplayView::buildModel(JsonDocument* doc,
   model_.buildFromJson(doc_, utc_timestamp_, local_timestamp_);
 
   Controller c = Controller(model_);
-  return c.needRefresh();
+  return c.needRefresh() || (http_post_error_code_ != 200);
 }
 
 DateTime DisplayView::parseTimestampValue(const String& timestamp_key) {

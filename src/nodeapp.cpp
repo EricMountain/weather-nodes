@@ -138,7 +138,7 @@ void NodeApp::doApiCalls() {
 
 void NodeApp::doPost(WiFiClientSecure& client) {
   HTTPClient httpPost;
-  httpPost.addHeader("x-api-key", API_KEY);
+  // httpPost.addHeader("x-api-key", API_KEY);
   Serial.println("[HTTPS] begin...");
   if (httpPost.begin(client, POST_URL)) {
     Serial.println("[HTTPS] POST...");
@@ -150,16 +150,14 @@ void NodeApp::doPost(WiFiClientSecure& client) {
       Serial.printf("[HTTPS] POST... code: %d\n", httpCode);
       String payload = httpPost.getString();
       Serial.println(payload);
-      http_post_error_code_ = 0;  // Clear error on success
 #ifdef OTA_UPDATE_ENABLED
       handlePostResponse(payload);
 #endif
     } else {
       Serial.printf("[HTTPS] POST... failed, error: %s\n",
                     httpPost.errorToString(httpCode).c_str());
-      http_post_error_code_ = httpCode;  // Store error code
-      // TODO: flag error for later display
     }
+    http_post_error_code_ = httpCode;
   }
   httpPost.end();
 }
