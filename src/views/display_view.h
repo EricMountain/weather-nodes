@@ -26,6 +26,13 @@ class DisplayView {
                           const std::map<std::string, Sensor*>& sensors);
 
   /**
+   * Set the HTTP POST error code for display.
+   */
+  void setHttpPostErrorCode(int error_code) {
+    http_post_error_code_ = error_code;
+  }
+
+  /**
    * Render the model to the display hardware.
    */
   virtual void render() = 0;
@@ -41,6 +48,7 @@ class DisplayView {
   DateTime utc_timestamp_;
   DateTime local_timestamp_;
   std::map<std::string, Sensor*> sensors_;
+  int http_post_error_code_ = 0;  // 0 means no error
 
   /**
    * Parse a timestamp value from the JSON document.

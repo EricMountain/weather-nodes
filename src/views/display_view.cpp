@@ -5,8 +5,13 @@ bool DisplayView::buildModel(JsonDocument* doc,
   doc_ = doc;
   sensors_ = sensors;
 
-  // Force render if we have no data
+  // Force render if we have no data or if there's a POST error
   if (doc_ == nullptr || doc_->isNull() || !(*doc_)["nodes"].is<JsonObject>()) {
+    return true;
+  }
+
+  // Force render if HTTP POST failed
+  if (http_post_error_code_ != 0) {
     return true;
   }
 

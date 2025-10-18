@@ -150,12 +150,14 @@ void NodeApp::doPost(WiFiClientSecure& client) {
       Serial.printf("[HTTPS] POST... code: %d\n", httpCode);
       String payload = httpPost.getString();
       Serial.println(payload);
+      http_post_error_code_ = 0;  // Clear error on success
 #ifdef OTA_UPDATE_ENABLED
       handlePostResponse(payload);
 #endif
     } else {
       Serial.printf("[HTTPS] POST... failed, error: %s\n",
                     httpPost.errorToString(httpCode).c_str());
+      http_post_error_code_ = httpCode;  // Store error code
       // TODO: flag error for later display
     }
   }
@@ -335,6 +337,7 @@ void NodeApp::updateDisplay() {
     Serial.println("View not initialized");
     return;
   }
+  view_->setHttpPostErrorCode(http_post_error_code_);
   if (!view_->buildModel(doc_, sensors_)) {
     return;
   }
