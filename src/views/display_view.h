@@ -33,6 +33,13 @@ class DisplayView {
   }
 
   /**
+   * Set the current device ID for POST error reporting.
+   */
+  void setCurrentDeviceId(const std::string& device_id) {
+    current_device_id_ = device_id;
+  }
+
+  /**
    * Render the model to the display hardware.
    */
   virtual void render() = 0;
@@ -49,6 +56,7 @@ class DisplayView {
   DateTime local_timestamp_;
   std::map<std::string, Sensor*> sensors_;
   int http_post_error_code_ = 0;  // 0 means no error
+  std::string current_device_id_;
 
   /**
    * Parse a timestamp value from the JSON document.

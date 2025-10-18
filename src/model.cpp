@@ -89,7 +89,7 @@ void Model::addNode(JsonPair& raw_node, DateTime& utc_timestamp) {
   new_node["display_name"] = displayName;
 
   addNodeBatteryLevel(raw_node_data, new_node);
-  addNodeStatusSection(raw_node_data, new_node);
+  addNodeStatusSection(raw_node_data, new_node, node_name.c_str());
   addNodeStaleState(utc_timestamp, raw_node_data, new_node);
   addNodeMeasurementsV2(raw_node_data, new_node);
   addNodeMeasurementsMinMax(raw_node_data, new_node);
@@ -168,9 +168,16 @@ void Model::addNodeStaleState(DateTime& utc_timestamp,
 
 void Model::addNodeStatusSection(
     ArduinoJson::V742PB22::JsonObject& raw_node_data,
-    ArduinoJson::V742PB22::JsonObject& new_node) {
+    ArduinoJson::V742PB22::JsonObject& new_node, const char* device_id) {
   if (raw_node_data["status"].is<JsonObject>()) {
     new_node["status"] = raw_node_data["status"].as<JsonObject>();
+  }
+
+  // Add HTTP POST error code to status if it's an error (not 200) and device
+  // matches
+  if (http_post_error_code_ != 200 && current_device_id_ == device_id) {
+    JsonObject status = new_node["status"].to<JsonObject>();
+    status["http_post"] = fmt::format("error_{}", http_post_error_code_);
   }
 }
 

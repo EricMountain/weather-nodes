@@ -138,7 +138,7 @@ void NodeApp::doApiCalls() {
 
 void NodeApp::doPost(WiFiClientSecure& client) {
   HTTPClient httpPost;
-  // httpPost.addHeader("x-api-key", API_KEY);
+  httpPost.addHeader("x-api-key", API_KEY);
   Serial.println("[HTTPS] begin...");
   if (httpPost.begin(client, POST_URL)) {
     Serial.println("[HTTPS] POST...");
@@ -327,6 +327,14 @@ void NodeApp::doGet(WiFiClientSecure& client) {
     delay(1000 * (4 - attempts));  // Wait longer for each retry
   }
 
+  if (doc != nullptr) {
+    // Extract device_id from the top level of the response
+    if ((*doc)["device_id"].is<JsonString>()) {
+      device_id_ = (*doc)["device_id"].as<std::string>();
+      Serial.printf("Device ID from response: %s\n", device_id_.c_str());
+    }
+  }
+
   doc_ = doc;
 }
 
@@ -336,6 +344,7 @@ void NodeApp::updateDisplay() {
     return;
   }
   view_->setHttpPostErrorCode(http_post_error_code_);
+  view_->setCurrentDeviceId(device_id_);
   if (!view_->buildModel(doc_, sensors_)) {
     return;
   }

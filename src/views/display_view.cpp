@@ -13,6 +13,8 @@ bool DisplayView::buildModel(JsonDocument* doc,
   utc_timestamp_ = parseTimestampValue("timestamp_utc");
   local_timestamp_ = parseTimestampValue("timestamp_local");
 
+  model_.setHttpPostErrorCode(http_post_error_code_);
+  model_.setCurrentDeviceId(current_device_id_);
   model_.buildFromJson(doc_, utc_timestamp_, local_timestamp_);
 
   Controller c = Controller(model_);
