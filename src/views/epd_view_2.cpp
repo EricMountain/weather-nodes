@@ -93,7 +93,7 @@ uint EPDView2::displayNodes() {
     JsonObject nodeData = node.value().as<JsonObject>();
     displayNodeHeader(node, nodeData, node_count, column, row, row_offset);
     displayNodeMeasurements(nodeData, node_count, column, row, row_offset);
-    displayBatteryLevel(nodeData, node_count, column, row, row_offset);
+    // displayBatteryLevel(nodeData, node_count, column, row, row_offset);
     displayBadStatuses(nodeData, node_count, column, row, row_offset);
     displayStaleState(nodeData, node_count, column, row, row_offset);
 
@@ -116,7 +116,8 @@ void EPDView2::displayNodeHeader(JsonPair& node, JsonObject& nodeData,
   row_offset = row * font_height_spacing_24pt;
   row++;
   u8g2_.setCursor(column * column_width, row_offset);
-  u8g2_.printf("%s", display_name.c_str());
+  u8g2_.printf("% s", display_name.c_str());
+  displayBatteryLevel(nodeData);
 
   // Leave an empty half row after header
   row_offset += font_height_spacing_24pt / 2;
@@ -262,9 +263,17 @@ void EPDView2::displayBatteryLevel(JsonObject& nodeData, int node_count,
   row_offset += row_height;
   row++;
 
-  std::string level = nodeData["battery_level"].as<JsonString>().c_str();
-
   u8g2_.setCursor(column * column_width, row_offset);
+
+  displayBatteryLevel(nodeData);
+}
+
+void EPDView2::displayBatteryLevel(JsonObject& nodeData) {
+  if (!nodeData["battery_level"].is<JsonString>()) {
+    return;
+  }
+
+  std::string level = nodeData["battery_level"].as<std::string>().c_str();
   u8g2_.setFont(u8g2_font_battery24_tr);
   u8g2_.print(level.c_str());
   u8g2_.setFont(defaultFont);

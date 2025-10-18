@@ -58,6 +58,7 @@ class EPDView2 : public DisplayView {
                                  int column, uint8_t& row, uint& row_offset);
   void displayBatteryLevel(JsonObject& nodeData, int node_count, int column,
                            uint8_t& row, uint& row_offset);
+  void displayBatteryLevel(JsonObject& nodeData);
   void displayBadStatuses(JsonObject& nodeData, int node_count, int column,
                           uint8_t& row, uint& row_offset);
   void displayStaleState(JsonObject& nodeData, int node_count, int column,
