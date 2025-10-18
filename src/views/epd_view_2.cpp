@@ -273,7 +273,7 @@ void EPDView2::displayBatteryLevel(JsonObject& nodeData) {
     return;
   }
 
-  std::string level = nodeData["battery_level"].as<std::string>().c_str();
+  std::string level = nodeData["battery_level"].as<std::string>();
   u8g2_.setFont(u8g2_font_battery24_tr);
   u8g2_.print(level.c_str());
   u8g2_.setFont(defaultFont);
