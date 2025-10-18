@@ -9,12 +9,12 @@ Model::Model() {
   (*doc_)["nodes"] = JsonDocument();
 }
 
-Model::Model(const std::string &json_str) {
+Model::Model(const std::string& json_str) {
   doc_ = new JsonDocument();
   jsonLoadOK_ = fromJsonString(json_str);
 }
 
-void Model::setDateTime(const std::string &datetime_str) {
+void Model::setDateTime(const std::string& datetime_str) {
   (*doc_)["datetime"] = datetime_str;
 }
 
@@ -25,8 +25,8 @@ std::string Model::getDateTime() const {
   return "";
 }
 
-void Model::setSunInfo(const std::string &sunrise, const std::string &transit,
-                       const std::string &sunset) {
+void Model::setSunInfo(const std::string& sunrise, const std::string& transit,
+                       const std::string& sunset) {
   (*doc_)["sun"]["transit"] = transit;
   (*doc_)["sun"]["rise"] = sunrise;
   (*doc_)["sun"]["set"] = sunset;
@@ -38,10 +38,10 @@ std::string Model::getSunSet() const { return get("sun", "set"); }
 
 std::string Model::getSunTransit() const { return get("sun", "transit"); }
 
-void Model::setMoonInfo(const std::string &phase,
-                        const std::string &phase_letter,
-                        const std::string &rise, const std::string &transit,
-                        const std::string &set) {
+void Model::setMoonInfo(const std::string& phase,
+                        const std::string& phase_letter,
+                        const std::string& rise, const std::string& transit,
+                        const std::string& set) {
   (*doc_)["moon"]["phase"] = phase;
   (*doc_)["moon"]["phase_letter"] = phase_letter;
   (*doc_)["moon"]["rise"] = rise;
@@ -68,14 +68,14 @@ JsonObject Model::getNodeData() const {
   return JsonObject();
 }
 
-void Model::addNodes(JsonObject rawNodes, DateTime &utc_timestamp) {
+void Model::addNodes(JsonObject rawNodes, DateTime& utc_timestamp) {
   JsonObject new_nodes = (*doc_)["nodes"].to<JsonObject>();
   for (JsonPair node : rawNodes) {
     addNode(node, utc_timestamp);
   }
 }
 
-void Model::addNode(JsonPair &raw_node, DateTime &utc_timestamp) {
+void Model::addNode(JsonPair& raw_node, DateTime& utc_timestamp) {
   JsonObject new_nodes = (*doc_)["nodes"].as<JsonObject>();
 
   JsonString node_name = raw_node.key();
@@ -92,10 +92,11 @@ void Model::addNode(JsonPair &raw_node, DateTime &utc_timestamp) {
   addNodeStatusSection(raw_node_data, new_node);
   addNodeStaleState(utc_timestamp, raw_node_data, new_node);
   addNodeMeasurementsV2(raw_node_data, new_node);
+  addNodeMeasurementsMinMax(raw_node_data, new_node);
 }
 
-void Model::addNodeMeasurementsV2(JsonObject &raw_node_data,
-                                  JsonObject &new_node) {
+void Model::addNodeMeasurementsV2(JsonObject& raw_node_data,
+                                  JsonObject& new_node) {
   // Copy measurements_v2 if it exists, round values to one decimal place,
   // ignore wifi and battery sections
   if (raw_node_data["measurements_v2"].is<JsonObject>()) {
@@ -114,8 +115,31 @@ void Model::addNodeMeasurementsV2(JsonObject &raw_node_data,
   }
 }
 
-void Model::addNodeStaleState(DateTime &utc_timestamp,
-                              JsonObject &raw_node_data, JsonObject &new_node) {
+void Model::addNodeMeasurementsMinMax(JsonObject& raw_node_data,
+                                      JsonObject& new_node) {
+  // Copy measurements_min_max if it exists
+  if (raw_node_data["measurements_min_max"].is<JsonObject>()) {
+    JsonObject new_measurements_min_max =
+        new_node["measurements_min_max"].to<JsonObject>();
+    JsonObject measurements_min_max =
+        raw_node_data["measurements_min_max"].as<JsonObject>();
+    for (JsonPair device : measurements_min_max) {
+      JsonObject new_device =
+          new_measurements_min_max[device.key()].to<JsonObject>();
+      for (JsonPair metric : device.value().as<JsonObject>()) {
+        JsonObject new_metric = new_device[metric.key()].to<JsonObject>();
+        JsonObject metric_values = metric.value().as<JsonObject>();
+        for (JsonPair minmax : metric_values) {
+          double value = minmax.value().as<JsonFloat>();
+          new_metric[minmax.key()] = value;
+        }
+      }
+    }
+  }
+}
+
+void Model::addNodeStaleState(DateTime& utc_timestamp,
+                              JsonObject& raw_node_data, JsonObject& new_node) {
   std::string node_stale = "";
   if (utc_timestamp.ok()) {
     if (raw_node_data["timestamp_utc"].is<JsonString>()) {
@@ -143,15 +167,15 @@ void Model::addNodeStaleState(DateTime &utc_timestamp,
 }
 
 void Model::addNodeStatusSection(
-    ArduinoJson::V742PB22::JsonObject &raw_node_data,
-    ArduinoJson::V742PB22::JsonObject &new_node) {
+    ArduinoJson::V742PB22::JsonObject& raw_node_data,
+    ArduinoJson::V742PB22::JsonObject& new_node) {
   if (raw_node_data["status"].is<JsonObject>()) {
     new_node["status"] = raw_node_data["status"].as<JsonObject>();
   }
 }
 
-void Model::addNodeBatteryLevel(JsonObject &raw_node_data,
-                                JsonObject &new_node) {
+void Model::addNodeBatteryLevel(JsonObject& raw_node_data,
+                                JsonObject& new_node) {
   if (raw_node_data["measurements_v2"].is<JsonObject>()) {
     JsonObject measurements_v2 =
         raw_node_data["measurements_v2"].as<JsonObject>();
@@ -174,16 +198,16 @@ std::string Model::toJsonString() const {
   return output;
 }
 
-bool Model::fromJsonString(const std::string &json_str) {
+bool Model::fromJsonString(const std::string& json_str) {
   DeserializationError error = deserializeJson(*doc_, json_str);
   return !error;
 }
 
-bool Model::operator==(const Model &other) const {
+bool Model::operator==(const Model& other) const {
   if (doc_->size() != other.doc_->size()) return false;
 
   for (JsonPair kvp : (*doc_).as<JsonObject>()) {
-    const char *key = kvp.key().c_str();
+    const char* key = kvp.key().c_str();
     if (!(other.doc_)->operator[](key).is<JsonVariant>()) {
       Serial.printf("Key '%s' not found in other model\n", key);
       return false;
@@ -257,7 +281,7 @@ bool Model::operator==(const Model &other) const {
   return true;
 }
 
-bool Model::operator!=(const Model &other) const { return !(*this == other); }
+bool Model::operator!=(const Model& other) const { return !(*this == other); }
 
 std::string Model::get(std::string key, std::string subkey) const {
   if (doc_->operator[](key).is<JsonObject>()) {
@@ -284,7 +308,7 @@ char Model::batteryLevelToChar(float battery_percentage) {
   return battery_chars[char_offset];
 }
 
-void Model::buildFromJson(JsonDocument *doc, DateTime utc_timestamp,
+void Model::buildFromJson(JsonDocument* doc, DateTime utc_timestamp,
                           DateTime local_timestamp) {
   std::string display_date = "(Date unknown)";
   if (local_timestamp.ok()) {
@@ -298,7 +322,7 @@ void Model::buildFromJson(JsonDocument *doc, DateTime utc_timestamp,
   addNodes((*doc)["nodes"], utc_timestamp);
 }
 
-void Model::calculateSunAndMoon(DateTime local_timestamp, JsonDocument *doc) {
+void Model::calculateSunAndMoon(DateTime local_timestamp, JsonDocument* doc) {
   // Get location data from response config section if available
   double latitude = 48.866667;
   double longitude = 2.333333;
