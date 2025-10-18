@@ -3,6 +3,7 @@
 #include "epd_view_2.h"
 
 #include "fonts/moon_phases_48pt.h"
+#include "version.h"
 
 EPDView2::EPDView2() : display_(nullptr), u8g2_() {}
 
@@ -43,14 +44,15 @@ void EPDView2::render() {
       u8g2_.println("Failed to get data - local sensor only");
       displayLocalSensorData();
     } else {
-      // u8g2_.printf("%s  ", model_.getDateTime().c_str());
-      // u8g2_.println();
-      // u8g2_.println();
+      uint row_offset = displayNodes();
 
-      // displaySunAndMoon();
-      // u8g2_.println();
+      row_offset += font_height_spacing_24pt;
+      u8g2_.setCursor(0, row_offset);
+      displaySunAndMoon();
 
-      displayNodes();
+      row_offset += font_height_spacing_24pt * 3;
+      u8g2_.setCursor(0, row_offset);
+      u8g2_.printf("%s  ", model_.getDateTime().c_str());
     }
   } while ((*display_).nextPage());
 }
@@ -78,78 +80,127 @@ void EPDView2::displaySunAndMoon() {
   u8g2_.setFont(moon_phases_48pt);
   u8g2_.print(model_.getMoonPhaseLetter());
   u8g2_.setFont(defaultFont);
-  u8g2_.println();
-
-  u8g2_.printf("      %s\n", model_.getMoonPhase().c_str());
 }
 
-void EPDView2::displayNodes() {
+uint EPDView2::displayNodes() {
   JsonObject nodes = model_.getNodeData();
   int column = 0;
   int node_count = nodes.size();
+  uint max_row_offset = 0;
   for (JsonPair node : nodes) {
     uint8_t row = 1;
+    uint row_offset = 0;
     JsonObject nodeData = node.value().as<JsonObject>();
-    displayNodeHeader(node, nodeData, node_count, column, row);
-    displayNodeMeasurements(nodeData, node_count, column, row);
-    // u8g2_.println();
+    displayNodeHeader(node, nodeData, node_count, column, row, row_offset);
+    displayNodeMeasurements(nodeData, node_count, column, row, row_offset);
+    displayBatteryLevel(nodeData, node_count, column, row, row_offset);
+    displayBadStatuses(nodeData, node_count, column, row, row_offset);
+    displayGitVersion(nodeData, node_count, column, row, row_offset);
+    displayStaleState(nodeData, node_count, column, row, row_offset);
+
     column++;
+    if (row_offset > max_row_offset) {
+      max_row_offset = row_offset;
+    }
   }
+
+  return max_row_offset;
 }
 
 void EPDView2::displayNodeHeader(JsonPair& node, JsonObject& nodeData,
-                                 int node_count, int column, uint8_t& row) {
+                                 int node_count, int column, uint8_t& row,
+                                 uint& row_offset) {
   JsonObject node_data = model_.getNodeData()[node.key()].as<JsonObject>();
 
   std::string display_name = node_data["display_name"].as<String>().c_str();
   int column_width = display_->width() / node_count;
-  u8g2_.setCursor(column * column_width, row * font_height_spacing_24pt);
-  u8g2_.printf("%s", display_name.c_str());
+  row_offset = row * font_height_spacing_24pt;
   row++;
+  u8g2_.setCursor(column * column_width, row_offset);
+  u8g2_.printf("%s", display_name.c_str());
 
-  // displayBatteryLevel(node_data["battery_level"].as<JsonString>());
-  // displayBadStatuses(nodeData);
-
-  // std::string node_stale = node_data["stale_state"].as<String>().c_str();
-  // if (node_stale != "") {
-  //   u8g2_.printf(" %s", node_stale.c_str());
-  // }
-  // u8g2_.println();
+  // Leave an empty half row after header
+  row_offset += font_height_spacing_24pt / 2;
+  row++;
 }
 
-void EPDView2::displayBadStatuses(JsonObject& nodeData) {
+void EPDView2::displayBadStatuses(JsonObject& nodeData, int node_count,
+                                  int column, uint8_t& row, uint& row_offset) {
+  int column_width = display_->width() / node_count;
+  int row_height = font_height_spacing_16pt;
+
+  u8g2_.setFont(smallFont);
+
   // Display status entries that are not "ok"
   if (nodeData["status"].is<JsonObject>()) {
     JsonObject status = nodeData["status"].as<JsonObject>();
     for (JsonPair kvp : status) {
       String value = kvp.value().as<String>();
-      if (value != "ok") {
+      if (value != "ok" || true) {
+        row_offset += row_height;
+        row++;
+        u8g2_.setCursor(column * column_width, row_offset);
         String key = kvp.key().c_str();
-        u8g2_.printf(" %s=%s", key.c_str(), value.c_str());
+        u8g2_.printf("%s:%s", key.c_str(), value.c_str());
       }
     }
   }
+
+  u8g2_.setFont(defaultFont);
+}
+
+void EPDView2::displayGitVersion(JsonObject& nodeData, int node_count,
+                                 int column, uint8_t& row, uint& row_offset) {
+  int column_width = display_->width() / node_count;
+  int row_height = font_height_spacing_16pt;
+
+  u8g2_.setFont(smallFont);
+
+  row_offset += row_height;
+  row++;
+  u8g2_.setCursor(column * column_width, row_offset);
+  u8g2_.printf("%s", GIT_COMMIT_HASH);
+
+  u8g2_.setFont(defaultFont);
+}
+
+void EPDView2::displayStaleState(JsonObject& nodeData, int node_count,
+                                 int column, uint8_t& row, uint& row_offset) {
+  int column_width = display_->width() / node_count;
+  int row_height = font_height_spacing_16pt;
+
+  u8g2_.setFont(smallFont);
+
+  row_offset += row_height;
+  row++;
+  u8g2_.setCursor(column * column_width, row_offset);
+
+  std::string node_stale = nodeData["stale_state"].as<String>().c_str();
+  if (node_stale != "") {
+    u8g2_.printf(" %s", node_stale.c_str());
+  }
+
+  u8g2_.setFont(defaultFont);
 }
 
 void EPDView2::displayNodeMeasurements(JsonObject& nodeData, int node_count,
-                                       int column, uint8_t& row) {
+                                       int column, uint8_t& row,
+                                       uint& row_offset) {
   if (nodeData["measurements_v2"].is<JsonObject>()) {
-    Serial.println("Found measurements_v2");
     JsonObject measurements_v2 = nodeData["measurements_v2"].as<JsonObject>();
     std::vector<std::string> devices = {"bme680", "sht31d"};
     for (const auto& device : devices) {
       displayDeviceMeasurements(measurements_v2, device, nodeData, node_count,
-                                column, row);
+                                column, row, row_offset);
     }
-  } else {
-    Serial.println("No measurements_v2 found");
   }
 }
 
 void EPDView2::displayDeviceMeasurements(JsonObject& measurements_v2,
                                          const std::string& device,
                                          JsonObject& nodeData, int node_count,
-                                         int column, uint8_t& row) {
+                                         int column, uint8_t& row,
+                                         uint& row_offset) {
   int column_width = display_->width() / node_count;
   int row_height = font_height_spacing_24pt;
 
@@ -158,27 +209,38 @@ void EPDView2::displayDeviceMeasurements(JsonObject& measurements_v2,
     JsonObject device_map = measurements_v2[device].as<JsonObject>();
     if (device_map["temperature"].is<JsonVariant>()) {
       auto min_max = getDeviceMinMax(nodeData, device, "temperature");
-      Serial.printf("Cursor set to (%d, %d)\n", column * column_width,
-                    row * row_height);
-      u8g2_.setCursor(column * column_width, (row++) * row_height);
       if (min_max.first) {
-        u8g2_.printf(" %.1f(%.1f/%.1f)°C ", float(device_map["temperature"]),
-                     min_max.second.first, min_max.second.second);
-      } else {
-        u8g2_.printf(" %.1f°C", float(device_map["temperature"]));
+        u8g2_.setFont(smallFont);
+        row_offset += font_height_spacing_16pt;
+        row++;
+        u8g2_.setCursor(column * column_width, row_offset);
+        u8g2_.printf("%.1f°C ", min_max.second.first);
+        u8g2_.setFont(defaultFont);
+      }
+      row_offset += row_height;
+      row++;
+      u8g2_.setCursor(column * column_width, row_offset);
+      u8g2_.printf("%.1f°C", float(device_map["temperature"]));
+      if (min_max.first) {
+        u8g2_.setFont(smallFont);
+        row_offset += font_height_spacing_16pt;
+        row++;
+        u8g2_.setCursor(column * column_width, row_offset);
+        u8g2_.printf("%.1f°C ", min_max.second.second);
+        u8g2_.setFont(defaultFont);
       }
     }
     if (device_map["humidity"].is<JsonVariant>()) {
-      Serial.printf("Cursor set to (%d, %d)\n", column * column_width,
-                    row * row_height);
-      u8g2_.setCursor(column * column_width, (row++) * row_height);
-      u8g2_.printf(" %.1f%% ", float(device_map["humidity"]));
+      row_offset += row_height;
+      row++;
+      u8g2_.setCursor(column * column_width, row_offset);
+      u8g2_.printf("%.1f%% ", float(device_map["humidity"]));
     }
     if (device_map["pressure"].is<JsonVariant>()) {
-      Serial.printf("Cursor set to (%d, %d)\n", column * column_width,
-                    row * row_height);
-      u8g2_.setCursor(column * column_width, (row++) * row_height);
-      u8g2_.printf(" %.0fhPa ", float(device_map["pressure"]));
+      row_offset += row_height;
+      row++;
+      u8g2_.setCursor(column * column_width, row_offset);
+      u8g2_.printf("%.0fhPa ", float(device_map["pressure"]));
     }
   }
 }
@@ -207,8 +269,20 @@ std::pair<bool, std::pair<float, float>> EPDView2::getDeviceMinMax(
   return std::make_pair(found, std::make_pair(min, max));
 }
 
-void EPDView2::displayBatteryLevel(JsonString level) {
-  u8g2_.print(" ");
+void EPDView2::displayBatteryLevel(JsonObject& nodeData, int node_count,
+                                   int column, uint8_t& row, uint& row_offset) {
+  if (!nodeData["battery_level"].is<JsonString>()) {
+    return;
+  }
+
+  int column_width = display_->width() / node_count;
+  int row_height = font_height_spacing_24pt;
+  row_offset += row_height;
+  row++;
+
+  std::string level = nodeData["battery_level"].as<JsonString>().c_str();
+
+  u8g2_.setCursor(column * column_width, row_offset);
   u8g2_.setFont(u8g2_font_battery24_tr);
   u8g2_.print(level.c_str());
   u8g2_.setFont(defaultFont);

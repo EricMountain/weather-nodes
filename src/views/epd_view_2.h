@@ -34,23 +34,36 @@ class EPDView2 : public DisplayView {
   GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT>* display_;
   U8G2_FOR_ADAFRUIT_GFX u8g2_;
 
+  // Font metrics:
+  // https://digitalaccessibility.virginia.edu/accessibility-font-size-conversions
+
   // 24pt fonts
   const uint8_t* defaultFont = u8g2_font_inb24_mf;
   const uint8_t* batteryFont = u8g2_font_battery24_tr;
   static const uint8_t font_height_spacing_24pt = 32 + 3;
 
+  // 16pt fonts
+  const uint8_t* smallFont = u8g2_font_inb16_mf;
+  static const uint8_t font_height_spacing_16pt = 22 + 2;
+
   void displaySunAndMoon();
-  void displayNodes();
+  uint displayNodes();
   void displayNodeHeader(JsonPair& node, JsonObject& nodeData, int node_count,
-                         int column, uint8_t& row);
+                         int column, uint8_t& row, uint& row_offset);
   void displayNodeMeasurements(JsonObject& nodeData, int node_count, int column,
-                               uint8_t& row);
+                               uint8_t& row, uint& row_offset);
   void displayDeviceMeasurements(JsonObject& measurements_v2,
                                  const std::string& device,
                                  JsonObject& nodeData, int node_count,
-                                 int column, uint8_t& row);
-  void displayBatteryLevel(JsonString level);
-  void displayBadStatuses(JsonObject& nodeData);
+                                 int column, uint8_t& row, uint& row_offset);
+  void displayBatteryLevel(JsonObject& nodeData, int node_count, int column,
+                           uint8_t& row, uint& row_offset);
+  void displayBadStatuses(JsonObject& nodeData, int node_count, int column,
+                          uint8_t& row, uint& row_offset);
+  void displayGitVersion(JsonObject& nodeData, int node_count, int column,
+                         uint8_t& row, uint& row_offset);
+  void displayStaleState(JsonObject& nodeData, int node_count, int column,
+                         uint8_t& row, uint& row_offset);
   std::pair<bool, std::pair<float, float>> getDeviceMinMax(
       JsonObject& nodeData, const std::string& device,
       const std::string& measurement);
