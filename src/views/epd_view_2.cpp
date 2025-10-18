@@ -188,7 +188,6 @@ void EPDView2::displayDeviceMeasurements(JsonObject& measurements_v2,
   int row_height = font_height_spacing_24pt;
 
   if (measurements_v2[device].is<JsonObject>()) {
-    Serial.printf("Displaying measurements for device: %s\n", device.c_str());
     JsonObject device_map = measurements_v2[device].as<JsonObject>();
     if (device_map["temperature"].is<JsonVariant>()) {
       auto min_max = getDeviceMinMax(nodeData, device, "temperature");
