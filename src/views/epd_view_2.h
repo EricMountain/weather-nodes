@@ -33,18 +33,22 @@ class EPDView2 : public DisplayView {
  private:
   GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT>* display_;
   U8G2_FOR_ADAFRUIT_GFX u8g2_;
+
+  // 24pt fonts
   const uint8_t* defaultFont = u8g2_font_inb24_mf;
+  const uint8_t* batteryFont = u8g2_font_battery24_tr;
+  static const uint8_t font_height_spacing_24pt = 32 + 3;
 
   void displaySunAndMoon();
   void displayNodes();
   void displayNodeHeader(JsonPair& node, JsonObject& nodeData, int node_count,
-                         int column);
-  void displayNodeMeasurements(JsonObject& nodeData, int node_count,
-                               int column);
+                         int column, uint8_t& row);
+  void displayNodeMeasurements(JsonObject& nodeData, int node_count, int column,
+                               uint8_t& row);
   void displayDeviceMeasurements(JsonObject& measurements_v2,
                                  const std::string& device,
                                  JsonObject& nodeData, int node_count,
-                                 int column);
+                                 int column, uint8_t& row);
   void displayBatteryLevel(JsonString level);
   void displayBadStatuses(JsonObject& nodeData);
   std::pair<bool, std::pair<float, float>> getDeviceMinMax(

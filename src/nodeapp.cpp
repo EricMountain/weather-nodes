@@ -44,7 +44,7 @@ void NodeApp::setup() {
   setupWiFi();
   registerSensors();
 #ifdef HAS_DISPLAY
-  view_ = new EPDView();
+  view_ = new EPDView2();
 #endif
   Serial.printf("Weather Node git commit: %s\n", GIT_COMMIT_HASH);
 }

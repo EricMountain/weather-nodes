@@ -88,22 +88,24 @@ void EPDView2::displayNodes() {
   int column = 0;
   int node_count = nodes.size();
   for (JsonPair node : nodes) {
+    uint8_t row = 1;
     JsonObject nodeData = node.value().as<JsonObject>();
-    displayNodeHeader(node, nodeData, node_count, column);
-    displayNodeMeasurements(nodeData, node_count, column);
+    displayNodeHeader(node, nodeData, node_count, column, row);
+    displayNodeMeasurements(nodeData, node_count, column, row);
     // u8g2_.println();
     column++;
   }
 }
 
 void EPDView2::displayNodeHeader(JsonPair& node, JsonObject& nodeData,
-                                 int node_count, int column) {
+                                 int node_count, int column, uint8_t& row) {
   JsonObject node_data = model_.getNodeData()[node.key()].as<JsonObject>();
 
   std::string display_name = node_data["display_name"].as<String>().c_str();
   int column_width = display_->width() / node_count;
-  u8g2_.setCursor(column * column_width, 32 + 3);  // Font height + spacing
+  u8g2_.setCursor(column * column_width, row * font_height_spacing_24pt);
   u8g2_.printf("%s", display_name.c_str());
+  row++;
 
   // displayBatteryLevel(node_data["battery_level"].as<JsonString>());
   // displayBadStatuses(nodeData);
@@ -130,14 +132,14 @@ void EPDView2::displayBadStatuses(JsonObject& nodeData) {
 }
 
 void EPDView2::displayNodeMeasurements(JsonObject& nodeData, int node_count,
-                                       int column) {
+                                       int column, uint8_t& row) {
   if (nodeData["measurements_v2"].is<JsonObject>()) {
     Serial.println("Found measurements_v2");
     JsonObject measurements_v2 = nodeData["measurements_v2"].as<JsonObject>();
     std::vector<std::string> devices = {"bme680", "sht31d"};
     for (const auto& device : devices) {
       displayDeviceMeasurements(measurements_v2, device, nodeData, node_count,
-                                column);
+                                column, row);
     }
   } else {
     Serial.println("No measurements_v2 found");
@@ -147,10 +149,9 @@ void EPDView2::displayNodeMeasurements(JsonObject& nodeData, int node_count,
 void EPDView2::displayDeviceMeasurements(JsonObject& measurements_v2,
                                          const std::string& device,
                                          JsonObject& nodeData, int node_count,
-                                         int column) {
+                                         int column, uint8_t& row) {
   int column_width = display_->width() / node_count;
-  int row_height = 32 + 3;  // Font height + spacing
-  int row = 2;
+  int row_height = font_height_spacing_24pt;
 
   if (measurements_v2[device].is<JsonObject>()) {
     Serial.printf("Displaying measurements for device: %s\n", device.c_str());
@@ -179,7 +180,6 @@ void EPDView2::displayDeviceMeasurements(JsonObject& measurements_v2,
       u8g2_.setCursor(column * column_width, (row++) * row_height);
       u8g2_.printf(" %.0fhPa ", float(device_map["pressure"]));
     }
-    // u8g2_.println();
   }
 }
 
