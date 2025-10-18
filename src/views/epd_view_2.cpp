@@ -95,7 +95,6 @@ uint EPDView2::displayNodes() {
     displayNodeMeasurements(nodeData, node_count, column, row, row_offset);
     displayBatteryLevel(nodeData, node_count, column, row, row_offset);
     displayBadStatuses(nodeData, node_count, column, row, row_offset);
-    displayGitVersion(nodeData, node_count, column, row, row_offset);
     displayStaleState(nodeData, node_count, column, row, row_offset);
 
     column++;
@@ -144,21 +143,6 @@ void EPDView2::displayBadStatuses(JsonObject& nodeData, int node_count,
       }
     }
   }
-
-  u8g2_.setFont(defaultFont);
-}
-
-void EPDView2::displayGitVersion(JsonObject& nodeData, int node_count,
-                                 int column, uint8_t& row, uint& row_offset) {
-  int column_width = display_->width() / node_count;
-  int row_height = font_height_spacing_16pt;
-
-  u8g2_.setFont(smallFont);
-
-  row_offset += row_height;
-  row++;
-  u8g2_.setCursor(column * column_width, row_offset);
-  u8g2_.printf("%s", GIT_COMMIT_HASH);
 
   u8g2_.setFont(defaultFont);
 }
