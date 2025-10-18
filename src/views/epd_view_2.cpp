@@ -116,7 +116,7 @@ void EPDView2::displayNodeHeader(JsonPair& node, JsonObject& nodeData,
   row_offset = row * font_height_spacing_24pt;
   row++;
   u8g2_.setCursor(column * column_width, row_offset);
-  u8g2_.printf("% s", display_name.c_str());
+  u8g2_.printf("%s ", display_name.c_str());
   displayBatteryLevel(nodeData);
 
   // Leave an empty half row after header
