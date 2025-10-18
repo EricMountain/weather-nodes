@@ -328,7 +328,6 @@ void NodeApp::updateDisplay() {
     return;
   }
   if (!view_->buildModel(doc_, sensors_)) {
-    Serial.println("Display update not needed");
     return;
   }
   view_->render();
