@@ -16,8 +16,7 @@ bool DisplayView::buildModel(JsonDocument* doc,
   model_.buildFromJson(doc_, utc_timestamp_, local_timestamp_);
 
   Controller c = Controller(model_);
-  // return c.needRefresh();
-  return true;
+  return c.needRefresh();
 }
 
 DateTime DisplayView::parseTimestampValue(const String& timestamp_key) {
