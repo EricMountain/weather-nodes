@@ -159,7 +159,7 @@ void EPDView2::displayStaleState(JsonObject& nodeData, int node_count,
   u8g2_.setCursor(column * column_width, row_offset);
 
   std::string node_stale = nodeData["stale_state"].as<String>().c_str();
-  if (node_stale != "") {
+  if (!node_stale.empty()) {
     u8g2_.printf(" %s", node_stale.c_str());
   }
 
