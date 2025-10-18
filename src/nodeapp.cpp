@@ -145,7 +145,6 @@ void NodeApp::doPost(WiFiClientSecure& client) {
     std::string payload = buildPayload();
     // TODO: implement retries with exponential backoff
     int httpCode = httpPost.POST(String(payload.c_str()));
-    // httpCode is negative on error
     if (httpCode > 0) {
       Serial.printf("[HTTPS] POST... code: %d\n", httpCode);
       String payload = httpPost.getString();
