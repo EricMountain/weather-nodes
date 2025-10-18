@@ -34,13 +34,11 @@ class NodeApp {
 #endif
   {
     doc_ = nullptr;
-    bmeOK_ = false;
   }
 
   void setup();
   void updateDisplay();
   void setJsonDoc(JsonDocument* d) { doc_ = d; }
-  void setBmeOK(bool ok) { bmeOK_ = ok; }
   void goToSleep();
   void doApiCalls();
 
@@ -54,9 +52,6 @@ class NodeApp {
   std::map<std::string, Sensor*> sensors_;
 
   JsonDocument* doc_;
-
-  // TODO remove
-  bool bmeOK_;
 
   void setupSerial();
   void registerSensors();
