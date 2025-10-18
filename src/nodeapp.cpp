@@ -156,8 +156,8 @@ void NodeApp::doPost(WiFiClientSecure& client) {
     } else {
       Serial.printf("[HTTPS] POST... failed, error: %s\n",
                     httpPost.errorToString(httpCode).c_str());
-      // TODO: flag error for later display
     }
+    http_post_error_code_ = httpCode;
   }
   httpPost.end();
 }
@@ -327,6 +327,14 @@ void NodeApp::doGet(WiFiClientSecure& client) {
     delay(1000 * (4 - attempts));  // Wait longer for each retry
   }
 
+  if (doc != nullptr) {
+    // Extract device_id from the top level of the response
+    if ((*doc)["device_id"].is<JsonString>()) {
+      device_id_ = (*doc)["device_id"].as<std::string>();
+      Serial.printf("Device ID from response: %s\n", device_id_.c_str());
+    }
+  }
+
   doc_ = doc;
 }
 
@@ -335,6 +343,8 @@ void NodeApp::updateDisplay() {
     Serial.println("View not initialized");
     return;
   }
+  view_->setHttpPostErrorCode(http_post_error_code_);
+  view_->setCurrentDeviceId(device_id_);
   if (!view_->buildModel(doc_, sensors_)) {
     return;
   }

@@ -31,12 +31,19 @@ class Model {
   char getMoonPhaseLetter() const;
   void addNodes(JsonObject nodes, DateTime& utc_timestamp);
   void addNode(JsonPair& node, DateTime& utc_timestamp);
+  void setHttpPostErrorCode(int error_code) {
+    http_post_error_code_ = error_code;
+  }
+  void setCurrentDeviceId(const std::string& device_id) {
+    current_device_id_ = device_id;
+  }
   void addNodeMeasurementsV2(JsonObject& raw_node_data, JsonObject& new_node);
   void addNodeMeasurementsMinMax(JsonObject& raw_node_data,
                                  JsonObject& new_node);
   void addNodeStaleState(DateTime& utc_timestamp, JsonObject& raw_node_data,
                          JsonObject& new_node);
-  void addNodeStatusSection(JsonObject& raw_node_data, JsonObject& new_node);
+  void addNodeStatusSection(JsonObject& raw_node_data, JsonObject& new_node,
+                            const char* device_id = "");
   void addNodeBatteryLevel(JsonObject& raw_node_data, JsonObject& new_node);
   JsonObject getNodeData() const;
   std::string toJsonString() const;
@@ -50,6 +57,8 @@ class Model {
  private:
   JsonDocument* doc_;
   bool jsonLoadOK_ = false;
+  int http_post_error_code_ = 0;
+  std::string current_device_id_;
   std::string get(std::string key, std::string subkey) const;
   char batteryLevelToChar(float battery_percentage);
 };

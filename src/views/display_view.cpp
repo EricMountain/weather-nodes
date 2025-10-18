@@ -5,7 +5,7 @@ bool DisplayView::buildModel(JsonDocument* doc,
   doc_ = doc;
   sensors_ = sensors;
 
-  // Force render if we have no data
+  // Only build model if we have a valid document
   if (doc_ == nullptr || doc_->isNull() || !(*doc_)["nodes"].is<JsonObject>()) {
     return true;
   }
@@ -13,6 +13,8 @@ bool DisplayView::buildModel(JsonDocument* doc,
   utc_timestamp_ = parseTimestampValue("timestamp_utc");
   local_timestamp_ = parseTimestampValue("timestamp_local");
 
+  model_.setHttpPostErrorCode(http_post_error_code_);
+  model_.setCurrentDeviceId(current_device_id_);
   model_.buildFromJson(doc_, utc_timestamp_, local_timestamp_);
 
   Controller c = Controller(model_);

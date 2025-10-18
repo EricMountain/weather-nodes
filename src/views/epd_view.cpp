@@ -121,6 +121,11 @@ void EPDView::displayBadStatuses(JsonObject& nodeData) {
       }
     }
   }
+
+  // Display HTTP POST error code as a special case
+  if (http_post_error_code_ != 0) {
+    u8g2_.printf(" http_post=error_%d", http_post_error_code_);
+  }
 }
 
 void EPDView::displayNodeMeasurements(JsonObject& nodeData) {
