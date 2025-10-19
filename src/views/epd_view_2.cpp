@@ -56,6 +56,7 @@ void EPDView2::render() {
       u8g2_.printf("%s  ", model_.getDateTime().c_str());
     }
   } while ((*display_).nextPage());
+  Serial.println("E-Paper full render completed");
 }
 
 void EPDView2::partialRender() {
@@ -66,8 +67,9 @@ void EPDView2::partialRender() {
 
   Serial.println("E-Paper partial render started");
 
-  (*display_).setPartialWindow(display_->width() - 100, display_->height() - 50,
-                               display_->width(), display_->height());
+  int x = display_->width() - 100;
+  int y = display_->height() - 50;
+  (*display_).setPartialWindow(x, y, 100, 50);
   (*display_).firstPage();
   do {
     u8g2_.setFontMode(0);
@@ -75,7 +77,7 @@ void EPDView2::partialRender() {
     u8g2_.setForegroundColor(GxEPD_BLACK);
     u8g2_.setBackgroundColor(GxEPD_WHITE);
     u8g2_.setFont(defaultFont);
-    u8g2_.setCursor(0, 24);
+    u8g2_.setCursor(x, y + 24);
     u8g2_.printf("%s  ", model_.getDateTime().c_str());
   } while ((*display_).nextPage());
   Serial.println("E-Paper partial render completed");
