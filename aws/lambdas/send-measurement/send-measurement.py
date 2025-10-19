@@ -124,7 +124,7 @@ def check_for_ota_update(api_key_response_item, input, response):
                     "get_object",
                     Params={
                         "Bucket": ota_update["s3_bucket"],
-                        "Key": ota_update["s3_key"],
+                        "Key": ota_update["s3_key"].format(target_version=ota_update["target_version"]),
                     },
                     ExpiresIn=3600, # seconds
                 )
