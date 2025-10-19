@@ -39,7 +39,6 @@
 #include "version.h"
 
 void NodeApp::setup() {
-  // setupSerial();
   setupWiFi();
   registerSensors();
 #ifdef HAS_DISPLAY
@@ -50,20 +49,6 @@ void NodeApp::setup() {
   }
 #endif
   Serial.printf("Weather Node git commit: %s\n", GIT_COMMIT_HASH);
-}
-
-void NodeApp::setupSerial() {
-  int attempts = 20;
-  Serial.begin(115200);
-  while (!Serial) {
-    delay(100 / (attempts < 1 ? 1 : attempts));
-    if (--attempts <= 0) {
-      Serial.println(
-          "Gave up waiting for serial monitor, continuing... (so this "
-          "shouldn't appear...)");
-      break;
-    }
-  }
 }
 
 void NodeApp::setupWiFi() {
