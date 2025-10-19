@@ -34,8 +34,13 @@ class EPDView2 : public DisplayView {
   GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT>* display_;
   U8G2_FOR_ADAFRUIT_GFX u8g2_;
 
-  // Font metrics:
+  // Font list and metrics:
+  // https://github.com/olikraus/u8g2/wiki/fntlistall
   // https://digitalaccessibility.virginia.edu/accessibility-font-size-conversions
+
+  // 38pt fonts
+  const uint8_t* largeFont = u8g2_font_inb38_mf;
+  static const uint8_t font_height_spacing_38pt = 50 + 3;
 
   // 24pt fonts
   const uint8_t* defaultFont = u8g2_font_inb24_mf;
@@ -44,7 +49,7 @@ class EPDView2 : public DisplayView {
 
   // 16pt fonts
   const uint8_t* smallFont = u8g2_font_inb16_mf;
-  static const uint8_t font_height_spacing_16pt = 22 + 2;
+  static const uint8_t font_height_spacing_16pt = 22 + 3;
 
   void displaySunAndMoon();
   uint displayNodes();
