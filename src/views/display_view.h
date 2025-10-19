@@ -45,6 +45,11 @@ class DisplayView {
   virtual void render() = 0;
 
   /**
+   * Partial render of the model to the display hardware.
+   */
+  virtual void partialRender() = 0;
+
+  /**
    * Cleanup display resources (e.g., put display to sleep).
    */
   virtual void cleanup() = 0;

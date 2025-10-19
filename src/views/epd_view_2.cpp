@@ -10,13 +10,11 @@ EPDView2::EPDView2() : display_(nullptr), u8g2_() {}
 EPDView2::~EPDView2() { cleanup(); }
 
 void EPDView2::cleanup() {
-  // #ifndef LIGHT_SLEEP_ENABLED
   if (display_ != nullptr) {
     display_->hibernate();
     delete display_;
     display_ = nullptr;
   }
-  // #endif
 }
 
 void EPDView2::render() {
@@ -28,6 +26,8 @@ void EPDView2::render() {
     Serial.println("E-Paper display initialized");
     (*display_).setRotation(0);  // Landscape
     u8g2_.begin(*display_);
+  } else {
+    Serial.println("E-Paper display previously initialized");
   }
 
   (*display_).setFullWindow();
@@ -56,6 +56,29 @@ void EPDView2::render() {
       u8g2_.printf("%s  ", model_.getDateTime().c_str());
     }
   } while ((*display_).nextPage());
+}
+
+void EPDView2::partialRender() {
+  if (display_ == nullptr) {
+    Serial.println("E-Paper display not initialized for partial render");
+    return;
+  }
+
+  Serial.println("E-Paper partial render started");
+
+  (*display_).setPartialWindow(display_->width() - 100, display_->height() - 50,
+                               display_->width(), display_->height());
+  (*display_).firstPage();
+  do {
+    u8g2_.setFontMode(0);
+    u8g2_.setFontDirection(0);
+    u8g2_.setForegroundColor(GxEPD_BLACK);
+    u8g2_.setBackgroundColor(GxEPD_WHITE);
+    u8g2_.setFont(defaultFont);
+    u8g2_.setCursor(0, 24);
+    u8g2_.printf("%s  ", model_.getDateTime().c_str());
+  } while ((*display_).nextPage());
+  Serial.println("E-Paper partial render completed");
 }
 
 void EPDView2::displayLocalSensorData() {

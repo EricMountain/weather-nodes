@@ -78,5 +78,6 @@ class EPDView2 : public DisplayView {
   ~EPDView2() override;
 
   void render() override;
+  void partialRender() override;
   void cleanup() override;
 };
