@@ -192,34 +192,22 @@ void EPDView2::displayDeviceMeasurements(JsonObject& measurements_v2,
     JsonObject device_map = measurements_v2[device].as<JsonObject>();
     if (device_map["temperature"].is<JsonVariant>()) {
       auto min_max = getDeviceMinMax(nodeData, device, "temperature");
-
-      // Display min temperature if available
       if (min_max.first) {
         u8g2_.setFont(smallFont);
         row_offset += font_height_spacing_16pt;
         row++;
         u8g2_.setCursor(column * column_width, row_offset);
-        u8g2_.printf("%.1f°C ", min_max.second.first);
+        u8g2_.printf("%.1f°C %.1f°C", min_max.second.first,
+                     min_max.second.second);
         u8g2_.setFont(defaultFont);
       }
 
-      // Display current temperature
       u8g2_.setFont(largeFont);
       row_offset += font_height_spacing_38pt;
       row++;
       u8g2_.setCursor(column * column_width, row_offset);
       u8g2_.printf("%.1f°C", float(device_map["temperature"]));
       u8g2_.setFont(defaultFont);
-
-      // Display max temperature if available
-      if (min_max.first) {
-        u8g2_.setFont(smallFont);
-        row_offset += font_height_spacing_16pt;
-        row++;
-        u8g2_.setCursor(column * column_width, row_offset);
-        u8g2_.printf("%.1f°C ", min_max.second.second);
-        u8g2_.setFont(defaultFont);
-      }
     }
     if (device_map["humidity"].is<JsonVariant>()) {
       u8g2_.setFont(largeFont);
