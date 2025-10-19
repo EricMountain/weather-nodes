@@ -331,11 +331,16 @@ void Model::buildFromJson(JsonDocument* doc, DateTime utc_timestamp,
 
   std::string display_date = "(Date unknown)";
   if (local_timestamp.ok()) {
-    Serial.printf("Local time: %s\n",
+    Serial.printf("Local date: %s\n",
                   local_timestamp.format("%A %d %B %Y").c_str());
+    Serial.printf("Local time: %s\n",
+                  local_timestamp.format("%H:%M:%S").c_str());
     display_date = local_timestamp.niceDate();
+    setTime(local_timestamp.format("%H:%M:%S"));
+    setDate(display_date);
+  } else {
+    Serial.println("Local timestamp not OK");
   }
-  setDate(display_date);
 
   calculateSunAndMoon(local_timestamp, doc);
   addNodes((*doc)["nodes"], utc_timestamp);

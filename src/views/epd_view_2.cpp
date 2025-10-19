@@ -62,6 +62,7 @@ void EPDView2::fullRender() {
       u8g2_.setCursor(0, row_offset);
       displaySunAndMoon();
 
+      Serial.printf("Time: %s\n", model_.getTime().c_str());
       u8g2_.setFont(largeFont);
       u8g2_.setCursor(0, display_->height() - 10);
       u8g2_.printf("%s", model_.getTime().c_str());
@@ -83,8 +84,10 @@ bool EPDView2::partialRender() {
 
   Serial.println("E-Paper partial render started");
 
+  Serial.printf("Time: %s\n", model_.getTime().c_str());
   int x = 0;
   int y = display_->height() - 10 - font_height_spacing_38pt;
+  u8g2_.setFont(largeFont);
   uint str_width = u8g2_.getUTF8Width(model_.getTime().c_str());
   (*display_).setPartialWindow(x, y, str_width, font_height_spacing_38pt);
   (*display_).firstPage();
@@ -94,7 +97,6 @@ bool EPDView2::partialRender() {
     u8g2_.setForegroundColor(GxEPD_BLACK);
     u8g2_.setBackgroundColor(GxEPD_WHITE);
 
-    u8g2_.setFont(largeFont);
     u8g2_.setCursor(0, display_->height() - 10);
     u8g2_.printf("%s", model_.getTime().c_str());
   } while ((*display_).nextPage());
