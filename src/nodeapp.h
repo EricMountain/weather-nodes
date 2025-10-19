@@ -32,6 +32,25 @@ class NodeApp {
     doc_ = nullptr;
   }
 
+  ~NodeApp() {
+    Serial.println("Cleaning up NodeApp...");
+    for (auto& sensor : sensors_) {
+      delete sensor.second;
+    }
+    sensors_.clear();
+
+    if (doc_ != nullptr) {
+      delete doc_;
+    }
+
+#ifdef HAS_DISPLAY
+    if (view_ != nullptr) {
+      view_->cleanup();
+      delete view_;
+    }
+#endif
+  }
+
   void setup();
   void updateDisplay();
   void setJsonDoc(JsonDocument* d) { doc_ = d; }
