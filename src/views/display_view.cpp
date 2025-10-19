@@ -2,30 +2,38 @@
 
 bool DisplayView::buildModel(JsonDocument* doc,
                              const std::map<std::string, Sensor*>& sensors) {
-  doc_ = doc;
+  // if (doc_ != nullptr && doc_ != doc) {
+  //   // Clean up previous document if different
+  //   delete doc_;
+  // }
+  // doc_ = doc;
   sensors_ = sensors;
 
   // Only build model if we have a valid document
-  if (doc_ == nullptr || doc_->isNull() || !(*doc_)["nodes"].is<JsonObject>()) {
+  if (doc == nullptr || doc->isNull() || !(*doc)["nodes"].is<JsonObject>()) {
+    doc_is_valid_ = false;
     return true;
   }
 
-  utc_timestamp_ = parseTimestampValue("timestamp_utc");
-  local_timestamp_ = parseTimestampValue("timestamp_local");
+  doc_is_valid_ = true;
+
+  utc_timestamp_ = parseTimestampValue(doc, "timestamp_utc");
+  local_timestamp_ = parseTimestampValue(doc, "timestamp_local");
 
   model_.setHttpPostErrorCode(http_post_error_code_);
   model_.setCurrentDeviceId(current_device_id_);
-  model_.buildFromJson(doc_, utc_timestamp_, local_timestamp_);
+  model_.buildFromJson(doc, utc_timestamp_, local_timestamp_);
 
   Controller c = Controller(model_);
   return c.needRefresh();
 }
 
-DateTime DisplayView::parseTimestampValue(const String& timestamp_key) {
+DateTime DisplayView::parseTimestampValue(JsonDocument* doc,
+                                          const String& timestamp_key) {
   DateTime dt;
 
-  if ((*doc_)[timestamp_key].is<JsonString>()) {
-    std::string timestamp = (*doc_)[timestamp_key].as<String>().c_str();
+  if ((*doc)[timestamp_key].is<JsonString>()) {
+    std::string timestamp = (*doc)[timestamp_key].as<String>().c_str();
     dt = parseTimestamp(timestamp, timestamp_key);
   }
   return dt;

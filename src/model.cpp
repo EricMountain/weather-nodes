@@ -14,6 +14,12 @@ Model::Model(const std::string& json_str) {
   jsonLoadOK_ = fromJsonString(json_str);
 }
 
+Model::~Model() {
+  if (doc_ != nullptr) {
+    delete doc_;
+  }
+}
+
 void Model::setDateTime(const std::string& datetime_str) {
   (*doc_)["datetime"] = datetime_str;
 }
@@ -311,12 +317,16 @@ char Model::batteryLevelToChar(float battery_percentage) {
   int char_offset = round(level);
   Serial.printf("Battery percentage: %.1f%%, level: %.1f, char_offset: %d\n",
                 battery_percentage, level, char_offset);
-
   return battery_chars[char_offset];
 }
 
 void Model::buildFromJson(JsonDocument* doc, DateTime utc_timestamp,
                           DateTime local_timestamp) {
+  if (doc_ != nullptr) {
+    delete doc_;
+    doc_ = new JsonDocument();
+  }
+
   std::string display_date = "(Date unknown)";
   if (local_timestamp.ok()) {
     Serial.printf("Local time: %s\n",

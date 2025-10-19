@@ -2,7 +2,8 @@
 
 #include <LittleFS.h>
 
-Controller::Controller(Model &current) : current_(current) {
+Controller::Controller(Model& current) : current_(current) {
+  Model* lastDisplayed = nullptr;
   LittleFS.begin(true);
   if (LittleFS.exists(dataFilePath)) {
     File file = LittleFS.open(dataFilePath, "r");
@@ -11,8 +12,8 @@ Controller::Controller(Model &current) : current_(current) {
       while (file.available()) {
         json_str += (char)file.read();
       }
-      lastDisplayed_ = Model(json_str);
-      if (!lastDisplayed_.jsonLoadOK()) {
+      lastDisplayed = new Model(json_str);
+      if (!lastDisplayed->jsonLoadOK()) {
         Serial.println("Failed to parse last displayed model from file");
       }
     }
@@ -22,9 +23,9 @@ Controller::Controller(Model &current) : current_(current) {
   LittleFS.end();
 
   Serial.printf("Last displayed model: %s\n",
-                lastDisplayed_.toJsonString().c_str());
+                lastDisplayed->toJsonString().c_str());
 
-  needRefresh_ = !lastDisplayed_.jsonLoadOK() || (lastDisplayed_ != current_);
+  needRefresh_ = !lastDisplayed->jsonLoadOK() || (lastDisplayed != &current_);
   if (needRefresh_) {
     Serial.println(
         "Current model differs from last displayed model, need refresh");
@@ -34,6 +35,10 @@ Controller::Controller(Model &current) : current_(current) {
   } else {
     Serial.println(
         "Current model matches last displayed model, no refresh needed");
+  }
+
+  if (lastDisplayed != nullptr) {
+    delete lastDisplayed;
   }
 }
 

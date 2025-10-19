@@ -13,6 +13,7 @@ class Model {
  public:
   Model();
   Model(const std::string& json_str);
+  ~Model();
   bool jsonLoadOK() const { return jsonLoadOK_; }
   void setDateTime(const std::string& datetime_str);
   std::string getDateTime() const;
