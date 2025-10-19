@@ -161,7 +161,7 @@ void EPDView2::displayStaleState(JsonObject& nodeData, int node_count,
 
   std::string node_stale = nodeData["stale_state"].as<String>().c_str();
   if (!node_stale.empty()) {
-    u8g2_.printf(" %s", node_stale.c_str());
+    u8g2_.printf("%s", node_stale.c_str());
   }
 
   u8g2_.setFont(defaultFont);
