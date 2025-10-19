@@ -1,6 +1,8 @@
 #include "nodeapp.h"
 #include "secrets.h"
 
+NodeApp app(WIFI_SSID, WIFI_PASSWORD);
+
 void showHeapInfo(const char* msg) {
   size_t free_heap = heap_caps_get_free_size(MALLOC_CAP_8BIT);
   Serial.printf("%s - Free heap: %d bytes\n", msg, free_heap);
@@ -28,8 +30,6 @@ void setupSerial() {
 void runApp() {
   setupSerial();
   showHeapInfo("Initial heap");
-  NodeApp app(WIFI_SSID, WIFI_PASSWORD);
-  showHeapInfo("After NodeApp creation");
   if (!app.setup()) {
     showHeapInfo("Setup failed");
     return;
