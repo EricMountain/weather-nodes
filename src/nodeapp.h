@@ -41,6 +41,7 @@ class NodeApp {
  private:
   const char* ssid_;
   const char* password_;
+  WiFiClientSecure client_;
 #ifdef HAS_DISPLAY
   DisplayView* view_;
 #endif
