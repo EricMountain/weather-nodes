@@ -186,7 +186,6 @@ void EPDView2::displayDeviceMeasurements(JsonObject& measurements_v2,
                                          int column, uint8_t& row,
                                          uint& row_offset) {
   int column_width = display_->width() / node_count;
-  int row_height = font_height_spacing_24pt;
 
   if (measurements_v2[device].is<JsonObject>()) {
     JsonObject device_map = measurements_v2[device].as<JsonObject>();
