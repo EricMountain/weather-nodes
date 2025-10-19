@@ -2,11 +2,6 @@
 
 bool DisplayView::buildModel(JsonDocument* doc,
                              const std::map<std::string, Sensor*>& sensors) {
-  // if (doc_ != nullptr && doc_ != doc) {
-  //   // Clean up previous document if different
-  //   delete doc_;
-  // }
-  // doc_ = doc;
   sensors_ = sensors;
 
   // Only build model if we have a valid document

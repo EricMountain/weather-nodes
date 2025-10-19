@@ -50,13 +50,12 @@ class DisplayView {
   virtual void cleanup() = 0;
 
  protected:
-  // JsonDocument* doc_ = nullptr;
   bool doc_is_valid_ = false;
   Model model_;
   DateTime utc_timestamp_;
   DateTime local_timestamp_;
   std::map<std::string, Sensor*> sensors_;
-  int http_post_error_code_ = 0;  // 0 means no error
+  int http_post_error_code_ = 0;
   std::string current_device_id_;
 
   /**
