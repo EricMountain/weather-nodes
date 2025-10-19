@@ -14,7 +14,8 @@
 // Devices
 #ifdef INDOOR_DISPLAY_NODE
 #define HAS_DISPLAY
-// #define LIGHT_SLEEP_ENABLED
+#define LIGHT_SLEEP_ENABLED
+#define SLEEP_SECONDS 15
 #define HAS_BME680
 #define OTA_UPDATE_ENABLED
 #endif
@@ -32,14 +33,19 @@
 #endif
 
 #ifdef HAS_BATTERY
-// Rough estimate of battery life is 10 days per minute of sleep
-#define SLEEP_SECONDS 60 * 10
 // Battery voltage calculation
 #define BAT_MON_PIN 35
 #define R1 2.2f
 #define R2 4.7f
+#endif
+
+#ifndef SLEEP_SECONDS
+#ifdef HAS_BATTERY
+// Rough estimate of battery life is 10 days per minute of sleep
+#define SLEEP_SECONDS 60 * 10
 #else
 #define SLEEP_SECONDS 60 * 2
+#endif
 #endif
 
 #endif
