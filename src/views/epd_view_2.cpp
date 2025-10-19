@@ -10,11 +10,13 @@ EPDView2::EPDView2() : display_(nullptr), u8g2_() {}
 EPDView2::~EPDView2() { cleanup(); }
 
 void EPDView2::cleanup() {
+#ifndef LIGHT_SLEEP_ENABLED
   if (display_ != nullptr) {
     display_->hibernate();
     delete display_;
     display_ = nullptr;
   }
+#endif
 }
 
 void EPDView2::render() {

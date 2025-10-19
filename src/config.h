@@ -14,6 +14,7 @@
 // Devices
 #ifdef INDOOR_DISPLAY_NODE
 #define HAS_DISPLAY
+// #define LIGHT_SLEEP_ENABLED
 #define HAS_BME680
 #define OTA_UPDATE_ENABLED
 #endif

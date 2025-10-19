@@ -44,7 +44,11 @@ void NodeApp::setup() {
   setupWiFi();
   registerSensors();
 #ifdef HAS_DISPLAY
-  view_ = new EPDView2();
+  if (view_ == nullptr) {
+    view_ = new EPDView2();
+  } else {
+    Serial.println("Display view already initialized");
+  }
 #endif
   Serial.printf("Weather Node git commit: %s\n", GIT_COMMIT_HASH);
 }
@@ -82,9 +86,9 @@ void NodeApp::setupWiFi() {
 }
 
 void NodeApp::goToSleep() {
-  Serial.printf("Entering deep sleep for %d seconds...\n", SLEEP_SECONDS);
+  Serial.printf("Sleeping for %d seconds...\n", SLEEP_SECONDS);
   esp_sleep_enable_timer_wakeup(SLEEP_SECONDS * 1000000ULL);  // microseconds
-#ifdef HAS_DISPLAY
+#if defined(HAS_DISPLAY) && !defined(LIGHT_SLEEP_ENABLED)
   if (view_ != nullptr) {
     view_->cleanup();
     delete view_;
@@ -94,7 +98,11 @@ void NodeApp::goToSleep() {
 #ifndef HAS_BATTERY
   delay(100);  // Let serial print
 #endif
-  esp_deep_sleep_start();  // Go to sleep
+#ifdef LIGHT_SLEEP_ENABLED
+  esp_light_sleep_start();
+#else
+  esp_deep_sleep_start();
+#endif
 }
 
 void NodeApp::registerSensors() {
@@ -126,14 +134,12 @@ void NodeApp::registerSensors() {
 }
 
 void NodeApp::doApiCalls() {
-  WiFiClientSecure client;
-
-  client.setCACert(rootCACerts);
-  doPost(client);
+  client_.setCACert(rootCACerts);
+  doPost(client_);
 #ifdef HAS_DISPLAY
-  doGet(client);
+  doGet(client_);
 #endif
-  client.stop();
+  // client_.stop();
 }
 
 void NodeApp::doPost(WiFiClientSecure& client) {
