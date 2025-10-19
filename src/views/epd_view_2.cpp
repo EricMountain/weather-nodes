@@ -230,10 +230,12 @@ void EPDView2::displayDeviceMeasurements(JsonObject& measurements_v2,
       u8g2_.setFont(defaultFont);
     }
     if (device_map["pressure"].is<JsonVariant>()) {
-      row_offset += row_height;
+      u8g2_.setFont(largeFont);
+      row_offset += font_height_spacing_38pt;
       row++;
       u8g2_.setCursor(column * column_width, row_offset);
       u8g2_.printf("%.0fhPa ", float(device_map["pressure"]));
+      u8g2_.setFont(defaultFont);
     }
   }
 }
