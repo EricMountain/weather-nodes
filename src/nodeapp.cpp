@@ -325,11 +325,7 @@ void NodeApp::updateDisplay() {
   }
   view_->setHttpPostErrorCode(http_post_error_code_);
   view_->setCurrentDeviceId(device_id_);
-  if (view_->buildModel(doc_, sensors_)) {
-    view_->render();
-  } else {
-    view_->partialRender();
-  }
+  view_->render(doc_, sensors_);
 }
 #endif
 

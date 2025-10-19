@@ -20,16 +20,18 @@ Model::~Model() {
   }
 }
 
-void Model::setDateTime(const std::string& datetime_str) {
-  (*doc_)["datetime"] = datetime_str;
-}
+void Model::setDate(const std::string& date_str) { (*doc_)["date"] = date_str; }
 
-std::string Model::getDateTime() const {
-  if (doc_->operator[]("datetime").is<std::string>()) {
-    return (*doc_)["datetime"].as<std::string>();
+std::string Model::getDate() const {
+  if (doc_->operator[]("date").is<std::string>()) {
+    return (*doc_)["date"].as<std::string>();
   }
   return "";
 }
+
+void Model::setTime(const std::string& time_str) { time_ = time_str; }
+
+std::string Model::getTime() const { return time_; }
 
 void Model::setSunInfo(const std::string& sunrise, const std::string& transit,
                        const std::string& sunset) {
@@ -333,7 +335,7 @@ void Model::buildFromJson(JsonDocument* doc, DateTime utc_timestamp,
                   local_timestamp.format("%A %d %B %Y").c_str());
     display_date = local_timestamp.niceDate();
   }
-  setDateTime(display_date);
+  setDate(display_date);
 
   calculateSunAndMoon(local_timestamp, doc);
   addNodes((*doc)["nodes"], utc_timestamp);

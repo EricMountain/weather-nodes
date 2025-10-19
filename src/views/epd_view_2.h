@@ -72,12 +72,14 @@ class EPDView2 : public DisplayView {
       JsonObject& nodeData, const std::string& device,
       const std::string& measurement);
   void displayLocalSensorData();
+  void fullRender() override;
+  bool partialRender() override;
 
  public:
   EPDView2();
   ~EPDView2() override;
 
-  void render() override;
-  void partialRender() override;
+  void render(JsonDocument* doc,
+              const std::map<std::string, Sensor*>& sensors) override;
   void cleanup() override;
 };
