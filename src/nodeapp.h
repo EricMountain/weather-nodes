@@ -51,10 +51,9 @@ class NodeApp {
 #endif
   }
 
-  void setup();
+  bool setup();
   void updateDisplay();
   void setJsonDoc(JsonDocument* d) { doc_ = d; }
-  void goToSleep();
   void doApiCalls();
 
  private:
@@ -72,7 +71,7 @@ class NodeApp {
   std::string device_id_;
 
   void registerSensors();
-  void setupWiFi();
+  bool setupWiFi();
   std::string buildPayload();
   void registerResultsBME680(
       std::vector<std::pair<std::string, std::string>>& status,
