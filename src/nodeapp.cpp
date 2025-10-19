@@ -16,7 +16,6 @@
 #ifdef HAS_DISPLAY
 #include <LittleFS.h>
 
-#include "views/epd_view.h"
 #include "views/epd_view_2.h"
 #endif
 
@@ -40,7 +39,7 @@
 #include "version.h"
 
 void NodeApp::setup() {
-  setupSerial();
+  // setupSerial();
   setupWiFi();
   registerSensors();
 #ifdef HAS_DISPLAY
@@ -70,7 +69,9 @@ void NodeApp::setupSerial() {
 void NodeApp::setupWiFi() {
   int attempts = 20;
   Serial.print("Connecting to WiFi");
-  WiFi.begin(this->ssid_, this->password_);
+  if (WiFi.status() != WL_CONNECTED) {
+    WiFi.begin(this->ssid_, this->password_);
+  }
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500 / (attempts < 1 ? 1 : attempts));
@@ -86,6 +87,11 @@ void NodeApp::setupWiFi() {
 }
 
 void NodeApp::goToSleep() {
+#ifdef LIGHT_SLEEP_ENABLED
+  Serial.println("Going to light sleep...");
+#else
+  Serial.println("Going to deep sleep...");
+#endif
   Serial.printf("Sleeping for %d seconds...\n", SLEEP_SECONDS);
   esp_sleep_enable_timer_wakeup(SLEEP_SECONDS * 1000000ULL);  // microseconds
 #if defined(HAS_DISPLAY) && !defined(LIGHT_SLEEP_ENABLED)
@@ -340,6 +346,11 @@ void NodeApp::doGet(WiFiClientSecure& client) {
     }
   }
 
+  // TODO: check if there is a better place to do this, e.g. after model is
+  // built
+  if (doc_ != nullptr) {
+    delete doc_;
+  }
   doc_ = doc;
 }
 
