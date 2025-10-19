@@ -68,7 +68,7 @@ class NodeApp {
   std::map<std::string, Sensor*> sensors_;
 
   JsonDocument* doc_;
-  int http_post_error_code_ = 0;  // 0 means no error
+  int http_post_error_code_ = 0;
   std::string device_id_;
 
   void setupSerial();
