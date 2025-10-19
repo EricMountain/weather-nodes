@@ -44,9 +44,9 @@ std::string DateTime::niceDate() {
 
 // From https://stackoverflow.com/a/58726549
 // Modified to not use make_unique as we don’t have it in this version of C++
-std::string DateTime::safe_strftime(const char *fmt, const tm *t) {
+std::string DateTime::safe_strftime(const char* fmt, const tm* t) {
   std::size_t len = 30;
-  char *buff = new char[len];
+  char* buff = new char[len];
   while (std::strftime(buff, len, fmt, t) == 0) {
     delete[] buff;
     len *= 2;
@@ -57,7 +57,7 @@ std::string DateTime::safe_strftime(const char *fmt, const tm *t) {
   return result;
 }
 
-const char *DateTime::dateSuffix() const {
+const char* DateTime::dateSuffix() const {
   if (day_ >= 11 && day_ <= 13) {
     return "th";
   }
