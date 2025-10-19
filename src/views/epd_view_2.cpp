@@ -10,13 +10,13 @@ EPDView2::EPDView2() : display_(nullptr), u8g2_() {}
 EPDView2::~EPDView2() { cleanup(); }
 
 void EPDView2::cleanup() {
-#ifndef LIGHT_SLEEP_ENABLED
+  // #ifndef LIGHT_SLEEP_ENABLED
   if (display_ != nullptr) {
     display_->hibernate();
     delete display_;
     display_ = nullptr;
   }
-#endif
+  // #endif
 }
 
 void EPDView2::render() {
@@ -41,8 +41,7 @@ void EPDView2::render() {
     u8g2_.setCursor(0, 24);
 
     // TODO: need to distinguish GET failure vs partial response
-    if (doc_ == nullptr || doc_->isNull() ||
-        !(*doc_)["nodes"].is<JsonObject>()) {
+    if (doc_is_valid_ == false) {
       u8g2_.println("Failed to get data - local sensor only");
       displayLocalSensorData();
     } else {
@@ -61,14 +60,14 @@ void EPDView2::render() {
 
 void EPDView2::displayLocalSensorData() {
   if (sensors_.find("bme680") == sensors_.end() || !sensors_["bme680"]->ok()) {
-    u8g2_.println("Local sensor (BME680) setup failed");
+    u8g2_.println("Local sensor (BME680) setup failed\n");
   } else {
     std::map<std::string, Measurement> measurements =
         sensors_["bme680"]->read();
     for (const auto& measurement : measurements) {
       u8g2_.printf("%s: ", measurement.first.c_str());
       Measurement m = measurement.second;
-      u8g2_.printf("%.2f %s\n", m.value, m.unit.c_str());
+      u8g2_.printf("%.2f %s\n\n", m.value, m.unit.c_str());
     }
   }
 }

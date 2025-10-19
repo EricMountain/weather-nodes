@@ -50,7 +50,8 @@ class DisplayView {
   virtual void cleanup() = 0;
 
  protected:
-  JsonDocument* doc_ = nullptr;
+  // JsonDocument* doc_ = nullptr;
+  bool doc_is_valid_ = false;
   Model model_;
   DateTime utc_timestamp_;
   DateTime local_timestamp_;
@@ -61,7 +62,7 @@ class DisplayView {
   /**
    * Parse a timestamp value from the JSON document.
    */
-  DateTime parseTimestampValue(const String& timestamp_key);
+  DateTime parseTimestampValue(JsonDocument* doc, const String& timestamp_key);
 
   /**
    * Parse a timestamp string into a DateTime object.
