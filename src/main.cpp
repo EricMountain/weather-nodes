@@ -30,7 +30,10 @@ void runApp() {
   showHeapInfo("Initial heap");
   NodeApp app(WIFI_SSID, WIFI_PASSWORD);
   showHeapInfo("After NodeApp creation");
-  app.setup();
+  if (!app.setup()) {
+    showHeapInfo("Setup failed");
+    return;
+  }
   showHeapInfo("After setup");
   app.doApiCalls();
   showHeapInfo("After API calls");
@@ -38,7 +41,6 @@ void runApp() {
   app.updateDisplay();
   showHeapInfo("After display update");
 #endif
-  // app.goToSleep();
 }
 
 void goToSleep() {

@@ -38,8 +38,10 @@
 
 #include "version.h"
 
-void NodeApp::setup() {
-  setupWiFi();
+bool NodeApp::setup() {
+  if (!setupWiFi()) {
+    return false;
+  }
   registerSensors();
 #ifdef HAS_DISPLAY
   if (view_ == nullptr) {
@@ -49,9 +51,10 @@ void NodeApp::setup() {
   }
 #endif
   Serial.printf("Weather Node git commit: %s\n", GIT_COMMIT_HASH);
+  return true;
 }
 
-void NodeApp::setupWiFi() {
+bool NodeApp::setupWiFi() {
   int attempts = 20;
   Serial.print("Connecting to WiFi");
   if (WiFi.status() != WL_CONNECTED) {
@@ -64,36 +67,12 @@ void NodeApp::setupWiFi() {
     if (--attempts <= 0) {
       Serial.println(
           "\nFailed to connect to WiFi, retrying later, going to sleep...");
-      goToSleep();
+      return false;
     }
   }
   Serial.printf("\nWiFi connected, link quality: %d dBm\n", WiFi.RSSI());
   Serial.printf("Local IP: %s\n", WiFi.localIP().toString().c_str());
-}
-
-void NodeApp::goToSleep() {
-#ifdef LIGHT_SLEEP_ENABLED
-  Serial.println("Going to light sleep...");
-#else
-  Serial.println("Going to deep sleep...");
-#endif
-  Serial.printf("Sleeping for %d seconds...\n", SLEEP_SECONDS);
-  esp_sleep_enable_timer_wakeup(SLEEP_SECONDS * 1000000ULL);  // microseconds
-#if defined(HAS_DISPLAY) && !defined(LIGHT_SLEEP_ENABLED)
-  if (view_ != nullptr) {
-    view_->cleanup();
-    delete view_;
-    view_ = nullptr;
-  }
-#endif
-#ifndef HAS_BATTERY
-  delay(100);  // Let serial print
-#endif
-#ifdef LIGHT_SLEEP_ENABLED
-  esp_light_sleep_start();
-#else
-  esp_deep_sleep_start();
-#endif
+  return true;
 }
 
 void NodeApp::registerSensors() {
