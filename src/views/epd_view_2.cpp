@@ -257,14 +257,36 @@ void EPDView2::displayDeviceMeasurements(JsonObject& measurements_v2,
       u8g2_.setFont(defaultFont);
     }
     if (device_map["humidity"].is<JsonVariant>()) {
+      auto min_max = getDeviceMinMax(nodeData, device, "humidity");
+      if (min_max.first) {
+        u8g2_.setFont(smallFont);
+        row_offset += font_height_spacing_16pt;
+        row++;
+        u8g2_.setCursor(column * column_width, row_offset);
+        u8g2_.printf("%.1f%% %.1f%%", min_max.second.first,
+                     min_max.second.second);
+        u8g2_.setFont(defaultFont);
+      }
+
       u8g2_.setFont(largeFont);
       row_offset += font_height_spacing_38pt;
       row++;
       u8g2_.setCursor(column * column_width, row_offset);
-      u8g2_.printf("%.1f%% ", float(device_map["humidity"]));
+      u8g2_.printf("%.1f%%", float(device_map["humidity"]));
       u8g2_.setFont(defaultFont);
     }
     if (device_map["pressure"].is<JsonVariant>()) {
+      auto min_max = getDeviceMinMax(nodeData, device, "pressure");
+      if (min_max.first) {
+        u8g2_.setFont(smallFont);
+        row_offset += font_height_spacing_16pt;
+        row++;
+        u8g2_.setCursor(column * column_width, row_offset);
+        u8g2_.printf("%.0fhPa %.0fhPa", min_max.second.first,
+                     min_max.second.second);
+        u8g2_.setFont(defaultFont);
+      }
+
       u8g2_.setFont(largeFont);
       row_offset += font_height_spacing_38pt;
       row++;

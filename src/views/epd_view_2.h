@@ -40,16 +40,16 @@ class EPDView2 : public DisplayView {
 
   // 38pt fonts
   const uint8_t* largeFont = u8g2_font_inb38_mf;
-  static const uint8_t font_height_spacing_38pt = 50 + 3;
+  static const uint8_t font_height_spacing_38pt = 50;
 
   // 24pt fonts
   const uint8_t* defaultFont = u8g2_font_inb24_mf;
   const uint8_t* batteryFont = u8g2_font_battery24_tr;
-  static const uint8_t font_height_spacing_24pt = 32 + 3;
+  static const uint8_t font_height_spacing_24pt = 32 + 2;
 
   // 16pt fonts
   const uint8_t* smallFont = u8g2_font_inb16_mf;
-  static const uint8_t font_height_spacing_16pt = 22 + 3;
+  static const uint8_t font_height_spacing_16pt = 22 + 6;
 
   void displaySunAndMoon();
   uint displayNodes();
