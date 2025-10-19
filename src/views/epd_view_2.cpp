@@ -186,7 +186,6 @@ void EPDView2::displayDeviceMeasurements(JsonObject& measurements_v2,
                                          int column, uint8_t& row,
                                          uint& row_offset) {
   int column_width = display_->width() / node_count;
-  int row_height = font_height_spacing_24pt;
 
   if (measurements_v2[device].is<JsonObject>()) {
     JsonObject device_map = measurements_v2[device].as<JsonObject>();
@@ -197,33 +196,33 @@ void EPDView2::displayDeviceMeasurements(JsonObject& measurements_v2,
         row_offset += font_height_spacing_16pt;
         row++;
         u8g2_.setCursor(column * column_width, row_offset);
-        u8g2_.printf("%.1f°C ", min_max.second.first);
+        u8g2_.printf("%.1f°C %.1f°C", min_max.second.first,
+                     min_max.second.second);
         u8g2_.setFont(defaultFont);
       }
-      row_offset += row_height;
+
+      u8g2_.setFont(largeFont);
+      row_offset += font_height_spacing_38pt;
       row++;
       u8g2_.setCursor(column * column_width, row_offset);
       u8g2_.printf("%.1f°C", float(device_map["temperature"]));
-      if (min_max.first) {
-        u8g2_.setFont(smallFont);
-        row_offset += font_height_spacing_16pt;
-        row++;
-        u8g2_.setCursor(column * column_width, row_offset);
-        u8g2_.printf("%.1f°C ", min_max.second.second);
-        u8g2_.setFont(defaultFont);
-      }
+      u8g2_.setFont(defaultFont);
     }
     if (device_map["humidity"].is<JsonVariant>()) {
-      row_offset += row_height;
+      u8g2_.setFont(largeFont);
+      row_offset += font_height_spacing_38pt;
       row++;
       u8g2_.setCursor(column * column_width, row_offset);
       u8g2_.printf("%.1f%% ", float(device_map["humidity"]));
+      u8g2_.setFont(defaultFont);
     }
     if (device_map["pressure"].is<JsonVariant>()) {
-      row_offset += row_height;
+      u8g2_.setFont(largeFont);
+      row_offset += font_height_spacing_38pt;
       row++;
       u8g2_.setCursor(column * column_width, row_offset);
       u8g2_.printf("%.0fhPa ", float(device_map["pressure"]));
+      u8g2_.setFont(defaultFont);
     }
   }
 }
