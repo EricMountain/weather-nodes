@@ -24,8 +24,12 @@ Controller::Controller(Model& current) : current_(current) {
 
   Serial.printf("Last displayed model: %s\n",
                 lastDisplayed->toJsonString().c_str());
+  Serial.printf("lastDisplayed->jsonLoadOK(): %d\n",
+                lastDisplayed->jsonLoadOK());
+  Serial.printf("Model comparison result: %s\n",
+                (*lastDisplayed == current_) ? "MATCH" : "DIFF");
 
-  needRefresh_ = !lastDisplayed->jsonLoadOK() || (lastDisplayed != &current_);
+  needRefresh_ = !lastDisplayed->jsonLoadOK() || !(*lastDisplayed == current_);
   if (needRefresh_) {
     Serial.println(
         "Current model differs from last displayed model, need refresh");
