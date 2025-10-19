@@ -17,6 +17,7 @@ bool DisplayView::buildModel(JsonDocument* doc,
 
   model_.setHttpPostErrorCode(http_post_error_code_);
   model_.setCurrentDeviceId(current_device_id_);
+  model_.setTime(local_timestamp_.format("%H:%M:%S"));
   model_.buildFromJson(doc, utc_timestamp_, local_timestamp_);
 
   Controller c = Controller(model_);

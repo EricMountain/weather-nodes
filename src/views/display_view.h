@@ -19,13 +19,6 @@ class DisplayView {
   virtual ~DisplayView() = default;
 
   /**
-   * Build the display model from JSON data and sensors.
-   * Returns true if display should be refreshed, false otherwise.
-   */
-  virtual bool buildModel(JsonDocument* doc,
-                          const std::map<std::string, Sensor*>& sensors);
-
-  /**
    * Set the HTTP POST error code for display.
    */
   void setHttpPostErrorCode(int error_code) {
@@ -42,12 +35,8 @@ class DisplayView {
   /**
    * Render the model to the display hardware.
    */
-  virtual void render() = 0;
-
-  /**
-   * Partial render of the model to the display hardware.
-   */
-  virtual void partialRender() = 0;
+  virtual void render(JsonDocument* doc,
+                      const std::map<std::string, Sensor*>& sensors) = 0;
 
   /**
    * Cleanup display resources (e.g., put display to sleep).
@@ -62,6 +51,23 @@ class DisplayView {
   std::map<std::string, Sensor*> sensors_;
   int http_post_error_code_ = 0;
   std::string current_device_id_;
+
+  /**
+   * Full render of the model to the display hardware.
+   */
+  virtual void fullRender() = 0;
+
+  /**
+   * Partial render of the model to the display hardware.
+   */
+  virtual bool partialRender() = 0;
+
+  /**
+   * Build the display model from JSON data and sensors.
+   * Returns true if display should be refreshed, false otherwise.
+   */
+  virtual bool buildModel(JsonDocument* doc,
+                          const std::map<std::string, Sensor*>& sensors);
 
   /**
    * Parse a timestamp value from the JSON document.

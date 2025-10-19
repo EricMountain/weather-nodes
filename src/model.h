@@ -15,8 +15,10 @@ class Model {
   Model(const std::string& json_str);
   ~Model();
   bool jsonLoadOK() const { return jsonLoadOK_; }
-  void setDateTime(const std::string& datetime_str);
-  std::string getDateTime() const;
+  void setDate(const std::string& datetime_str);
+  std::string getDate() const;
+  void setTime(const std::string& time_str);
+  std::string getTime() const;
   void setSunInfo(const std::string& sunrise, const std::string& transit,
                   const std::string& sunset);
   std::string getSunRise() const;
@@ -60,6 +62,7 @@ class Model {
   bool jsonLoadOK_ = false;
   int http_post_error_code_ = 0;
   std::string current_device_id_;
+  std::string time_;
   std::string get(std::string key, std::string subkey) const;
   char batteryLevelToChar(float battery_percentage);
 };

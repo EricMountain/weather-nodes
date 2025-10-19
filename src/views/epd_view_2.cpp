@@ -17,7 +17,18 @@ void EPDView2::cleanup() {
   }
 }
 
-void EPDView2::render() {
+void EPDView2::render(JsonDocument* doc,
+                      const std::map<std::string, Sensor*>& sensors) {
+  if (buildModel(doc, sensors)) {
+    fullRender();
+  } else {
+    if (!partialRender()) {
+      fullRender();
+    }
+  }
+}
+
+void EPDView2::fullRender() {
   if (display_ == nullptr) {
     display_ = new GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT>(
         GxEPD2_750_T7(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY));
@@ -51,36 +62,45 @@ void EPDView2::render() {
       u8g2_.setCursor(0, row_offset);
       displaySunAndMoon();
 
-      row_offset += font_height_spacing_24pt * 3;
-      u8g2_.setCursor(0, row_offset);
-      u8g2_.printf("%s  ", model_.getDateTime().c_str());
+      u8g2_.setFont(largeFont);
+      u8g2_.setCursor(0, display_->height() - 10);
+      u8g2_.printf("%s", model_.getTime().c_str());
+      u8g2_.setFont(defaultFont);
+
+      uint str_width = u8g2_.getUTF8Width(model_.getDate().c_str());
+      u8g2_.setCursor(display_->width() - str_width, display_->height() - 10);
+      u8g2_.printf("%s", model_.getDate().c_str());
     }
   } while ((*display_).nextPage());
   Serial.println("E-Paper full render completed");
 }
 
-void EPDView2::partialRender() {
+bool EPDView2::partialRender() {
   if (display_ == nullptr) {
     Serial.println("E-Paper display not initialized for partial render");
-    return;
+    return false;
   }
 
   Serial.println("E-Paper partial render started");
 
-  int x = display_->width() - 100;
-  int y = display_->height() - 50;
-  (*display_).setPartialWindow(x, y, 100, 50);
+  int x = 0;
+  int y = display_->height() - 10 - font_height_spacing_38pt;
+  uint str_width = u8g2_.getUTF8Width(model_.getTime().c_str());
+  (*display_).setPartialWindow(x, y, str_width, font_height_spacing_38pt);
   (*display_).firstPage();
   do {
     u8g2_.setFontMode(0);
     u8g2_.setFontDirection(0);
     u8g2_.setForegroundColor(GxEPD_BLACK);
     u8g2_.setBackgroundColor(GxEPD_WHITE);
-    u8g2_.setFont(defaultFont);
-    u8g2_.setCursor(x, y + 24);
-    u8g2_.printf("%s  ", model_.getDateTime().c_str());
+
+    u8g2_.setFont(largeFont);
+    u8g2_.setCursor(0, display_->height() - 10);
+    u8g2_.printf("%s", model_.getTime().c_str());
   } while ((*display_).nextPage());
   Serial.println("E-Paper partial render completed");
+
+  return true;
 }
 
 void EPDView2::displayLocalSensorData() {
