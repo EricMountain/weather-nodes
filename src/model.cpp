@@ -336,7 +336,7 @@ void Model::buildFromJson(JsonDocument* doc, DateTime utc_timestamp,
     Serial.printf("Local time: %s\n",
                   local_timestamp.format("%H:%M:%S").c_str());
     display_date = local_timestamp.niceDate();
-    setTime(local_timestamp.format("%H:%M:%S"));
+    setTime(local_timestamp.format("%H:%M"));
     setDate(display_date);
   } else {
     Serial.println("Local timestamp not OK");
