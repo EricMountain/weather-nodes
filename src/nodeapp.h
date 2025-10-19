@@ -71,7 +71,6 @@ class NodeApp {
   int http_post_error_code_ = 0;
   std::string device_id_;
 
-  void setupSerial();
   void registerSensors();
   void setupWiFi();
   std::string buildPayload();
