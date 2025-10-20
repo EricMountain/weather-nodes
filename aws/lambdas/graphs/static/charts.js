@@ -236,7 +236,8 @@ function getMetricLabel(metric) {
         'humidity': 'Humidity (%)',
         'pressure': 'Pressure (hPa)',
         'battery': 'Battery Voltage (V)',
-        'wifi_dbm': 'WiFi Signal (dBm)'
+        'wifi_dbm': 'WiFi Signal (dBm)',
+        'free_heap_bytes': 'Free Heap (bytes)'
     };
     return labels[metric] || metric;
 }
