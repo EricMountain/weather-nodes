@@ -145,6 +145,7 @@ std::string NodeApp::buildPayload() {
   registerResultsBME680(status, device_measurements);
   registerResultsBattery(status, device_measurements);
   registerResultsSHT31D(status, device_measurements);
+  registerResultsFreeHeap(status, device_measurements);
 
   std::string measurements_v2;
   formatMeasurementsPayload(device_measurements, measurements_v2);
@@ -228,6 +229,15 @@ void NodeApp::registerResultsWiFi(
                                        measurements["wifi_dbm"].value);
     device_measurements.push_back(wifi_fmt);
   }
+}
+
+void NodeApp::registerResultsFreeHeap(
+    std::vector<std::pair<std::string, std::string>>& status,
+    std::vector<std::string>& device_measurements) {
+  size_t free_heap = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+  std::string heap_fmt =
+      fmt::format(R"("system": {{"free_heap_bytes": {}}})", free_heap);
+  device_measurements.push_back(heap_fmt);
 }
 
 void NodeApp::formatMeasurementsPayload(
