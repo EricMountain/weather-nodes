@@ -52,7 +52,7 @@ class NodeApp {
   }
 
   bool setup();
-  void updateDisplay();
+  bool updateDisplay();
   void setJsonDoc(JsonDocument* d) { doc_ = d; }
   void doApiCalls();
 

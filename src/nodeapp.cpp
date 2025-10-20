@@ -328,14 +328,15 @@ void NodeApp::doGet(WiFiClientSecure& client) {
   doc_ = doc;
 }
 
-void NodeApp::updateDisplay() {
+// Returns true if deep sleep is needed
+bool NodeApp::updateDisplay() {
   if (view_ == nullptr) {
     Serial.println("View not initialized");
-    return;
+    return true;
   }
   view_->setHttpPostErrorCode(http_post_error_code_);
   view_->setCurrentDeviceId(device_id_);
-  view_->render(doc_, sensors_);
+  return view_->render(doc_, sensors_);
 }
 #endif
 
