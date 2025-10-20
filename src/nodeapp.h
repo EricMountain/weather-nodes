@@ -85,6 +85,9 @@ class NodeApp {
   void registerResultsWiFi(
       std::vector<std::pair<std::string, std::string>>& status,
       std::vector<std::string>& device_measurements);
+  void registerResultsFreeHeap(
+      std::vector<std::pair<std::string, std::string>>& status,
+      std::vector<std::string>& device_measurements);
   void formatMeasurementsPayload(std::vector<std::string>& device_measurements,
                                  std::string& measurements_v2);
   std::string formatStatusPayload(
