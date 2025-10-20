@@ -3,9 +3,10 @@
 
 NodeApp app(WIFI_SSID, WIFI_PASSWORD);
 
-void showHeapInfo(const char* msg) {
+size_t showHeapInfo(const char* msg) {
   size_t free_heap = heap_caps_get_free_size(MALLOC_CAP_8BIT);
   Serial.printf("%s - Free heap: %d bytes\n", msg, free_heap);
+  return free_heap;
 }
 
 void setupSerial() {
@@ -44,21 +45,37 @@ void runApp() {
 }
 
 void goToSleep() {
+  bool isLightSleep = true;
+  size_t free_heap = showHeapInfo("Before sleep");
+
+  if (free_heap < 100000) {
+    Serial.println("Low memory detected, switching to deep sleep mode forced");
+    isLightSleep = false;
+  }
+
 #ifdef LIGHT_SLEEP_ENABLED
-  Serial.println("Going to light sleep...");
+  if (isLightSleep) {
+    Serial.println("Going to light sleep...");
+  } else {
+    Serial.println("Going to deep sleep due to low memory...");
+  }
 #else
   Serial.println("Going to deep sleep...");
+  isLightSleep = false;
 #endif
+
   Serial.printf("Sleeping for %d seconds...\n", SLEEP_SECONDS);
   esp_sleep_enable_timer_wakeup(SLEEP_SECONDS * 1000000ULL);  // microseconds
+
 #ifndef HAS_BATTERY
   delay(100);  // Let serial print
 #endif
-#ifdef LIGHT_SLEEP_ENABLED
-  esp_light_sleep_start();
-#else
-  esp_deep_sleep_start();
-#endif
+
+  if (isLightSleep) {
+    esp_light_sleep_start();
+  } else {
+    esp_deep_sleep_start();
+  }
 }
 
 void setup() {}
