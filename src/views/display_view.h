@@ -35,7 +35,7 @@ class DisplayView {
   /**
    * Render the model to the display hardware.
    */
-  virtual void render(JsonDocument* doc,
+  virtual bool render(JsonDocument* doc,
                       const std::map<std::string, Sensor*>& sensors) = 0;
 
   /**
@@ -55,7 +55,7 @@ class DisplayView {
   /**
    * Full render of the model to the display hardware.
    */
-  virtual void fullRender() = 0;
+  virtual bool fullRender() = 0;
 
   /**
    * Partial render of the model to the display hardware.

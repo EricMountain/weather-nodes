@@ -17,18 +17,21 @@ void EPDView2::cleanup() {
   }
 }
 
-void EPDView2::render(JsonDocument* doc,
+bool EPDView2::render(JsonDocument* doc,
                       const std::map<std::string, Sensor*>& sensors) {
-  if (buildModel(doc, sensors)) {
-    fullRender();
-  } else {
-    if (!partialRender()) {
-      fullRender();
-    }
-  }
+  // if (buildModel(doc, sensors)) {
+  //   fullRender();
+  // } else {
+  //   if (!partialRender()) {
+  //     fullRender();
+  //   }
+  // }
+  buildModel(doc, sensors);
+  return fullRender();
 }
 
-void EPDView2::fullRender() {
+// Returns true if full display re-initialisation is needed on next cycle
+bool EPDView2::fullRender() {
   bool fullWindowRefresh = true;
   if (display_ == nullptr) {
     display_ = new GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT>(
@@ -43,11 +46,14 @@ void EPDView2::fullRender() {
     fullWindowRefresh = false;
   }
 
-  fullRenderInternal(fullWindowRefresh);
+  bool deepSleepNeeded = fullRenderInternal(fullWindowRefresh);
   Serial.println("E-Paper full render completed");
+  return deepSleepNeeded;
 }
 
-void EPDView2::fullRenderInternal(bool fullWindowRefresh) {
+bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
+  bool deepSleepNeeded = false;
+
   if (fullWindowRefresh) {
     Serial.println("Performing full window refresh");
     (*display_).setFullWindow();
@@ -69,6 +75,7 @@ void EPDView2::fullRenderInternal(bool fullWindowRefresh) {
     if (doc_is_valid_ == false) {
       u8g2_.println("Failed to get data - local sensor only");
       displayLocalSensorData();
+      deepSleepNeeded = true;
     } else {
       uint row_offset = displayNodes();
 
@@ -87,6 +94,8 @@ void EPDView2::fullRenderInternal(bool fullWindowRefresh) {
       u8g2_.printf("%s", model_.getDate().c_str());
     }
   } while ((*display_).nextPage());
+
+  return deepSleepNeeded;
 }
 
 bool EPDView2::partialRender() {

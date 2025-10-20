@@ -28,24 +28,28 @@ void setupSerial() {
   }
 }
 
-void runApp() {
+bool runApp() {
+  bool deepSleepNeeded = false;
+
   setupSerial();
   showHeapInfo("Initial heap");
   if (!app.setup()) {
     showHeapInfo("Setup failed");
-    return;
+    return true;
   }
   showHeapInfo("After setup");
   app.doApiCalls();
   showHeapInfo("After API calls");
 #ifdef HAS_DISPLAY
-  app.updateDisplay();
+  deepSleepNeeded = app.updateDisplay();
   showHeapInfo("After display update");
 #endif
+
+  return deepSleepNeeded;
 }
 
-void goToSleep() {
-  bool isLightSleep = true;
+void goToSleep(bool deepSleepNeeded) {
+  bool isLightSleep = !deepSleepNeeded;
   size_t free_heap = showHeapInfo("Before sleep");
 
   if (free_heap < 100000) {
@@ -81,7 +85,7 @@ void goToSleep() {
 void setup() {}
 
 void loop() {
-  runApp();
+  bool deepSleepNeeded = runApp();
   showHeapInfo("After runApp");
-  goToSleep();
+  goToSleep(deepSleepNeeded);
 }
