@@ -73,7 +73,9 @@ class EPDView2 : public DisplayView {
       const std::string& measurement);
   void displayLocalSensorData();
   void fullRender() override;
+  void fullRenderInternal(bool fullWindowRefresh = true);
   bool partialRender() override;
+  void partialRenderInternal();
 
  public:
   EPDView2();
