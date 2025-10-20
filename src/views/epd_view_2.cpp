@@ -29,6 +29,7 @@ void EPDView2::render(JsonDocument* doc,
 }
 
 void EPDView2::fullRender() {
+  bool fullWindowRefresh = true;
   if (display_ == nullptr) {
     display_ = new GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT>(
         GxEPD2_750_T7(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY));
@@ -39,9 +40,22 @@ void EPDView2::fullRender() {
     u8g2_.begin(*display_);
   } else {
     Serial.println("E-Paper display previously initialized");
+    fullWindowRefresh = false;
   }
 
-  (*display_).setFullWindow();
+  fullRenderInternal(fullWindowRefresh);
+  Serial.println("E-Paper full render completed");
+}
+
+void EPDView2::fullRenderInternal(bool fullWindowRefresh) {
+  if (fullWindowRefresh) {
+    Serial.println("Performing full window refresh");
+    (*display_).setFullWindow();
+  } else {
+    Serial.println("Performing partial window refresh");
+    (*display_).setPartialWindow(0, 0, display_->width(), display_->height());
+  }
+
   (*display_).firstPage();
   do {
     u8g2_.setFontMode(0);
@@ -73,7 +87,6 @@ void EPDView2::fullRender() {
       u8g2_.printf("%s", model_.getDate().c_str());
     }
   } while ((*display_).nextPage());
-  Serial.println("E-Paper full render completed");
 }
 
 bool EPDView2::partialRender() {
@@ -82,8 +95,14 @@ bool EPDView2::partialRender() {
     return false;
   }
 
-  Serial.println("E-Paper partial render started");
+  // partialRenderInternal();
+  fullRenderInternal(false);
+  Serial.println("E-Paper partial render completed");
 
+  return true;
+}
+
+void EPDView2::partialRenderInternal() {
   Serial.printf("Time: %s\n", model_.getTime().c_str());
   int x = 0;
   int y = display_->height() - 10 - font_height_spacing_38pt;
@@ -100,9 +119,6 @@ bool EPDView2::partialRender() {
     u8g2_.setCursor(0, display_->height() - 10);
     u8g2_.printf("%s", model_.getTime().c_str());
   } while ((*display_).nextPage());
-  Serial.println("E-Paper partial render completed");
-
-  return true;
 }
 
 void EPDView2::displayLocalSensorData() {
