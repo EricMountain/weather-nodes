@@ -36,17 +36,20 @@ class NodeApp {
     Serial.println("Cleaning up NodeApp...");
     for (auto& sensor : sensors_) {
       delete sensor.second;
+      sensor.second = nullptr;
     }
     sensors_.clear();
 
     if (doc_ != nullptr) {
       delete doc_;
+      doc_ = nullptr;
     }
 
 #ifdef HAS_DISPLAY
     if (view_ != nullptr) {
       view_->cleanup();
       delete view_;
+      view_ = nullptr;
     }
 #endif
   }
