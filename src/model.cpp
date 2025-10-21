@@ -21,6 +21,37 @@ Model::~Model() {
   }
 }
 
+Model::Model(const Model& other) {
+  doc_ = new JsonDocument();
+  if (other.doc_ != nullptr) {
+    *doc_ = *other.doc_;
+  }
+  jsonLoadOK_ = other.jsonLoadOK_;
+  http_post_error_code_ = other.http_post_error_code_;
+  current_device_id_ = other.current_device_id_;
+  time_ = other.time_;
+}
+
+Model& Model::operator=(const Model& other) {
+  if (this != &other) {
+    // Delete existing doc
+    if (doc_ != nullptr) {
+      delete doc_;
+      doc_ = nullptr;
+    }
+    // Create new doc and copy data
+    doc_ = new JsonDocument();
+    if (other.doc_ != nullptr) {
+      *doc_ = *other.doc_;
+    }
+    jsonLoadOK_ = other.jsonLoadOK_;
+    http_post_error_code_ = other.http_post_error_code_;
+    current_device_id_ = other.current_device_id_;
+    time_ = other.time_;
+  }
+  return *this;
+}
+
 void Model::setDate(const std::string& date_str) { (*doc_)["date"] = date_str; }
 
 std::string Model::getDate() const {
