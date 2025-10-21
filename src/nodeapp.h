@@ -32,6 +32,8 @@ class NodeApp {
     doc_ = nullptr;
   }
 
+  ~NodeApp();
+
   void setup();
   void updateDisplay();
   void setJsonDoc(JsonDocument* d) { doc_ = d; }

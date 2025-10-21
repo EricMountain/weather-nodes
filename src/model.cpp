@@ -14,6 +14,13 @@ Model::Model(const std::string& json_str) {
   jsonLoadOK_ = fromJsonString(json_str);
 }
 
+Model::~Model() {
+  if (doc_ != nullptr) {
+    delete doc_;
+    doc_ = nullptr;
+  }
+}
+
 void Model::setDateTime(const std::string& datetime_str) {
   (*doc_)["datetime"] = datetime_str;
 }

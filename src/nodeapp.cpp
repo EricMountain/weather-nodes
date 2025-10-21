@@ -49,6 +49,32 @@ void NodeApp::setup() {
   Serial.printf("Weather Node git commit: %s\n", GIT_COMMIT_HASH);
 }
 
+NodeApp::~NodeApp() {
+  // Clean up sensors
+  for (auto& sensor_pair : sensors_) {
+    if (sensor_pair.second != nullptr) {
+      delete sensor_pair.second;
+      sensor_pair.second = nullptr;
+    }
+  }
+  sensors_.clear();
+
+  // Clean up JSON document
+  if (doc_ != nullptr) {
+    delete doc_;
+    doc_ = nullptr;
+  }
+
+#ifdef HAS_DISPLAY
+  // Clean up view
+  if (view_ != nullptr) {
+    view_->cleanup();
+    delete view_;
+    view_ = nullptr;
+  }
+#endif
+}
+
 void NodeApp::setupSerial() {
   int attempts = 20;
   Serial.begin(115200);
