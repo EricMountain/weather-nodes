@@ -17,6 +17,7 @@ Model::Model(const std::string& json_str) {
 Model::~Model() {
   if (doc_ != nullptr) {
     delete doc_;
+    doc_ = nullptr;
   }
 }
 
