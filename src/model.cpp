@@ -21,6 +21,34 @@ Model::~Model() {
   }
 }
 
+Model::Model(const Model& other) {
+  doc_ = new JsonDocument();
+  if (other.doc_ != nullptr) {
+    *doc_ = *other.doc_;
+  }
+  jsonLoadOK_ = other.jsonLoadOK_;
+  http_post_error_code_ = other.http_post_error_code_;
+  current_device_id_ = other.current_device_id_;
+}
+
+Model& Model::operator=(const Model& other) {
+  if (this != &other) {
+    // Delete existing doc
+    if (doc_ != nullptr) {
+      delete doc_;
+    }
+    // Create new doc and copy data
+    doc_ = new JsonDocument();
+    if (other.doc_ != nullptr) {
+      *doc_ = *other.doc_;
+    }
+    jsonLoadOK_ = other.jsonLoadOK_;
+    http_post_error_code_ = other.http_post_error_code_;
+    current_device_id_ = other.current_device_id_;
+  }
+  return *this;
+}
+
 void Model::setDateTime(const std::string& datetime_str) {
   (*doc_)["datetime"] = datetime_str;
 }

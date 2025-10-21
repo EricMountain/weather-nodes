@@ -14,6 +14,8 @@ class Model {
   Model();
   Model(const std::string& json_str);
   ~Model();
+  Model(const Model& other);
+  Model& operator=(const Model& other);
   bool jsonLoadOK() const { return jsonLoadOK_; }
   void setDateTime(const std::string& datetime_str);
   std::string getDateTime() const;
