@@ -10,3 +10,7 @@ _codeql_detected_source_root
 test/*_bin
 test/*.o
 test/.pio/
+
+# CodeQL artifacts
+_codeql_*
+test/test
