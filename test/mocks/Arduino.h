@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <cstdarg>
 
 // Basic Arduino types
 typedef uint8_t byte;
