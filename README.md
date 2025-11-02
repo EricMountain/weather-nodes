@@ -21,6 +21,7 @@ The project includes a comprehensive testing framework for unit testing ESP32 co
 See [test/README.md](test/README.md) for detailed testing documentation.
 
 Quick start:
+
 ```shell
 # Install PlatformIO
 pip install platformio

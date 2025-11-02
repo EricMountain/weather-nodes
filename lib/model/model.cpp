@@ -206,9 +206,8 @@ void Model::addNodeStaleState(DateTime& utc_timestamp,
   new_node["stale_state"] = node_stale;
 }
 
-void Model::addNodeStatusSection(
-    ArduinoJson::V742PB22::JsonObject& raw_node_data,
-    ArduinoJson::V742PB22::JsonObject& new_node, const char* device_id) {
+void Model::addNodeStatusSection(JsonObject& raw_node_data,
+                                 JsonObject& new_node, const char* device_id) {
   if (raw_node_data["status"].is<JsonObject>()) {
     new_node["status"] = raw_node_data["status"].as<JsonObject>();
   }
