@@ -29,6 +29,9 @@ pip install platformio
 # Run all tests
 pio test -e native
 
+# List available tests
+pio test --list-tests -e native
+
 # Run specific test
 pio test -e native -f test_datetime
 ```
