@@ -14,6 +14,28 @@ Before building the project:
 
 * Use PlatformIO
 
+### Testing
+
+The project includes a comprehensive testing framework for unit testing ESP32 code. Tests run on your local machine (Linux/Mac) without requiring ESP32 hardware, and also run automatically in GitHub CI.
+
+See [test/README.md](test/README.md) for detailed testing documentation.
+
+Quick start:
+
+```shell
+# Install PlatformIO
+pip install platformio
+
+# Run all tests
+pio test -e native
+
+# List available tests
+pio test --list-tests -e native
+
+# Run specific test
+pio test -e native -f test_datetime
+```
+
 ## Lambdas
 
 ### Send measurements
