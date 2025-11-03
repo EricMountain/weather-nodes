@@ -11,6 +11,11 @@
 
 #include <math.h>
 
+// Define U8G2_FONT_SECTION for fonts
+#ifndef U8G2_FONT_SECTION
+#define U8G2_FONT_SECTION(name)
+#endif
+
 #define PI 3.1415926535897932384626433832795
 #define HALF_PI 1.5707963267948966192313216916398
 #define TWO_PI 6.283185307179586476925286766559
@@ -28,8 +33,19 @@ typedef uint8_t byte;
 class String : public std::string {
  public:
   using std::string::string;  // Inherit constructors
+  
+  // Constructor from std::string
+  String(const std::string& str) : std::string(str) {}
+  
+  // Constructor from const char*
+  String(const char* str) : std::string(str ? str : "") {}
+  
+  // Default constructor
+  String() : std::string() {}
 
   double toDouble() const { return std::stod(*this); }
+  
+  const char* c_str() const { return std::string::c_str(); }
 };
 
 // Mock Serial for tests
