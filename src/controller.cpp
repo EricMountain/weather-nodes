@@ -22,10 +22,15 @@ Controller::Controller(Model& current) : current_(current) {
   }
   LittleFS.end();
 
-  Serial.printf("Last displayed model: %s\n",
-                lastDisplayed->toJsonString().c_str());
+  if (lastDisplayed != nullptr) {
+    Serial.printf("Last displayed model: %s\n",
+                  lastDisplayed->toJsonString().c_str());
+    needRefresh_ = !lastDisplayed->jsonLoadOK() || !(*lastDisplayed == current_);
+  } else {
+    Serial.println("No last displayed model, will refresh");
+    needRefresh_ = true;
+  }
 
-  needRefresh_ = !lastDisplayed->jsonLoadOK() || !(*lastDisplayed == current_);
   if (needRefresh_) {
     Serial.println(
         "Current model differs from last displayed model, need refresh");
