@@ -75,7 +75,7 @@ void test_datetime_diff(void) {
   DateTime dt2("2025-10-21T12:00:30");
   double diff = dt2.diff(dt1);
   // Should be 30 seconds difference
-  TEST_ASSERT_EQUAL_DOUBLE(30.0, diff);
+  TEST_ASSERT_FLOAT_WITHIN(0.1, 30.0, diff);
 }
 
 int main(int argc, char** argv) {

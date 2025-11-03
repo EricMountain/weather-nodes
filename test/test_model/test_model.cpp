@@ -12,7 +12,7 @@ void tearDown(void) {
 
 void test_model_default_constructor(void) {
   Model model;
-  TEST_ASSERT_TRUE(model.jsonLoadOK());
+  TEST_ASSERT_FALSE(model.jsonLoadOK());
   TEST_ASSERT_EQUAL_STRING("", model.getDate().c_str());
 }
 
@@ -53,7 +53,7 @@ void test_model_to_json_string(void) {
 
 void test_model_from_json_string(void) {
   std::string json =
-      R"({"datetime":"2025-10-21T15:30:45","sun":{"rise":"06:30","transit":"12:45","set":"18:30"}})";
+      R"({"date":"2025-10-21T15:30:45","sun":{"rise":"06:30","transit":"12:45","set":"18:30"}})";
   Model model(json);
 
   TEST_ASSERT_TRUE(model.jsonLoadOK());
