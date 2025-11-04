@@ -2,7 +2,7 @@
 
 #include "epd_view_2.h"
 
-#include "fonts/moon_phases_48pt.h"
+#include "moon_phases_48pt.h"
 #include "version.h"
 
 EPDView2::EPDView2() : display_(nullptr), u8g2_() {}

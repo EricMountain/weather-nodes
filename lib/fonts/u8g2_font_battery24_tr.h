@@ -3,6 +3,11 @@
 #ifndef U8G2_FONT_BATTERY24_TR_H
 #define U8G2_FONT_BATTERY24_TR_H
 
+// Define U8G2_FONT_SECTION if not defined
+#ifndef U8G2_FONT_SECTION
+#define U8G2_FONT_SECTION(name)
+#endif
+
 // From
 // https://github.com/olikraus/u8g2/blob/master/tools/font/bdf/battery24.bdf
 

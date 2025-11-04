@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Arduino.h>
 #include <ArduinoJson.h>
 #include <Fonts/FreeMonoBold24pt7b.h>
 #include <Fonts/FreeSans24pt7b.h>
@@ -9,10 +10,10 @@
 #include <map>
 #include <string>
 
-#include "controller.h"
+// #include "controller.h"
 #include "datetime.h"
 #include "display_view.h"
-#include "fonts/u8g2_font_battery24_tr.h"
+#include "u8g2_font_battery24_tr.h"
 #include "model.h"
 #include "sensor.h"
 
