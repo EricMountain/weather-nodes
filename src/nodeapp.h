@@ -16,7 +16,7 @@
 
 // Display view system
 #ifdef HAS_DISPLAY
-#include "views/display_view.h"
+#include "display_view.h"
 #endif
 
 class NodeApp {

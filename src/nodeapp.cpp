@@ -16,7 +16,7 @@
 #ifdef HAS_DISPLAY
 #include <LittleFS.h>
 
-#include "views/epd_view_2.h"
+#include "epd_view_2.h"
 #endif
 
 #if defined(HAS_BME680) || defined(HAS_SHT31D)

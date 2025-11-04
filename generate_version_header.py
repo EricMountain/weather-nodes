@@ -11,7 +11,7 @@ def generate_version_header():
 
     # Check current version.h to avoid unnecessary rebuilds
     try:
-        with open('src/version.h', 'r') as f:
+        with open('lib/config/version.h', 'r') as f:
             content = f.read()
             if f'#define GIT_COMMIT_HASH "{short_hash}"' in content and \
                f'#define GIT_COMMIT_FULL "{full_hash}"' in content:
@@ -21,15 +21,15 @@ def generate_version_header():
 
     timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    with open('src/version.h', 'w') as f:
+    with open('lib/config/version.h', 'w') as f:
         f.write(f'''#ifndef VERSION_H
-    #define VERSION_H
+#define VERSION_H
 
-    #define GIT_COMMIT_HASH "{short_hash}"
-    #define GIT_COMMIT_FULL "{full_hash}"
-    #define BUILD_TIMESTAMP "{timestamp}"
+#define GIT_COMMIT_HASH "{short_hash}"
+#define GIT_COMMIT_FULL "{full_hash}"
+#define BUILD_TIMESTAMP "{timestamp}"
 
-    #endif
+#endif
     ''')
         
     return short_hash
