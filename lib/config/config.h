@@ -18,6 +18,7 @@
 // #define SLEEP_SECONDS 15
 #define HAS_BME680
 #define OTA_UPDATE_ENABLED
+#define FORCE_FULL_REFRESH
 #endif
 
 #ifdef OUTDOOR_NODE

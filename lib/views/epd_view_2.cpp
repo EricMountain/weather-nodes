@@ -3,6 +3,7 @@
 #include "epd_view_2.h"
 
 #include "moon_phases_48pt.h"
+#include "config.h"
 #include "version.h"
 
 EPDView2::EPDView2() : display_(nullptr), u8g2_() {}
@@ -42,8 +43,15 @@ bool EPDView2::fullRender() {
     (*display_).setRotation(0);  // Landscape
     u8g2_.begin(*display_);
   } else {
+#ifdef FORCE_FULL_REFRESH
+    (*display_).init(115200);
+    Serial.println("E-Paper display initialized (forced)");
+    (*display_).setRotation(0);  // Landscape
+    u8g2_.begin(*display_);
+#else
     Serial.println("E-Paper display previously initialized");
     fullWindowRefresh = false;
+#endif
   }
 
   bool deepSleepNeeded = fullRenderInternal(fullWindowRefresh);
