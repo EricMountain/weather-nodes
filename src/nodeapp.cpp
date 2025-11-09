@@ -336,7 +336,8 @@ bool NodeApp::updateDisplay() {
   }
   view_->setHttpPostErrorCode(http_post_error_code_);
   view_->setCurrentDeviceId(device_id_);
-  return view_->render(doc_, sensors_);
+  bool deep_sleep_needed = view_->render(doc_, sensors_);
+  return deep_sleep_needed;
 }
 #endif
 
