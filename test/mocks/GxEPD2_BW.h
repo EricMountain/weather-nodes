@@ -17,7 +17,7 @@ class GxEPD2_750_T7 {
   static const uint16_t HEIGHT = 480;
   static const uint16_t WIDTH_VISIBLE = 800;
 
-  GxEPD2_750_T7(int8_t cs, int8_t dc, int8_t rst, int8_t busy) 
+  GxEPD2_750_T7(int8_t cs, int8_t dc, int8_t rst, int8_t busy)
       : cs_(cs), dc_(dc), rst_(rst), busy_(busy) {}
 
  private:
@@ -28,17 +28,18 @@ class GxEPD2_750_T7 {
 };
 
 // Mock GxEPD2_BW template class
-template<typename GxEPD2_Type, uint16_t page_height>
+template <typename GxEPD2_Type, uint16_t page_height>
 class GxEPD2_BW {
  public:
-  GxEPD2_BW(GxEPD2_Type display) 
-      : display_(display), 
-        width_(GxEPD2_Type::WIDTH_VISIBLE), 
+  GxEPD2_BW(GxEPD2_Type display)
+      : display_(display),
+        width_(GxEPD2_Type::WIDTH_VISIBLE),
         height_(GxEPD2_Type::HEIGHT),
         page_index_(0),
         in_page_loop_(false) {}
 
-  void init(uint32_t serial_diag_bitrate = 0, bool initial = true, uint16_t reset_duration = 10, bool pulldown_rst_mode = false) {
+  void init(uint32_t serial_diag_bitrate = 0, bool initial = true,
+            uint16_t reset_duration = 10, bool pulldown_rst_mode = false) {
     // Mock init - do nothing
   }
 
@@ -47,9 +48,7 @@ class GxEPD2_BW {
     // For simplicity, don't swap width/height in mock
   }
 
-  void setFullWindow() {
-    full_window_ = true;
-  }
+  void setFullWindow() { full_window_ = true; }
 
   void setPartialWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     full_window_ = false;
@@ -89,6 +88,9 @@ class GxEPD2_BW {
   bool isFullWindow() const { return full_window_; }
   uint8_t getRotation() const { return rotation_; }
 
+  uint16_t getTextColor() const { return text_color_; }
+  void setTextColor(uint16_t color) { text_color_ = color; }
+
  private:
   GxEPD2_Type display_;
   uint16_t width_;
@@ -101,6 +103,7 @@ class GxEPD2_BW {
   uint16_t partial_h_ = 0;
   uint16_t page_index_ = 0;
   bool in_page_loop_ = false;
+  uint16_t text_color_ = GxEPD_BLACK;
 };
 
 #endif  // UNIT_TEST
