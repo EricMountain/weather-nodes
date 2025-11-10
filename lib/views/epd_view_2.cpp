@@ -67,21 +67,6 @@ bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
     (*display_).setPartialWindow(0, 0, display_->width(), display_->height());
   }
 
-#if 0
-  (*display_).setRotation(0);
-  (*display_).setFont(&FreeMonoBold24pt7b);
-  (*display_).setTextColor(GxEPD_BLACK);
-  (*display_).firstPage();
-  do {
-    (*display_).fillScreen(GxEPD_WHITE);
-    (*display_).setCursor(40, 130);
-    (*display_).print("Waveshare 7.5in v2");
-    (*display_).setCursor(60, 220);
-    (*display_).print("Hello, e-paper! (again)");
-    Serial.println("Drew on display page");
-  } while ((*display_).nextPage());
-  deepSleepNeeded = true;
-#else
   (*display_).firstPage();
   do {
     (*display_).setRotation(0);
@@ -119,7 +104,6 @@ bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
   } while ((*display_).nextPage());
 
   deepSleepNeeded = true;
-#endif
 
   return deepSleepNeeded;
 }
