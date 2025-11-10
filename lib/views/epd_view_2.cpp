@@ -37,16 +37,13 @@ bool EPDView2::fullRender() {
   if (display_ == nullptr) {
     display_ = new GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT>(
         GxEPD2_750_T7(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY));
-
     (*display_).init(115200);
     Serial.println("E-Paper display initialized");
-    (*display_).setRotation(0);  // Landscape
     u8g2_.begin(*display_);
   } else {
 #ifdef FORCE_FULL_REFRESH
     (*display_).init(115200);
     Serial.println("E-Paper display initialized (forced)");
-    (*display_).setRotation(0);  // Landscape
     u8g2_.begin(*display_);
 #else
     Serial.println("E-Paper display previously initialized");
@@ -70,8 +67,26 @@ bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
     (*display_).setPartialWindow(0, 0, display_->width(), display_->height());
   }
 
+#if 0
+  (*display_).setRotation(0);
+  (*display_).setFont(&FreeMonoBold24pt7b);
+  (*display_).setTextColor(GxEPD_BLACK);
   (*display_).firstPage();
   do {
+    (*display_).fillScreen(GxEPD_WHITE);
+    (*display_).setCursor(40, 130);
+    (*display_).print("Waveshare 7.5in v2");
+    (*display_).setCursor(60, 220);
+    (*display_).print("Hello, e-paper! (again)");
+    Serial.println("Drew on display page");
+  } while ((*display_).nextPage());
+  deepSleepNeeded = true;
+#else
+  (*display_).firstPage();
+  do {
+    (*display_).setRotation(0);
+    (*display_).setTextColor(GxEPD_BLACK);
+
     u8g2_.setFontMode(0);
     u8g2_.setFontDirection(0);
     u8g2_.setForegroundColor(GxEPD_BLACK);
@@ -102,6 +117,9 @@ bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
       u8g2_.printf("%s", model_.getDate().c_str());
     }
   } while ((*display_).nextPage());
+
+  deepSleepNeeded = true;
+#endif
 
   return deepSleepNeeded;
 }
