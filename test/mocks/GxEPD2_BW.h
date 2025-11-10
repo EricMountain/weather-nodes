@@ -91,6 +91,11 @@ class GxEPD2_BW {
   uint16_t getTextColor() const { return text_color_; }
   void setTextColor(uint16_t color) { text_color_ = color; }
 
+  void fillScreen(uint16_t color) {
+    // Mock fillScreen - do nothing
+    screen_color_ = color;
+  }
+
  private:
   GxEPD2_Type display_;
   uint16_t width_;
@@ -104,6 +109,7 @@ class GxEPD2_BW {
   uint16_t page_index_ = 0;
   bool in_page_loop_ = false;
   uint16_t text_color_ = GxEPD_BLACK;
+  uint16_t screen_color_ = GxEPD_WHITE;
 };
 
 #endif  // UNIT_TEST

@@ -32,8 +32,32 @@
  */
 class EPDView2 : public DisplayView {
  private:
+  enum class RenderMode {
+    FULL,
+    PARTIAL_TIME,
+    PARTIAL_DATE,
+    PARTIAL_NODES,
+    PARTIAL_SUN_MOON
+  };
+
+  struct RenderContext {
+    RenderMode mode;
+    GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT>* display;
+    U8G2_FOR_ADAFRUIT_GFX* u8g2;
+    uint16_t display_width;
+    uint16_t display_height;
+    int node_count;
+    bool is_partial;
+  };
+
   GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT>* display_;
   U8G2_FOR_ADAFRUIT_GFX u8g2_;
+
+  // State tracking for partial updates
+  Model previous_model_;
+  bool has_previous_state_;
+  uint8_t partial_update_count_;
+  static constexpr uint8_t MAX_PARTIAL_UPDATES = 10;
 
   // Font list and metrics:
   // https://github.com/olikraus/u8g2/wiki/fntlistall
@@ -52,12 +76,25 @@ class EPDView2 : public DisplayView {
   const uint8_t* smallFont = u8g2_font_inb16_mf;
   static const uint8_t font_height_spacing_16pt = 22 + 6;
 
-  void displaySunAndMoon();
-  uint displayNodes();
-  void displayNodeHeader(JsonPair& node, JsonObject& nodeData, int node_count,
-                         int column, uint8_t& row, uint& row_offset);
-  void displayNodeMeasurements(JsonObject& nodeData, int node_count, int column,
-                               uint8_t& row, uint& row_offset);
+  // Change detection methods
+  bool hasTimeChanged() const;
+  bool hasDateChanged() const;
+  bool haveSunMoonChanged() const;
+  bool haveNodesChanged() const;
+
+  // Partial update orchestration
+  bool performPartialUpdates();
+
+  // Display methods with RenderContext support
+  void displayTime(const RenderContext& ctx);
+  void displayDate(const RenderContext& ctx);
+  void displaySunAndMoon(const RenderContext& ctx);
+  uint displayNodes(const RenderContext& ctx);
+  void displayNodeHeader(JsonPair& node, JsonObject& nodeData,
+                         const RenderContext& ctx, int column, uint8_t& row,
+                         uint& row_offset);
+  void displayNodeMeasurements(JsonObject& nodeData, const RenderContext& ctx,
+                               int column, uint8_t& row, uint& row_offset);
   void displayDeviceMeasurements(JsonObject& measurements_v2,
                                  const std::string& device,
                                  JsonObject& nodeData, int node_count,
