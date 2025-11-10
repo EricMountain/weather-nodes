@@ -6,7 +6,12 @@
 #include "config.h"
 #include "version.h"
 
-EPDView2::EPDView2() : display_(nullptr), u8g2_() {}
+EPDView2::EPDView2()
+    : display_(nullptr),
+      u8g2_(),
+      previous_model_(),
+      has_previous_state_(false),
+      partial_update_count_(0) {}
 
 EPDView2::~EPDView2() { cleanup(); }
 
@@ -20,15 +25,96 @@ void EPDView2::cleanup() {
 
 bool EPDView2::render(JsonDocument* doc,
                       const std::map<std::string, Sensor*>& sensors) {
-  // if (buildModel(doc, sensors)) {
-  //   fullRender();
-  // } else {
-  //   if (!partialRender()) {
-  //     fullRender();
-  //   }
-  // }
   buildModel(doc, sensors);
+
+  // First render or invalid data - full refresh
+  if (!has_previous_state_ || !doc_is_valid_) {
+    Serial.println("First render or invalid data - performing full refresh");
+    has_previous_state_ = true;
+    previous_model_ = model_;
+    partial_update_count_ = 0;
+    return fullRender();
+  }
+
+  // Force full refresh periodically to prevent ghosting
+  if (partial_update_count_ >= MAX_PARTIAL_UPDATES) {
+    Serial.printf("Max partial updates (%d) reached - forcing full refresh\n",
+                  MAX_PARTIAL_UPDATES);
+    previous_model_ = model_;
+    partial_update_count_ = 0;
+    return fullRender();
+  }
+
+  // Try partial updates
+  if (performPartialUpdates()) {
+    Serial.println("Partial updates completed successfully");
+    previous_model_ = model_;
+    partial_update_count_++;
+    return false;  // No deep sleep needed for partial updates
+  }
+
+  // Fall back to full render if partial updates failed
+  Serial.println(
+      "Partial updates failed or not applicable - performing full refresh");
+  previous_model_ = model_;
+  partial_update_count_ = 0;
   return fullRender();
+}
+
+bool EPDView2::performPartialUpdates() {
+  if (display_ == nullptr) {
+    Serial.println("Display not initialized for partial updates");
+    return false;
+  }
+
+  bool updated = false;
+  RenderContext ctx;
+  ctx.display = display_;
+  ctx.u8g2 = &u8g2_;
+  ctx.display_width = display_->width();
+  ctx.display_height = display_->height();
+  ctx.node_count = model_.getNodeData().size();
+  ctx.is_partial = true;
+
+  // Check for layout changes (node count changed)
+  if (previous_model_.getNodeData().size() != model_.getNodeData().size()) {
+    Serial.println("Node count changed - need full refresh");
+    return false;
+  }
+
+  // Update time if changed
+  if (hasTimeChanged()) {
+    Serial.println("Time changed, partial update");
+    ctx.mode = RenderMode::PARTIAL_TIME;
+    displayTime(ctx);
+    updated = true;
+  }
+
+  // Update date if changed
+  if (hasDateChanged()) {
+    Serial.println("Date changed, partial update");
+    ctx.mode = RenderMode::PARTIAL_DATE;
+    displayDate(ctx);
+    updated = true;
+  }
+
+  // Update sun/moon if changed
+  if (haveSunMoonChanged()) {
+    Serial.println("Sun/Moon changed, partial update");
+    ctx.mode = RenderMode::PARTIAL_SUN_MOON;
+    displaySunAndMoon(ctx);
+    updated = true;
+  }
+
+  // Update nodes if changed
+  if (haveNodesChanged()) {
+    Serial.println("Nodes changed, partial update");
+    ctx.mode = RenderMode::PARTIAL_NODES;
+    displayNodes(ctx);
+    updated = true;
+  }
+
+  return updated;
 }
 
 // Returns true if full display re-initialisation is needed on next cycle
@@ -61,6 +147,16 @@ bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
     (*display_).setPartialWindow(0, 0, display_->width(), display_->height());
   }
 
+  // Create RenderContext for full render
+  RenderContext ctx;
+  ctx.mode = RenderMode::FULL;
+  ctx.display = display_;
+  ctx.u8g2 = &u8g2_;
+  ctx.display_width = display_->width();
+  ctx.display_height = display_->height();
+  ctx.node_count = model_.getNodeData().size();
+  ctx.is_partial = false;
+
   (*display_).firstPage();
   do {
     (*display_).setRotation(0);
@@ -78,21 +174,16 @@ bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
       displayLocalSensorData();
       deepSleepNeeded = true;
     } else {
-      uint row_offset = displayNodes();
+      uint row_offset = displayNodes(ctx);
 
       row_offset += font_height_spacing_24pt;
       u8g2_.setCursor(0, row_offset);
-      displaySunAndMoon();
+      displaySunAndMoon(ctx);
 
       Serial.printf("Time: %s\n", model_.getTime().c_str());
-      u8g2_.setFont(largeFont);
-      u8g2_.setCursor(0, display_->height() - 10);
-      u8g2_.printf("%s", model_.getTime().c_str());
-      u8g2_.setFont(defaultFont);
+      displayTime(ctx);
 
-      uint str_width = u8g2_.getUTF8Width(model_.getDate().c_str());
-      u8g2_.setCursor(display_->width() - str_width, display_->height() - 10);
-      u8g2_.printf("%s", model_.getDate().c_str());
+      displayDate(ctx);
     }
   } while ((*display_).nextPage());
 
@@ -148,48 +239,113 @@ void EPDView2::displayLocalSensorData() {
   }
 }
 
-void EPDView2::displaySunAndMoon() {
-  u8g2_.printf("Sun:  %s  %s  %s\n", model_.getSunRise().c_str(),
-               model_.getSunTransit().c_str(), model_.getSunSet().c_str());
-  u8g2_.printf("Moon: %s  %s  %s  ", model_.getMoonRise().c_str(),
-               model_.getMoonTransit().c_str(), model_.getMoonSet().c_str());
+void EPDView2::displaySunAndMoon(const RenderContext& ctx) {
+  if (ctx.is_partial) {
+    // Calculate sun/moon display region
+    // For partial updates, we need to know where nodes end
+    // This is a simplified approach - in full render, this is called after
+    // displayNodes()
+    u8g2_.setFont(defaultFont);
+    int height = font_height_spacing_24pt * 2 + 48;  // 2 lines + moon icon
 
-  u8g2_.setFont(moon_phases_48pt);
-  u8g2_.print(model_.getMoonPhaseLetter());
-  u8g2_.setFont(defaultFont);
+    // Calculate starting Y position (after nodes area)
+    // In full render, this is passed as row_offset from displayNodes()
+    // For partial, we approximate based on layout
+    int node_area_height = ctx.display_height - font_height_spacing_38pt * 2;
+    int y = node_area_height;
+
+    Serial.printf("displaySunAndMoon partial: window (0,%d) size (%dx%d)\n", y,
+                  ctx.display_width, height);
+    display_->setPartialWindow(0, y, ctx.display_width, height);
+    display_->firstPage();
+  }
+
+  do {
+    if (ctx.is_partial) {
+      display_->fillScreen(GxEPD_WHITE);
+      u8g2_.setFontMode(0);
+      u8g2_.setFontDirection(0);
+      u8g2_.setForegroundColor(GxEPD_BLACK);
+      u8g2_.setBackgroundColor(GxEPD_WHITE);
+      u8g2_.setFont(defaultFont);
+
+      // Set cursor to top of partial window
+      u8g2_.setCursor(0, font_height_spacing_24pt);
+    }
+
+    u8g2_.printf("Sun:  %s  %s  %s\n", model_.getSunRise().c_str(),
+                 model_.getSunTransit().c_str(), model_.getSunSet().c_str());
+    u8g2_.printf("Moon: %s  %s  %s  ", model_.getMoonRise().c_str(),
+                 model_.getMoonTransit().c_str(), model_.getMoonSet().c_str());
+
+    u8g2_.setFont(moon_phases_48pt);
+    u8g2_.print(model_.getMoonPhaseLetter());
+
+    if (!ctx.is_partial) {
+      u8g2_.setFont(defaultFont);
+    }
+  } while (ctx.is_partial && display_->nextPage());
+
+  if (!ctx.is_partial) {
+    u8g2_.setFont(defaultFont);
+  }
 }
 
-uint EPDView2::displayNodes() {
-  JsonObject nodes = model_.getNodeData();
-  int column = 0;
-  int node_count = nodes.size();
-  uint max_row_offset = 0;
-  for (JsonPair node : nodes) {
-    uint8_t row = 1;
-    uint row_offset = 0;
-    JsonObject nodeData = node.value().as<JsonObject>();
-    displayNodeHeader(node, nodeData, node_count, column, row, row_offset);
-    displayNodeMeasurements(nodeData, node_count, column, row, row_offset);
-    // displayBatteryLevel(nodeData, node_count, column, row, row_offset);
-    displayBadStatuses(nodeData, node_count, column, row, row_offset);
-    displayStaleState(nodeData, node_count, column, row, row_offset);
+uint EPDView2::displayNodes(const RenderContext& ctx) {
+  if (ctx.is_partial && ctx.mode == RenderMode::PARTIAL_NODES) {
+    // Calculate nodes region
+    int height = ctx.display_height - font_height_spacing_38pt * 2;
 
-    column++;
-    if (row_offset > max_row_offset) {
-      max_row_offset = row_offset;
-    }
+    Serial.printf("displayNodes partial: window (0,0) size (%dx%d)\n",
+                  ctx.display_width, height);
+    display_->setPartialWindow(0, 0, ctx.display_width, height);
+    display_->firstPage();
   }
+
+  uint max_row_offset = 0;
+
+  do {
+    if (ctx.is_partial && ctx.mode == RenderMode::PARTIAL_NODES) {
+      display_->fillScreen(GxEPD_WHITE);
+      u8g2_.setFontMode(0);
+      u8g2_.setFontDirection(0);
+      u8g2_.setForegroundColor(GxEPD_BLACK);
+      u8g2_.setBackgroundColor(GxEPD_WHITE);
+      u8g2_.setFont(defaultFont);
+    }
+
+    JsonObject nodes = model_.getNodeData();
+    int column = 0;
+    max_row_offset = 0;
+
+    for (JsonPair node : nodes) {
+      uint8_t row = 1;
+      uint row_offset = 0;
+      JsonObject nodeData = node.value().as<JsonObject>();
+      displayNodeHeader(node, nodeData, ctx, column, row, row_offset);
+      displayNodeMeasurements(nodeData, ctx, column, row, row_offset);
+      // displayBatteryLevel(nodeData, ctx.node_count, column, row, row_offset);
+      displayBadStatuses(nodeData, ctx.node_count, column, row, row_offset);
+      displayStaleState(nodeData, ctx.node_count, column, row, row_offset);
+
+      column++;
+      if (row_offset > max_row_offset) {
+        max_row_offset = row_offset;
+      }
+    }
+  } while (ctx.is_partial && ctx.mode == RenderMode::PARTIAL_NODES &&
+           display_->nextPage());
 
   return max_row_offset;
 }
 
 void EPDView2::displayNodeHeader(JsonPair& node, JsonObject& nodeData,
-                                 int node_count, int column, uint8_t& row,
-                                 uint& row_offset) {
+                                 const RenderContext& ctx, int column,
+                                 uint8_t& row, uint& row_offset) {
   JsonObject node_data = model_.getNodeData()[node.key()].as<JsonObject>();
 
   std::string display_name = node_data["display_name"].as<String>().c_str();
-  int column_width = display_->width() / node_count;
+  int column_width = ctx.display_width / ctx.node_count;
   row_offset = row * font_height_spacing_24pt;
   row++;
   u8g2_.setCursor(column * column_width, row_offset);
@@ -244,15 +400,15 @@ void EPDView2::displayStaleState(JsonObject& nodeData, int node_count,
   u8g2_.setFont(defaultFont);
 }
 
-void EPDView2::displayNodeMeasurements(JsonObject& nodeData, int node_count,
-                                       int column, uint8_t& row,
-                                       uint& row_offset) {
+void EPDView2::displayNodeMeasurements(JsonObject& nodeData,
+                                       const RenderContext& ctx, int column,
+                                       uint8_t& row, uint& row_offset) {
   if (nodeData["measurements_v2"].is<JsonObject>()) {
     JsonObject measurements_v2 = nodeData["measurements_v2"].as<JsonObject>();
     std::vector<std::string> devices = {"bme680", "sht31d"};
     for (const auto& device : devices) {
-      displayDeviceMeasurements(measurements_v2, device, nodeData, node_count,
-                                column, row, row_offset);
+      displayDeviceMeasurements(measurements_v2, device, nodeData,
+                                ctx.node_count, column, row, row_offset);
     }
   }
 }
@@ -375,4 +531,108 @@ void EPDView2::displayBatteryLevel(JsonObject& nodeData) {
   u8g2_.setFont(u8g2_font_battery24_tr);
   u8g2_.print(level.c_str());
   u8g2_.setFont(defaultFont);
+}
+
+// Change detection methods
+bool EPDView2::hasTimeChanged() const {
+  if (!has_previous_state_) {
+    return false;
+  }
+  return previous_model_.getTime() != model_.getTime();
+}
+
+bool EPDView2::hasDateChanged() const {
+  if (!has_previous_state_) {
+    return false;
+  }
+  return previous_model_.getDate() != model_.getDate();
+}
+
+bool EPDView2::haveSunMoonChanged() const {
+  if (!has_previous_state_) {
+    return false;
+  }
+  return previous_model_.getSunRise() != model_.getSunRise() ||
+         previous_model_.getSunSet() != model_.getSunSet() ||
+         previous_model_.getSunTransit() != model_.getSunTransit() ||
+         previous_model_.getMoonRise() != model_.getMoonRise() ||
+         previous_model_.getMoonSet() != model_.getMoonSet() ||
+         previous_model_.getMoonTransit() != model_.getMoonTransit() ||
+         previous_model_.getMoonPhaseLetter() != model_.getMoonPhaseLetter();
+}
+
+bool EPDView2::haveNodesChanged() const {
+  if (!has_previous_state_) {
+    return false;
+  }
+
+  // Use the Model equality operator
+  return previous_model_ != model_;
+}
+
+// Display methods with RenderContext support
+void EPDView2::displayTime(const RenderContext& ctx) {
+  u8g2_.setFont(largeFont);
+  uint str_width = u8g2_.getUTF8Width(model_.getTime().c_str());
+
+  if (ctx.is_partial) {
+    int x = 0;
+    int y = ctx.display_height - 10 - font_height_spacing_38pt;
+    int width = str_width + 20;  // Add padding
+    int height = font_height_spacing_38pt;
+
+    Serial.printf("displayTime partial: window (%d,%d) size (%dx%d)\n", x, y,
+                  width, height);
+    display_->setPartialWindow(x, y, width, height);
+    display_->firstPage();
+  }
+
+  do {
+    if (ctx.is_partial) {
+      display_->fillScreen(GxEPD_WHITE);
+      u8g2_.setFontMode(0);
+      u8g2_.setFontDirection(0);
+      u8g2_.setForegroundColor(GxEPD_BLACK);
+      u8g2_.setBackgroundColor(GxEPD_WHITE);
+      u8g2_.setFont(largeFont);
+    }
+
+    u8g2_.setCursor(0, ctx.display_height - 10);
+    u8g2_.printf("%s", model_.getTime().c_str());
+  } while (ctx.is_partial && display_->nextPage());
+
+  if (!ctx.is_partial) {
+    u8g2_.setFont(defaultFont);
+  }
+}
+
+void EPDView2::displayDate(const RenderContext& ctx) {
+  u8g2_.setFont(defaultFont);
+  uint str_width = u8g2_.getUTF8Width(model_.getDate().c_str());
+  int x = ctx.display_width - str_width;
+
+  if (ctx.is_partial) {
+    int y = ctx.display_height - 10 - font_height_spacing_24pt;
+    int width = str_width + 20;  // Add padding
+    int height = font_height_spacing_24pt;
+
+    Serial.printf("displayDate partial: window (%d,%d) size (%dx%d)\n", x, y,
+                  width, height);
+    display_->setPartialWindow(x - 10, y, width, height);
+    display_->firstPage();
+  }
+
+  do {
+    if (ctx.is_partial) {
+      display_->fillScreen(GxEPD_WHITE);
+      u8g2_.setFontMode(0);
+      u8g2_.setFontDirection(0);
+      u8g2_.setForegroundColor(GxEPD_BLACK);
+      u8g2_.setBackgroundColor(GxEPD_WHITE);
+      u8g2_.setFont(defaultFont);
+    }
+
+    u8g2_.setCursor(x, ctx.display_height - 10);
+    u8g2_.printf("%s", model_.getDate().c_str());
+  } while (ctx.is_partial && display_->nextPage());
 }
