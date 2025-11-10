@@ -53,7 +53,7 @@ bool EPDView2::fullRender() {
 bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
   bool deepSleepNeeded = false;
 
-  if (fullWindowRefresh) {
+  if (fullWindowRefresh || doc_is_valid_ == false) {
     Serial.println("Performing full window refresh");
     (*display_).setFullWindow();
   } else {
@@ -71,10 +71,9 @@ bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
     u8g2_.setForegroundColor(GxEPD_BLACK);
     u8g2_.setBackgroundColor(GxEPD_WHITE);
     u8g2_.setFont(defaultFont);
-    u8g2_.setCursor(0, 24);
 
-    // TODO: need to distinguish GET failure vs partial response
     if (doc_is_valid_ == false) {
+      u8g2_.setCursor(0, 24);
       u8g2_.println("Failed to get data - local sensor only");
       displayLocalSensorData();
       deepSleepNeeded = true;
@@ -97,6 +96,7 @@ bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
     }
   } while ((*display_).nextPage());
 
+  // TODO: remove
   deepSleepNeeded = true;
 
   return deepSleepNeeded;
