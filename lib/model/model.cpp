@@ -254,10 +254,17 @@ bool Model::operator==(const Model& other) const {
 
   for (JsonPair kvp : (*doc_).as<JsonObject>()) {
     const char* key = kvp.key().c_str();
+
+    // Ignore keys that are not relevant for equality
+    if (kvp.key() == "free_heap_bytes" || kvp.key() == "stale_state") {
+      continue;
+    }
+
     if (!(other.doc_)->operator[](key).is<JsonVariant>()) {
       Serial.printf("Key '%s' not found in other model\n", key);
       return false;
     }
+
     JsonVariant v1 = kvp.value();
     JsonVariant v2 = (*other.doc_)[key];
     if (v1.is<JsonObject>() && v2.is<JsonObject>()) {
