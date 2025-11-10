@@ -11,7 +11,7 @@ size_t showHeapInfo(const char* msg) {
 
 void setupSerial() {
   if (Serial) {
-    Serial.println("Serial already initialized");
+    Serial.println(F("Serial already initialized"));
     return;
   }
 
@@ -21,8 +21,8 @@ void setupSerial() {
     delay(100 / (attempts < 1 ? 1 : attempts));
     if (--attempts <= 0) {
       Serial.println(
-          "Gave up waiting for serial monitor, continuing... (so this "
-          "shouldn't appear...)");
+          F("Gave up waiting for serial monitor, continuing... (so this "
+            "shouldn't appear...)"));
       break;
     }
   }
@@ -53,18 +53,19 @@ void goToSleep(bool deepSleepNeeded) {
   size_t free_heap = showHeapInfo("Before sleep");
 
   if (free_heap < 100000) {
-    Serial.println("Low memory detected, switching to deep sleep mode forced");
+    Serial.println(
+        F("Low memory detected, switching to deep sleep mode forced"));
     isLightSleep = false;
   }
 
 #ifdef LIGHT_SLEEP_ENABLED
   if (isLightSleep) {
-    Serial.println("Going to light sleep...");
+    Serial.println(F("Going to light sleep..."));
   } else {
-    Serial.println("Going to deep sleep due to low memory...");
+    Serial.println(F("Going to deep sleep..."));
   }
 #else
-  Serial.println("Going to deep sleep...");
+  Serial.println(F("Going to deep sleep..."));
   isLightSleep = false;
 #endif
 
