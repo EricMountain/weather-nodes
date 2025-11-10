@@ -41,14 +41,8 @@ bool EPDView2::fullRender() {
     Serial.println("E-Paper display initialized");
     u8g2_.begin(*display_);
   } else {
-#ifdef FORCE_FULL_REFRESH
-    (*display_).init(115200);
-    Serial.println("E-Paper display initialized (forced)");
-    u8g2_.begin(*display_);
-#else
     Serial.println("E-Paper display previously initialized");
     fullWindowRefresh = false;
-#endif
   }
 
   bool deepSleepNeeded = fullRenderInternal(fullWindowRefresh);
