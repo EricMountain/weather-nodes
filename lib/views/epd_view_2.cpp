@@ -96,7 +96,7 @@ bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
     }
   } while ((*display_).nextPage());
 
-  // TODO: remove
+  // TODO: remove once we have proper partial update handling
   deepSleepNeeded = true;
 
   return deepSleepNeeded;
