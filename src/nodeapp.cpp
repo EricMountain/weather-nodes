@@ -365,7 +365,7 @@ void NodeApp::updateFirmware(const char* firmware_url) {
   client.setCACert(rootCACerts);
 
   HTTPClient https;
-  Serial.printf("Starting OTA from: %s\n", firmware_url);
+  Serial.println(F("Starting OTA update"));
 
   if (https.begin(client, firmware_url)) {
     int httpCode = https.GET();
