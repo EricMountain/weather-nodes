@@ -187,6 +187,9 @@ bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
     }
   } while ((*display_).nextPage());
 
+  // TODO: remove if we succeed in getting partial updates working reliably
+  deepSleepNeeded = true;
+
   return deepSleepNeeded;
 }
 
