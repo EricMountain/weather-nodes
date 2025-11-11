@@ -180,8 +180,9 @@ bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
       u8g2_.setCursor(0, row_offset);
       displaySunAndMoon(ctx);
 
-      Serial.printf("Time: %s\n", model_.getTime().c_str());
-      displayTime(ctx);
+      // TODO: re-enable if we get partial updates working reliably
+      // Serial.printf("Time: %s\n", model_.getTime().c_str());
+      // displayTime(ctx);
 
       displayDate(ctx);
     }
