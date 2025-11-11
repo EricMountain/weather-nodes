@@ -38,8 +38,12 @@ bool runApp() {
     return true;
   }
   showHeapInfo("After setup");
+#ifdef API_KEY
   app.doApiCalls();
   showHeapInfo("After API calls");
+#else
+  Serial.println(F("No API key, no HTTP calls"));
+#endif
 #ifdef HAS_DISPLAY
   deepSleepNeeded = app.updateDisplay();
   showHeapInfo("After display update");
