@@ -18,10 +18,19 @@
 #include "sensor.h"
 
 // Pin mapping for many ESP32 dev boards and Waveshare 7.5in V2 SPI displays:
+#ifdef USE_THINGPULSE_EPULSE_FEATHER
+// Wiring for ThingPulse ePulse Feather
+#define EPD_CS 15
+#define EPD_DC 27
+#define EPD_RST 26
+#define EPD_BUSY 25
+#else
+// Wiring for Waveshare ESP32
 #define EPD_CS 5
 #define EPD_DC 17
 #define EPD_RST 16
 #define EPD_BUSY 4
+#endif
 
 #define DISPLAY_WIDTH GxEPD2_750_T7::WIDTH_VISIBLE
 #define DISPLAY_HEIGHT GxEPD2_750_T7::HEIGHT
