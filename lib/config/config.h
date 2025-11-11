@@ -1,8 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-// #define INDOOR_DISPLAY_NODE
-// #define OUTDOOR_NODE
 #define MAX_STALE_SECONDS 60 * 30
 
 #define BME680_I2C_ADDR 0x77
