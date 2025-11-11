@@ -560,7 +560,7 @@ bool EPDView2::haveNodesChanged() const {
     return false;
   }
 
-  // Use the Model equality operator
+  // TODO: implement per-node comparison for more granular updates
   return previous_model_ != model_;
 }
 
