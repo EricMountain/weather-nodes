@@ -31,6 +31,10 @@
 #define OTA_UPDATE_ENABLED
 #endif
 
+#ifdef DUMMY_NODE
+#define OTA_UPDATE_ENABLED
+#endif
+
 #ifdef HAS_BATTERY
 // Battery voltage calculation
 #define BAT_MON_PIN 35
