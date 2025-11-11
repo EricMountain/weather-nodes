@@ -16,6 +16,7 @@
 #include "u8g2_font_battery24_tr.h"
 #include "model.h"
 #include "sensor.h"
+#include "config.h"
 
 // Pin mapping for many ESP32 dev boards and Waveshare 7.5in V2 SPI displays:
 #ifdef USE_THINGPULSE_EPULSE_FEATHER
