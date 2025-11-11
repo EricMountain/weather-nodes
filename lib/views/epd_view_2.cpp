@@ -281,15 +281,8 @@ void EPDView2::displaySunAndMoon(const RenderContext& ctx) {
 
     u8g2_.setFont(moon_phases_48pt);
     u8g2_.print(model_.getMoonPhaseLetter());
-
-    if (!ctx.is_partial) {
-      u8g2_.setFont(defaultFont);
-    }
-  } while (ctx.is_partial && display_->nextPage());
-
-  if (!ctx.is_partial) {
     u8g2_.setFont(defaultFont);
-  }
+  } while (ctx.is_partial && display_->nextPage());
 }
 
 uint EPDView2::displayNodes(const RenderContext& ctx) {
