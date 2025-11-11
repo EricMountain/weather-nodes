@@ -60,7 +60,11 @@ pio test --list-tests -e native
 
 ## Project-Specific Conventions
 
-* There are three firmware build configurations: `indoor_display_node`, `outdoor_node`, and `prototype_node`
+* There are four firmware build configurations:
+    * `indoor_display_node`: ESP32 with e-paper display
+    * `outdoor_node`: ESP32 with outdoor sensors
+    * `prototype_node`: ESP32 to experiment with
+    * `dummy_node`: ESP32 with no-op functionality. Used to load an ESP32 with minimal code that won’t upload data.
 * Each has specific build flags defined in `platformio.ini`
 * Serial monitor speed is 115200 baud
 * The project uses custom partition table `min_spiffs.csv`
