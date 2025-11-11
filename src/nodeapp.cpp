@@ -113,6 +113,7 @@ void NodeApp::doApiCalls() {
 }
 
 void NodeApp::doPost(WiFiClientSecure& client) {
+#ifdef API_KEY
   HTTPClient httpPost;
   httpPost.addHeader("x-api-key", API_KEY);
   Serial.println("[HTTPS] begin...");
@@ -135,6 +136,7 @@ void NodeApp::doPost(WiFiClientSecure& client) {
     http_post_error_code_ = httpCode;
   }
   httpPost.end();
+#endif
 }
 
 std::string NodeApp::buildPayload() {
