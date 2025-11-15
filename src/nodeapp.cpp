@@ -103,16 +103,17 @@ void NodeApp::registerSensors() {
   }
 }
 
-void NodeApp::doApiCalls() {
+bool NodeApp::doApiCalls() {
   client_.setCACert(rootCACerts);
-  doPost(client_);
+  bool success = doPost(client_);
 #ifdef HAS_DISPLAY
-  doGet(client_);
+  success |= doGet(client_);
 #endif
   // client_.stop();
+  return success;
 }
 
-void NodeApp::doPost(WiFiClientSecure& client) {
+bool NodeApp::doPost(WiFiClientSecure& client) {
 #ifdef API_KEY
   HTTPClient httpPost;
   httpPost.addHeader("x-api-key", API_KEY);
@@ -129,13 +130,20 @@ void NodeApp::doPost(WiFiClientSecure& client) {
 #ifdef OTA_UPDATE_ENABLED
       handlePostResponse(payload);
 #endif
+      http_post_error_code_ = httpCode;
+      httpPost.end();
+      return (httpCode == HTTP_CODE_OK);
     } else {
       Serial.printf("[HTTPS] POST... failed, error: %s\n",
                     httpPost.errorToString(httpCode).c_str());
+      http_post_error_code_ = httpCode;
     }
-    http_post_error_code_ = httpCode;
+    httpPost.end();
+    return false;
   }
-  httpPost.end();
+  return false;
+#else
+  return false;
 #endif
 }
 
@@ -280,15 +288,18 @@ std::string NodeApp::formatStatusPayload(
 }
 
 #ifdef HAS_DISPLAY
-void NodeApp::doGet(WiFiClientSecure& client) {
+bool NodeApp::doGet(WiFiClientSecure& client) {
   JsonDocument* doc = nullptr;
   int attempts = 3;
+  int final_http_code = 0;
 
   while (attempts-- > 0) {
     HTTPClient httpGet;
     httpGet.begin(client, GET_URL);
     httpGet.addHeader("x-api-key", API_KEY);
     int httpCode = httpGet.GET();
+    final_http_code = httpCode;
+
     if (httpCode > 0) {
       Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
       String payload = httpGet.getString();
@@ -328,6 +339,8 @@ void NodeApp::doGet(WiFiClientSecure& client) {
     delete doc_;
   }
   doc_ = doc;
+
+  return (final_http_code == HTTP_CODE_OK && doc != nullptr);
 }
 
 // Returns true if deep sleep is needed
