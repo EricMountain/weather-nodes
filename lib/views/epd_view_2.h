@@ -120,6 +120,8 @@ class EPDView2 : public DisplayView {
       JsonObject& nodeData, const std::string& device,
       const std::string& measurement);
   void displayLocalSensorData();
+  void displayNodeVersion(JsonObject& nodeData, int node_count, int column,
+                          uint8_t& row, uint& row_offset);
   bool fullRender() override;
   bool fullRenderInternal(bool fullWindowRefresh = true);
   bool partialRender() override;

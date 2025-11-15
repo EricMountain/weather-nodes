@@ -19,6 +19,7 @@
 #define HAS_BME680
 #define HAS_BATTERY
 #define OTA_UPDATE_ENABLED
+#define DISPLAY_NODE_VERSIONS
 #endif
 
 #ifdef OUTDOOR_NODE

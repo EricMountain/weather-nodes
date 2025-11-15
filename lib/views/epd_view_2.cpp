@@ -324,6 +324,7 @@ uint EPDView2::displayNodes(const RenderContext& ctx) {
       // displayBatteryLevel(nodeData, ctx.node_count, column, row, row_offset);
       displayBadStatuses(nodeData, ctx.node_count, column, row, row_offset);
       displayStaleState(nodeData, ctx.node_count, column, row, row_offset);
+      displayNodeVersion(nodeData, ctx.node_count, column, row, row_offset);
 
       column++;
       if (row_offset > max_row_offset) {
@@ -395,6 +396,34 @@ void EPDView2::displayStaleState(JsonObject& nodeData, int node_count,
   }
 
   u8g2_.setFont(defaultFont);
+}
+
+void EPDView2::displayNodeVersion(JsonObject& nodeData, int node_count,
+                                  int column, uint8_t& row,
+                                  uint& row_offset) {
+#ifdef DISPLAY_NODE_VERSIONS
+  if (!nodeData["version"].is<JsonString>()) {
+    return;
+  }
+
+  int column_width = display_->width() / node_count;
+  int row_height = font_height_spacing_16pt;
+
+  u8g2_.setFont(smallFont);
+
+  row_offset += row_height;
+  row++;
+  u8g2_.setCursor(column * column_width, row_offset);
+
+  std::string version = nodeData["version"].as<String>().c_str();
+  // Display only first 8 characters of the git SHA1 hash
+  if (version.length() > 8) {
+    version = version.substr(0, 8);
+  }
+  u8g2_.printf("v:%s", version.c_str());
+
+  u8g2_.setFont(defaultFont);
+#endif
 }
 
 void EPDView2::displayNodeMeasurements(JsonObject& nodeData,
