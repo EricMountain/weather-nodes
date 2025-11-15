@@ -82,6 +82,7 @@ bool EPDView2::performPartialUpdates() {
     return false;
   }
 
+#ifdef DISPLAY_TIME
   // Update time if changed
   if (hasTimeChanged()) {
     Serial.println("Time changed, partial update");
@@ -89,6 +90,7 @@ bool EPDView2::performPartialUpdates() {
     displayTime(ctx);
     updated = true;
   }
+#endif
 
   // Update date if changed
   if (hasDateChanged()) {
@@ -182,7 +184,9 @@ bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
 
       // TODO: re-enable if we get partial updates working reliably
       // Serial.printf("Time: %s\n", model_.getTime().c_str());
-      // displayTime(ctx);
+#ifdef DISPLAY_TIME
+      displayTime(ctx);
+#endif
 
       displayDate(ctx);
     }
@@ -399,8 +403,7 @@ void EPDView2::displayStaleState(JsonObject& nodeData, int node_count,
 }
 
 void EPDView2::displayNodeVersion(JsonObject& nodeData, int node_count,
-                                  int column, uint8_t& row,
-                                  uint& row_offset) {
+                                  int column, uint8_t& row, uint& row_offset) {
 #ifdef DISPLAY_NODE_VERSIONS
   if (!nodeData["version"].is<JsonString>()) {
     return;
