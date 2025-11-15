@@ -21,7 +21,7 @@
 #define HAS_BATTERY
 #define OTA_UPDATE_ENABLED
 #define DISPLAY_NODE_VERSIONS
-// #define DISPLAY_TIME
+#define DISPLAY_TIME
 #endif
 
 #ifdef OUTDOOR_NODE
