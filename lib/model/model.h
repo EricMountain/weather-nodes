@@ -50,6 +50,7 @@ class Model {
   void addNodeStatusSection(JsonObject& raw_node_data, JsonObject& new_node,
                             const char* device_id = "");
   void addNodeBatteryLevel(JsonObject& raw_node_data, JsonObject& new_node);
+  void addNodeVersion(JsonObject& raw_node_data, JsonObject& new_node);
   JsonObject getNodeData() const;
   std::string toJsonString() const;
   bool fromJsonString(const std::string& json_str);

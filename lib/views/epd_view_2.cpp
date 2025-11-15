@@ -389,27 +389,29 @@ void EPDView2::displayBadStatuses(JsonObject& nodeData, int node_count,
 
 void EPDView2::displayStaleState(JsonObject& nodeData, int node_count,
                                  int column, uint8_t& row, uint& row_offset) {
-  int column_width = display_->width() / node_count;
-  int row_height = font_height_spacing_16pt;
-
-  u8g2_.setFont(smallFont);
-
-  row_offset += row_height;
-  row++;
-  u8g2_.setCursor(column * column_width, row_offset);
-
   std::string node_stale = nodeData["stale_state"].as<String>().c_str();
   if (!node_stale.empty()) {
-    u8g2_.printf("%s", node_stale.c_str());
-  }
+    int column_width = display_->width() / node_count;
+    int row_height = font_height_spacing_16pt;
 
-  u8g2_.setFont(defaultFont);
+    u8g2_.setFont(smallFont);
+
+    row_offset += row_height;
+    row++;
+    u8g2_.setCursor(column * column_width, row_offset);
+
+    u8g2_.printf("%s", node_stale.c_str());
+
+    u8g2_.setFont(defaultFont);
+  }
 }
 
 void EPDView2::displayNodeVersion(JsonObject& nodeData, int node_count,
                                   int column, uint8_t& row, uint& row_offset) {
+  Serial.println("Displaying node version");
 #ifdef DISPLAY_NODE_VERSIONS
   if (!nodeData["version"].is<JsonString>()) {
+    Serial.println("Node version is not a string");
     return;
   }
 
@@ -423,11 +425,12 @@ void EPDView2::displayNodeVersion(JsonObject& nodeData, int node_count,
   u8g2_.setCursor(column * column_width, row_offset);
 
   std::string version = nodeData["version"].as<String>().c_str();
-  // Display only first 8 characters of the git SHA1 hash
-  if (version.length() > 8) {
-    version = version.substr(0, 8);
+  // Display only first 13 characters of the git SHA1 hash
+  if (version.length() > 13) {
+    version = version.substr(0, 13);
   }
-  u8g2_.printf("v:%s", version.c_str());
+  u8g2_.printf("%s", version.c_str());
+  Serial.printf("Displaying node version: %s\n", version.c_str());
 
   u8g2_.setFont(defaultFont);
 #endif

@@ -133,6 +133,7 @@ void Model::addNode(JsonPair& raw_node, DateTime& utc_timestamp) {
   addNodeStaleState(utc_timestamp, raw_node_data, new_node);
   addNodeMeasurementsV2(raw_node_data, new_node);
   addNodeMeasurementsMinMax(raw_node_data, new_node);
+  addNodeVersion(raw_node_data, new_node);
 }
 
 void Model::addNodeMeasurementsV2(JsonObject& raw_node_data,
@@ -235,6 +236,14 @@ void Model::addNodeBatteryLevel(JsonObject& raw_node_data,
         new_node["battery_level"] = battery_level;
       }
     }
+  }
+}
+
+void Model::addNodeVersion(JsonObject& raw_node_data, JsonObject& new_node) {
+  if (raw_node_data["version"].is<JsonString>()) {
+    new_node["version"] = raw_node_data["version"].as<JsonString>();
+  } else {
+    new_node["version"] = "unknown";
   }
 }
 
