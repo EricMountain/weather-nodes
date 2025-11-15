@@ -54,16 +54,6 @@ class DisplayView {
   std::string current_device_id_;
 
   /**
-   * Full render of the model to the display hardware.
-   */
-  virtual bool fullRender() = 0;
-
-  /**
-   * Partial render of the model to the display hardware.
-   */
-  virtual bool partialRender() = 0;
-
-  /**
    * Build the display model from JSON data and sensors.
    * Returns true if display should be refreshed, false otherwise.
    */

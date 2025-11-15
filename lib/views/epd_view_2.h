@@ -122,9 +122,8 @@ class EPDView2 : public DisplayView {
   void displayLocalSensorData();
   void displayNodeVersion(JsonObject& nodeData, int node_count, int column,
                           uint8_t& row, uint& row_offset);
-  bool fullRender() override;
+  bool fullRender();
   bool fullRenderInternal(bool fullWindowRefresh = true);
-  bool partialRender() override;
   void partialRenderInternal();
 
  public:
