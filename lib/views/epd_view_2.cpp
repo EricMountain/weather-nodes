@@ -189,7 +189,10 @@ bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
   } while ((*display_).nextPage());
 
   // TODO: remove if we succeed in getting partial updates working reliably
+#ifdef FORCE_DEEP_SLEEP
+  Serial.println(F("Forcing deep sleep after full render"));
   deepSleepNeeded = true;
+#endif
 
   return deepSleepNeeded;
 }
