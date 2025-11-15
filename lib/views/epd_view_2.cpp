@@ -28,8 +28,8 @@ bool EPDView2::render(JsonDocument* doc,
   buildModel(doc, sensors);
 
   // First render or invalid data - full refresh
-  if (!has_previous_state_ || !doc_is_valid_) {
-    Serial.println("First render or invalid data - performing full refresh");
+  if (!has_previous_state_ || !doc_is_valid_ || display_ == nullptr) {
+    Serial.println(F("First render or invalid data - performing full refresh"));
     has_previous_state_ = true;
     previous_model_ = model_;
     partial_update_count_ = 0;
@@ -48,7 +48,7 @@ bool EPDView2::render(JsonDocument* doc,
 
   // Try partial updates
   if (performPartialUpdates()) {
-    Serial.println("Partial updates completed successfully");
+    Serial.println(F("Partial updates completed successfully"));
     previous_model_ = model_;
     partial_update_count_++;
     return deepSleepNeeded;
@@ -56,7 +56,7 @@ bool EPDView2::render(JsonDocument* doc,
 
   // Fall back to full render if partial updates failed
   Serial.println(
-      "Partial updates failed or not applicable - performing full refresh");
+      F("Partial updates failed or not applicable - performing full refresh"));
   previous_model_ = model_;
   partial_update_count_ = 0;
   fullRender();
@@ -65,7 +65,7 @@ bool EPDView2::render(JsonDocument* doc,
 
 bool EPDView2::performPartialUpdates() {
   if (display_ == nullptr) {
-    Serial.println("Display not initialized for partial updates");
+    Serial.println(F("Display not initialized for partial updates"));
     return false;
   }
 
@@ -80,14 +80,14 @@ bool EPDView2::performPartialUpdates() {
 
   // Check for layout changes (node count changed)
   if (previous_model_.getNodeData().size() != model_.getNodeData().size()) {
-    Serial.println("Node count changed - need full refresh");
+    Serial.println(F("Node count changed - need full refresh"));
     return false;
   }
 
 #ifdef DISPLAY_TIME
   // Update time if changed
   if (hasTimeChanged()) {
-    Serial.println("Time changed, partial update");
+    Serial.println(F("Time changed, partial update"));
     ctx.mode = RenderMode::PARTIAL_TIME;
     displayTime(ctx);
     updated = true;
@@ -96,7 +96,7 @@ bool EPDView2::performPartialUpdates() {
 
   // Update date if changed
   if (hasDateChanged()) {
-    Serial.println("Date changed, partial update");
+    Serial.println(F("Date changed, partial update"));
     ctx.mode = RenderMode::PARTIAL_DATE;
     displayDate(ctx);
     updated = true;
@@ -104,7 +104,7 @@ bool EPDView2::performPartialUpdates() {
 
   // Update sun/moon if changed
   if (haveSunMoonChanged()) {
-    Serial.println("Sun/Moon changed, partial update");
+    Serial.println(F("Sun/Moon changed, partial update"));
     ctx.mode = RenderMode::PARTIAL_SUN_MOON;
     displaySunAndMoon(ctx);
     updated = true;
@@ -112,7 +112,7 @@ bool EPDView2::performPartialUpdates() {
 
   // Update nodes if changed
   if (haveNodesChanged()) {
-    Serial.println("Nodes changed, partial update");
+    Serial.println(F("Nodes changed, partial update"));
     ctx.mode = RenderMode::PARTIAL_NODES;
     displayNodes(ctx);
     updated = true;
@@ -123,33 +123,28 @@ bool EPDView2::performPartialUpdates() {
 
 // Returns true if full display re-initialisation is needed on next cycle
 bool EPDView2::fullRender() {
-  bool fullWindowRefresh = true;
   if (display_ == nullptr) {
     display_ = new GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT>(
         GxEPD2_750_T7(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY));
     (*display_).init(115200);
-    Serial.println("E-Paper display initialized");
+    Serial.println(F("E-Paper display initialized"));
     u8g2_.begin(*display_);
   } else {
-    Serial.println("E-Paper display previously initialized");
-    fullWindowRefresh = false;
+    Serial.println(
+        F("E-Paper display previously initialized (unexpected, display_ should "
+          "be nullptr)"));
   }
 
-  bool deepSleepNeeded = fullRenderInternal(fullWindowRefresh);
-  Serial.println("E-Paper full render completed");
+  bool deepSleepNeeded = fullRenderInternal();
+  Serial.println(F("E-Paper full render completed"));
   return deepSleepNeeded;
 }
 
-bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
+bool EPDView2::fullRenderInternal() {
   bool deepSleepNeeded = false;
 
-  if (fullWindowRefresh || doc_is_valid_ == false) {
-    Serial.println("Performing full window refresh");
-    (*display_).setFullWindow();
-  } else {
-    Serial.println("Performing partial window refresh");
-    (*display_).setPartialWindow(0, 0, display_->width(), display_->height());
-  }
+  Serial.println(F("Performing full window refresh"));
+  (*display_).setFullWindow();
 
   // Create RenderContext for full render
   RenderContext ctx;
@@ -184,8 +179,6 @@ bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
       u8g2_.setCursor(0, row_offset);
       displaySunAndMoon(ctx);
 
-      // TODO: re-enable if we get partial updates working reliably
-      // Serial.printf("Time: %s\n", model_.getTime().c_str());
 #ifdef DISPLAY_TIME
       displayTime(ctx);
 #endif
@@ -194,7 +187,6 @@ bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
     }
   } while ((*display_).nextPage());
 
-  // TODO: remove if we succeed in getting partial updates working reliably
 #ifdef FORCE_DEEP_SLEEP
   Serial.println(F("Forcing deep sleep after full render"));
   deepSleepNeeded = true;
@@ -397,10 +389,10 @@ void EPDView2::displayStaleState(JsonObject& nodeData, int node_count,
 
 void EPDView2::displayNodeVersion(JsonObject& nodeData, int node_count,
                                   int column, uint8_t& row, uint& row_offset) {
-  Serial.println("Displaying node version");
+  Serial.println(F("Displaying node version"));
 #ifdef DISPLAY_NODE_VERSIONS
   if (!nodeData["version"].is<JsonString>()) {
-    Serial.println("Node version is not a string");
+    Serial.println(F("Node version is not a string"));
     return;
   }
 
