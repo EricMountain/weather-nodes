@@ -16,6 +16,7 @@
 #define LIGHT_SLEEP_ENABLED
 #define SLEEP_SECONDS 900
 #define HAS_BME680
+#define HAS_BATTERY
 #define OTA_UPDATE_ENABLED
 #endif
 
