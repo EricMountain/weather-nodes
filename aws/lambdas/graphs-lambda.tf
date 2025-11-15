@@ -81,7 +81,7 @@ resource "aws_iam_role_policy_attachment" "graphs_lambda_policy_attach" {
 }
 
 # Uncomment for logging in CloudWatch
-resource "aws_iam_role_policy_attachment" "graphs_lambda_attach_lambda_basic_execution" {
-  role       = aws_iam_role.iam_for_graphs_lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
+# resource "aws_iam_role_policy_attachment" "graphs_lambda_attach_lambda_basic_execution" {
+#   role       = aws_iam_role.iam_for_graphs_lambda.name
+#   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+# }
