@@ -123,7 +123,7 @@ class EPDView2 : public DisplayView {
   void displayNodeVersion(JsonObject& nodeData, int node_count, int column,
                           uint8_t& row, uint& row_offset);
   bool fullRender();
-  bool fullRenderInternal(bool fullWindowRefresh = true);
+  bool fullRenderInternal();
   void partialRenderInternal();
 
  public:
