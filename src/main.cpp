@@ -76,7 +76,8 @@ void goToSleep(bool deepSleepNeeded) {
   Serial.printf("Sleeping for %d seconds...\n", SLEEP_SECONDS);
   esp_sleep_enable_timer_wakeup(SLEEP_SECONDS * 1000000ULL);  // microseconds
 
-#ifndef HAS_BATTERY
+// if doesn’t have battery or if it’s a display node delay
+#if !defined(HAS_BATTERY) || defined(HAS_DISPLAY)
   delay(100);  // Let serial print
 #endif
 
