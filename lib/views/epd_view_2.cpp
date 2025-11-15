@@ -37,12 +37,13 @@ bool EPDView2::render(JsonDocument* doc,
   }
 
   // Force full refresh periodically to prevent ghosting
+  bool deepSleepNeeded = false;
   if (partial_update_count_ >= MAX_PARTIAL_UPDATES) {
     Serial.printf("Max partial updates (%d) reached - forcing full refresh\n",
                   MAX_PARTIAL_UPDATES);
     previous_model_ = model_;
     partial_update_count_ = 0;
-    return fullRender();
+    deepSleepNeeded = true;
   }
 
   // Try partial updates
@@ -50,7 +51,7 @@ bool EPDView2::render(JsonDocument* doc,
     Serial.println("Partial updates completed successfully");
     previous_model_ = model_;
     partial_update_count_++;
-    return false;  // No deep sleep needed for partial updates
+    return deepSleepNeeded;
   }
 
   // Fall back to full render if partial updates failed
@@ -58,7 +59,8 @@ bool EPDView2::render(JsonDocument* doc,
       "Partial updates failed or not applicable - performing full refresh");
   previous_model_ = model_;
   partial_update_count_ = 0;
-  return fullRender();
+  fullRender();
+  return true;
 }
 
 bool EPDView2::performPartialUpdates() {
@@ -199,19 +201,6 @@ bool EPDView2::fullRenderInternal(bool fullWindowRefresh) {
 #endif
 
   return deepSleepNeeded;
-}
-
-bool EPDView2::partialRender() {
-  if (display_ == nullptr) {
-    Serial.println("E-Paper display not initialized for partial render");
-    return false;
-  }
-
-  // partialRenderInternal();
-  fullRenderInternal(false);
-  Serial.println("E-Paper partial render completed");
-
-  return true;
 }
 
 void EPDView2::partialRenderInternal() {
