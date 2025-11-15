@@ -249,18 +249,14 @@ void EPDView2::displayLocalSensorData() {
 
 void EPDView2::displaySunAndMoon(const RenderContext& ctx) {
   if (ctx.is_partial) {
-    // Calculate sun/moon display region
-    // For partial updates, we need to know where nodes end
-    // This is a simplified approach - in full render, this is called after
-    // displayNodes()
+    // Position sun/moon in a fixed location above the time display
+    // Time is at display_height - 10, so place sun/moon above it
     u8g2_.setFont(defaultFont);
     int height = font_height_spacing_24pt * 2 + 48;  // 2 lines + moon icon
 
-    // Calculate starting Y position (after nodes area)
-    // In full render, this is passed as row_offset from displayNodes()
-    // For partial, we approximate based on layout
-    int node_area_height = ctx.display_height - font_height_spacing_38pt * 2;
-    int y = node_area_height;
+    // Calculate Y position: above time display
+    // Time takes ~50 pixels (font_height_spacing_38pt), place sun/moon above it
+    int y = ctx.display_height - font_height_spacing_38pt - height;
 
     Serial.printf("displaySunAndMoon partial: window (0,%d) size (%dx%d)\n", y,
                   ctx.display_width, height);
@@ -294,8 +290,12 @@ void EPDView2::displaySunAndMoon(const RenderContext& ctx) {
 
 uint EPDView2::displayNodes(const RenderContext& ctx) {
   if (ctx.is_partial && ctx.mode == RenderMode::PARTIAL_NODES) {
-    // Calculate nodes region
-    int height = ctx.display_height - font_height_spacing_38pt * 2;
+    // Calculate nodes region - limit height to stop just above sun/moon display
+    // Sun/moon starts at: display_height - font_height_spacing_38pt -
+    // (font_height_spacing_24pt * 2 + 48)
+    int sun_moon_height = font_height_spacing_24pt * 2 + 48;
+    int height =
+        ctx.display_height - font_height_spacing_38pt - sun_moon_height;
 
     Serial.printf("displayNodes partial: window (0,0) size (%dx%d)\n",
                   ctx.display_width, height);
