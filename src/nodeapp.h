@@ -57,7 +57,7 @@ class NodeApp {
   bool setup();
   bool updateDisplay();
   void setJsonDoc(JsonDocument* d) { doc_ = d; }
-  void doApiCalls();
+  bool doApiCalls();
 
  private:
   const char* ssid_;
@@ -95,9 +95,9 @@ class NodeApp {
                                  std::string& measurements_v2);
   std::string formatStatusPayload(
       std::vector<std::pair<std::string, std::string>>& status);
-  void doPost(WiFiClientSecure& client);
+  bool doPost(WiFiClientSecure& client);
 #ifdef HAS_DISPLAY
-  void doGet(WiFiClientSecure& client);
+  bool doGet(WiFiClientSecure& client);
 #endif
 #ifdef OTA_UPDATE_ENABLED
   void handlePostResponse(String response);
