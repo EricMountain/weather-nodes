@@ -124,6 +124,8 @@ def addNodeDataToResponse(nodes, node, now_utc):
     if "status" in latest_measurement:
         for k, v in latest_measurement["status"].items():
             nodes[node_device_id]["status"][k] = str(v)
+    if "version" in latest_measurement:
+        nodes[node_device_id]["version"] = str(latest_measurement["version"])
 
 def addLocationToResponse(response, device_config, local_now):
     if "location" in device_config:
