@@ -248,16 +248,16 @@ void EPDView2::displayLocalSensorData() {
 }
 
 void EPDView2::displaySunAndMoon(const RenderContext& ctx) {
+  // Position sun/moon in a fixed location above the time display
+  // Time is at display_height - 10, so place sun/moon above it
+  int height = font_height_spacing_24pt * 2;  // 2 lines
+  height -= 20;                               // Adjust as it’s too much
+
+  // Calculate Y position: above time display
+  // Time takes ~50 pixels (font_height_spacing_38pt), place sun/moon above it
+  int y = ctx.display_height - font_height_spacing_38pt - height;
+
   if (ctx.is_partial) {
-    // Position sun/moon in a fixed location above the time display
-    // Time is at display_height - 10, so place sun/moon above it
-    u8g2_.setFont(defaultFont);
-    int height = font_height_spacing_24pt * 2 + 48;  // 2 lines + moon icon
-
-    // Calculate Y position: above time display
-    // Time takes ~50 pixels (font_height_spacing_38pt), place sun/moon above it
-    int y = ctx.display_height - font_height_spacing_38pt - height;
-
     Serial.printf("displaySunAndMoon partial: window (0,%d) size (%dx%d)\n", y,
                   ctx.display_width, height);
     display_->setPartialWindow(0, y, ctx.display_width, height);
@@ -274,9 +274,13 @@ void EPDView2::displaySunAndMoon(const RenderContext& ctx) {
       u8g2_.setFont(defaultFont);
 
       // Set cursor to top of partial window
-      u8g2_.setCursor(0, font_height_spacing_24pt);
+      // u8g2_.setCursor(0, font_height_spacing_24pt);
     }
 
+    Serial.printf("displaySunAndMoon at y=%d (height=%d, display_height=%d)\n",
+                  y, height, ctx.display_height);
+    u8g2_.setCursor(0, y);
+    u8g2_.setFont(defaultFont);
     u8g2_.printf("Sun:  %s  %s  %s\n", model_.getSunRise().c_str(),
                  model_.getSunTransit().c_str(), model_.getSunSet().c_str());
     u8g2_.printf("Moon: %s  %s  %s  ", model_.getMoonRise().c_str(),
