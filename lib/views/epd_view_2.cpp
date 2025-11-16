@@ -231,12 +231,12 @@ void EPDView2::displayLocalSensorData() {
 void EPDView2::displaySunAndMoon(const RenderContext& ctx) {
   // Position sun/moon in a fixed location above the time display
   // Time is at display_height - 10, so place sun/moon above it
-  int height = font_height_spacing_24pt * 2;  // 2 lines
-  height -= 20;                               // Adjust as it’s too much
+  int height = font_height_spacing_24pt;  // 2 lines, up, then 1 down as the
+                                          // cursor is bottom left of text
 
   // Calculate Y position: above time display
   // Time takes ~50 pixels (font_height_spacing_38pt), place sun/moon above it
-  int y = ctx.display_height - font_height_spacing_38pt - height;
+  int y = ctx.display_height - (font_height_spacing_38pt + 10) - height;
 
   if (ctx.is_partial) {
     Serial.printf("displaySunAndMoon partial: window (0,%d) size (%dx%d)\n", y,
@@ -253,9 +253,6 @@ void EPDView2::displaySunAndMoon(const RenderContext& ctx) {
       u8g2_.setForegroundColor(GxEPD_BLACK);
       u8g2_.setBackgroundColor(GxEPD_WHITE);
       u8g2_.setFont(defaultFont);
-
-      // Set cursor to top of partial window
-      // u8g2_.setCursor(0, font_height_spacing_24pt);
     }
 
     Serial.printf("displaySunAndMoon at y=%d (height=%d, display_height=%d)\n",
@@ -277,7 +274,7 @@ uint EPDView2::displayNodes(const RenderContext& ctx) {
   if (ctx.is_partial && ctx.mode == RenderMode::PARTIAL_NODES) {
     // Calculate nodes region - limit height to stop just above sun/moon display
     int time_sun_moon_height =
-        font_height_spacing_24pt * 2 - 20 + font_height_spacing_38pt;
+        font_height_spacing_24pt * 2 + font_height_spacing_38pt + 10;
     int height = ctx.display_height - time_sun_moon_height;
 
     Serial.printf("displayNodes partial: window (0,0) size (%dx%d)\n",
