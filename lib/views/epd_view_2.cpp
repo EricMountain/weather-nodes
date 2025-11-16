@@ -276,11 +276,9 @@ void EPDView2::displaySunAndMoon(const RenderContext& ctx) {
 uint EPDView2::displayNodes(const RenderContext& ctx) {
   if (ctx.is_partial && ctx.mode == RenderMode::PARTIAL_NODES) {
     // Calculate nodes region - limit height to stop just above sun/moon display
-    // Sun/moon starts at: display_height - font_height_spacing_38pt -
-    // (font_height_spacing_24pt * 2 + 48)
-    int sun_moon_height = font_height_spacing_24pt * 2 + 48;
-    int height =
-        ctx.display_height - font_height_spacing_38pt - sun_moon_height;
+    int time_sun_moon_height =
+        font_height_spacing_24pt * 2 - 20 + font_height_spacing_38pt;
+    int height = ctx.display_height - time_sun_moon_height;
 
     Serial.printf("displayNodes partial: window (0,0) size (%dx%d)\n",
                   ctx.display_width, height);
