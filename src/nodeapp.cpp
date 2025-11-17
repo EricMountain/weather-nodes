@@ -115,32 +115,47 @@ bool NodeApp::doApiCalls() {
 
 bool NodeApp::doPost(WiFiClientSecure& client) {
 #ifdef API_KEY
-  HTTPClient httpPost;
-  httpPost.addHeader("x-api-key", API_KEY);
-  Serial.println("[HTTPS] begin...");
-  if (httpPost.begin(client, POST_URL)) {
-    Serial.println("[HTTPS] POST...");
-    std::string payload = buildPayload();
-    // TODO: implement retries with exponential backoff
-    int httpCode = httpPost.POST(String(payload.c_str()));
-    if (httpCode > 0) {
-      Serial.printf("[HTTPS] POST... code: %d\n", httpCode);
-      String payload = httpPost.getString();
-      Serial.println(payload);
-#ifdef OTA_UPDATE_ENABLED
-      handlePostResponse(payload);
+  // Determine number of retry attempts:
+  // - If HAS_BATTERY without HAS_DISPLAY: 1 attempt only
+  // - Otherwise: 3 attempts
+#if defined(HAS_BATTERY) && !defined(HAS_DISPLAY)
+  int max_attempts = 1;
+#else
+  int max_attempts = 3;
 #endif
-      http_post_error_code_ = httpCode;
-      httpPost.end();
-      return (httpCode == HTTP_CODE_OK);
-    } else {
-      Serial.printf("[HTTPS] POST... failed, error: %s\n",
-                    httpPost.errorToString(httpCode).c_str());
-      http_post_error_code_ = httpCode;
+
+  int attempts = max_attempts;
+  std::string payload = buildPayload();
+
+  while (attempts-- > 0) {
+    HTTPClient httpPost;
+    httpPost.addHeader("x-api-key", API_KEY);
+    Serial.println(F("[HTTPS] POST begin..."));
+    if (httpPost.begin(client, POST_URL)) {
+      Serial.println(F("[HTTPS] POST..."));
+      int httpCode = httpPost.POST(String(payload.c_str()));
+      if (httpCode > 0) {
+        Serial.printf("[HTTPS] POST code: %d\n", httpCode);
+        String response = httpPost.getString();
+        Serial.printf("[HTTPS] POST response: %s\n", response.c_str());
+#ifdef OTA_UPDATE_ENABLED
+        handlePostResponse(response);
+#endif
+        http_post_error_code_ = httpCode;
+        httpPost.end();
+        return (httpCode == HTTP_CODE_OK);
+      } else {
+        Serial.printf("[HTTPS] POST failed, error: %s\n",
+                      httpPost.errorToString(httpCode).c_str());
+        http_post_error_code_ = httpCode;
+      }
     }
-    httpPost.end();
-    return false;
+    httpPost.end();  // begin() may have failed, but try anyway
+    if (attempts > 0) {
+      delay(1000 * (4 - attempts));  // Wait longer for each retry
+    }
   }
+
   return false;
 #else
   return false;
@@ -301,7 +316,7 @@ bool NodeApp::doGet(WiFiClientSecure& client) {
     final_http_code = httpCode;
 
     if (httpCode > 0) {
-      Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
+      Serial.printf("[HTTPS] GET code: %d\n", httpCode);
       String payload = httpGet.getString();
       Serial.println(payload);
 
