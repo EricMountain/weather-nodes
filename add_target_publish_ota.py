@@ -13,7 +13,7 @@ env.AddCustomTarget(
     actions=[
         f"aws --profile eric s3 cp $SOURCE s3://enry-weather-nodes-fmw-update/{env['PIOENV']}-{short_hash}.bin --region eu-north-1",
         f"echo 'target_version = {short_hash}'",
-        f"echo -n {short_hash} | xsel -b"
+        f"echo -n {short_hash} | xsel -ib"
     ],
     always_build=True,
 )
