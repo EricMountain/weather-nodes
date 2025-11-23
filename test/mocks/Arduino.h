@@ -26,6 +26,8 @@
 #define radians(deg) ((deg) * DEG_TO_RAD)
 #define degrees(rad) ((rad) * RAD_TO_DEG)
 
+#define F(string_literal) (string_literal)
+
 // Basic Arduino types
 typedef uint8_t byte;
 
@@ -33,18 +35,18 @@ typedef uint8_t byte;
 class String : public std::string {
  public:
   using std::string::string;  // Inherit constructors
-  
+
   // Constructor from std::string
   String(const std::string& str) : std::string(str) {}
-  
+
   // Constructor from const char*
   String(const char* str) : std::string(str ? str : "") {}
-  
+
   // Default constructor
   String() : std::string() {}
 
   double toDouble() const { return std::stod(*this); }
-  
+
   const char* c_str() const { return std::string::c_str(); }
 };
 
