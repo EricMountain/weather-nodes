@@ -30,6 +30,12 @@
 #define OTA_UPDATE_ENABLED
 #endif
 
+#ifdef SENSOR2_NODE
+// #define HAS_SHT31D
+#define HAS_BATTERY
+#define OTA_UPDATE_ENABLED
+#endif
+
 #ifdef PROTOTYPE_NODE
 #define HAS_SHT31D
 #define HAS_BATTERY
