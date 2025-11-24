@@ -103,6 +103,9 @@ void NodeApp::registerSensors() {
   }
 }
 
+// Returns true if at least one API call succeeded
+// Just trying to detect if all network calls are failing, indicating
+// WiFi/TLS state issues
 bool NodeApp::doApiCalls() {
   client_.setCACert(rootCACerts);
   bool success = doPost(client_);
