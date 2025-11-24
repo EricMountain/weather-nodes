@@ -155,7 +155,7 @@ bool NodeApp::doPost(WiFiClientSecure& client) {
     }
     httpPost.end();  // begin() may have failed, but try anyway
     if (attempts > 0) {
-      delay(1000 * (4 - attempts));  // Wait longer for each retry
+      delay(1000 * (max_attempts - attempts));  // Wait longer for each retry
     }
   }
 
