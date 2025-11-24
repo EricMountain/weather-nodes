@@ -384,8 +384,8 @@ void EPDView2::displayStaleState(JsonObject& nodeData, int node_count,
 
 void EPDView2::displayNodeVersion(JsonObject& nodeData, int node_count,
                                   int column, uint8_t& row, uint& row_offset) {
-  Serial.println(F("Displaying node version"));
 #ifdef DISPLAY_NODE_VERSIONS
+  Serial.println(F("Displaying node version"));
   if (!nodeData["version"].is<JsonString>()) {
     Serial.println(F("Node version is not a string"));
     return;
