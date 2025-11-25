@@ -280,17 +280,6 @@ def generate_dashboard_html(
             padding-bottom: 8px;
         }}
         
-        .device-measurements {{
-            margin-bottom: 15px;
-        }}
-        
-        .device-name {{
-            font-size: 0.9em;
-            font-weight: 500;
-            color: #555;
-            margin-bottom: 8px;
-        }}
-        
         .measurement-row {{
             display: flex;
             justify-content: space-between;
@@ -312,33 +301,6 @@ def generate_dashboard_html(
         .measurement-value {{
             color: #333;
             font-weight: 600;
-            font-family: 'Courier New', monospace;
-        }}
-        
-        .status-grid {{
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }}
-        
-        .status-item {{
-            background: #f5f5f5;
-            padding: 12px;
-            border-radius: 6px;
-            text-align: center;
-        }}
-        
-        .status-label {{
-            font-size: 0.8em;
-            color: #666;
-            text-transform: uppercase;
-            margin-bottom: 5px;
-        }}
-        
-        .status-value {{
-            font-size: 1.1em;
-            font-weight: 600;
-            color: #333;
             font-family: 'Courier New', monospace;
         }}
         
@@ -416,25 +378,45 @@ def render_node_card(node: Dict[str, Any]) -> str:
     device_id = node.get("device_id", "Unknown")
     version = node.get("version", "Unknown")
 
+    # Define measurement order priority
+    measurement_priority = {
+        "temperature": 1,
+        "humidity": 2,
+        "pressure": 3,
+        "battery": 4,
+        "rssi": 5,
+        "wifi": 5,
+        "wifi_dbm": 5,
+    }
+
+    def get_sort_key(item):
+        """Get sort priority for a measurement."""
+        name = item[0].lower()
+        return measurement_priority.get(name, 100)
+
     # Build measurements HTML
     measurements_html = ""
     if node.get("measurements"):
         measurements_html = '<div class="measurement-section">'
         measurements_html += '<div class="section-title">📊 Measurements</div>'
 
+        # Collect all measurements first
+        all_measurements = []
         for device_name, device_measurements in node["measurements"].items():
-            measurements_html += f'<div class="device-measurements">'
-            measurements_html += f'<div class="device-name">{device_name}</div>'
-
             for measurement_name, measurement_value in device_measurements.items():
-                measurements_html += f"""
+                all_measurements.append((measurement_name, measurement_value))
+
+        # Sort measurements by priority
+        all_measurements.sort(key=get_sort_key)
+
+        # Render sorted measurements
+        for measurement_name, measurement_value in all_measurements:
+            measurements_html += f"""
                 <div class="measurement-row">
                     <span class="measurement-label">{format_measurement_name(measurement_name)}</span>
                     <span class="measurement-value">{format_measurement_value(measurement_name, measurement_value)}</span>
                 </div>
                 """
-
-            measurements_html += "</div>"
 
         measurements_html += "</div>"
 
@@ -443,17 +425,16 @@ def render_node_card(node: Dict[str, Any]) -> str:
     if node.get("status"):
         status_html = '<div class="measurement-section">'
         status_html += '<div class="section-title">📡 Status</div>'
-        status_html += '<div class="status-grid">'
 
         for status_key, status_value in node["status"].items():
             status_html += f"""
-            <div class="status-item">
-                <div class="status-label">{format_measurement_name(status_key)}</div>
-                <div class="status-value">{status_value}</div>
+            <div class="measurement-row">
+                <span class="measurement-label">{format_measurement_name(status_key)}</span>
+                <span class="measurement-value">{format_measurement_value(status_key, status_value)}</span>
             </div>
             """
 
-        status_html += "</div></div>"
+        status_html += "</div>"
 
     # Build version HTML
     version_html = f"""
@@ -496,9 +477,16 @@ def format_measurement_name(name: str) -> str:
         "humidity": "💧",
         "pressure": "🔽",
         "battery": "🔋",
+        "battery_voltage": "🔌",
+        "battery_percentage": "🔋",
         "rssi": "📶",
+        "wifi": "📶",
+        "wifi_dbm": "📶",
         "uptime": "⏱️",
         "last_update": "🕐",
+        "free_heap_bytes": "💾",
+        "sht31d": "🌡️",
+        "bme680": "🌡️",
     }
 
     emoji = emoji_map.get(name.lower(), "")
@@ -523,7 +511,9 @@ def format_measurement_value(name: str, value: Any) -> str:
         return f"{value}%"
     elif "pressure" in name_lower and not "h" in value_str:
         return f"{value} hPa"
-    elif "battery" in name_lower and not "%" in value_str:
+    elif "battery_voltage" in name_lower and not "V" in value_str:
+        return f"{value} V"
+    elif "battery_percentage" in name_lower and not "%" in value_str:
         return f"{value}%"
     elif "rssi" in name_lower:
         return f"{value} dBm"
