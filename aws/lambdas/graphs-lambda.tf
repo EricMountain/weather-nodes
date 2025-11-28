@@ -70,6 +70,13 @@ resource "aws_iam_policy" "graphs_lambda_policy" {
           "dynamodb:Query"
         ],
         Resource = aws_dynamodb_table.measurements.arn
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "dynamodb:Scan"
+        ],
+        Resource = aws_dynamodb_table.latest_measurements.arn
       }
     ]
   })
