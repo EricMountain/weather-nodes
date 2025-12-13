@@ -15,31 +15,70 @@ dynamodb = boto3.client("dynamodb")
 
 
 def get_available_devices(device_id: str) -> List[Dict[str, str]]:
-    """Get list of devices available for the given device_id"""
+    """Get list of all devices from the latest_measurements table"""
     try:
-        device_config_response = dynamodb.get_item(
-            TableName="device_configs",
-            Key={"device_id": {"S": device_id}},
+        devices = []
+        
+        # Scan the latest_measurements table to get all devices
+        scan_response = dynamodb.scan(
+            TableName="latest_measurements",
         )
         
-        devices = []
-        if "Item" in device_config_response:
-            device_config = dynamo_to_python(device_config_response["Item"])
-            if "nodes" in device_config:
-                for node in device_config["nodes"]:
+        if "Items" in scan_response:
+            for item in scan_response["Items"]:
+                measurement = dynamo_to_python(item)
+                device_id_val = measurement.get("device_id")
+                if device_id_val:
+                    # Try to get display name from device_configs
+                    display_name = device_id_val
+                    try:
+                        config_response = dynamodb.get_item(
+                            TableName="device_configs",
+                            Key={"device_id": {"S": device_id_val}},
+                        )
+                        if "Item" in config_response:
+                            config = dynamo_to_python(config_response["Item"])
+                            if "location" in config and "name" in config["location"]:
+                                display_name = config["location"]["name"]
+                    except Exception:
+                        pass
+                    
                     devices.append({
-                        "device_id": node["device_id"],
-                        "display_name": node["display_name"]
+                        "device_id": device_id_val,
+                        "display_name": display_name
                     })
         
-        # If no devices found in config, at least include the main device
-        if not devices:
-            devices.append({
-                "device_id": device_id,
-                "display_name": "Main Device"
-            })
+        # Handle pagination if there are more results
+        while "LastEvaluatedKey" in scan_response:
+            scan_response = dynamodb.scan(
+                TableName="latest_measurements",
+                ExclusiveStartKey=scan_response["LastEvaluatedKey"]
+            )
+            
+            if "Items" in scan_response:
+                for item in scan_response["Items"]:
+                    measurement = dynamo_to_python(item)
+                    device_id_val = measurement.get("device_id")
+                    if device_id_val:
+                        display_name = device_id_val
+                        try:
+                            config_response = dynamodb.get_item(
+                                TableName="device_configs",
+                                Key={"device_id": {"S": device_id_val}},
+                            )
+                            if "Item" in config_response:
+                                config = dynamo_to_python(config_response["Item"])
+                                if "location" in config and "name" in config["location"]:
+                                    display_name = config["location"]["name"]
+                        except Exception:
+                            pass
+                        
+                        devices.append({
+                            "device_id": device_id_val,
+                            "display_name": display_name
+                        })
         
-        return devices
+        return devices if devices else [{"device_id": device_id, "display_name": "Main Device"}]
     
     except Exception as e:
         logger.error(f"Error getting available devices: {str(e)}")
