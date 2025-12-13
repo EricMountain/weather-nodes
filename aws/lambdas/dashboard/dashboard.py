@@ -505,15 +505,15 @@ def format_measurement_value(name: str, value: Any) -> str:
     value_str = str(value)
 
     # Add units based on measurement type
-    if "temperature" in name_lower and not "°" in value_str:
+    if "temperature" in name_lower and "°" not in value_str:
         return f"{value}°C"
-    elif "humidity" in name_lower and not "%" in value_str:
+    elif "humidity" in name_lower and "%" not in value_str:
         return f"{value}%"
-    elif "pressure" in name_lower and not "h" in value_str:
+    elif "pressure" in name_lower and "h" not in value_str:
         return f"{value} hPa"
-    elif "battery_voltage" in name_lower and not "V" in value_str:
+    elif "battery_voltage" in name_lower and "V" not in value_str:
         return f"{value} V"
-    elif "battery_percentage" in name_lower and not "%" in value_str:
+    elif "battery_percentage" in name_lower and "%" not in value_str:
         return f"{value}%"
     elif "rssi" in name_lower:
         return f"{value} dBm"
