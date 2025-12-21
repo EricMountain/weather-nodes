@@ -2,12 +2,17 @@ from typing import Dict, Any
 import json
 import logging
 from urllib.parse import parse_qs
+import base64
 
 from auth import extract_api_key, authenticate_api_key
 from datahelper import get_available_devices, get_measurements_data
 from htmlhelper import generate_html_interface
+from aws.lambdas.shared.webapp_assets import build_manifest, get_icon_base64
 
 logger = logging.getLogger(__name__)
+
+# Weather-themed favicon (sun, cloud, raindrops on purple background)
+FAVICON_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAACAklEQVR4nO2Y3W2DMBSFnSgrVOoceWEFlEHKFo06BosgVshL5qiaHdo+BCMEduz7Y44R/qQ8JCbX5x6u7QuHj8+fP7NjjmgBaIoBaAFoigFoAWiKAWgBaE7cP7aXevFb0/UiMQjIBoyJV+flmHmObckIkgHtpXYmPjKMtabejAnRe0Aw+SnV2blEciTKAFLylo2YsPtTIGgA6+5bNlAFpQLQAtAUA9AC0AQNaLremNudF/12z74h2n0FRLXCTdc/+3zKcei5++3X2zL+9REfV5kD5a1wdE/gSN6V+ByEEaQlMO4Hvj1hGOMkT7lOE1IFTIl9H8BJas1KYL8QsclOE2yrYUwxgdR7Br8CAOU6R8MI1jGYQ/LG6OggG5BL8hapnt03QiQDcrv7FomuUgFoAWiKAWgBaGjPAszGo7k+xk8KJHFXr4CURnAgG0AV77pe8ziVmsmqgNhJc0/eGMnT4DA54g1PFk+DHCR3P5Wp5RhEC0BTDEALQLOqAZJOMhWlAlIF/n13H3kaneSr+FSSGGDFSU0IJa9hgnoj5BJ1/PYnTO0kqfFDsFthLdBPhtlsglprmoq6AfNyjClPyprmxH8ZT/RvX9BBFCV533dp/GAscQRfYAVxa8TPZg9AATdAe02T5191Ng+aa5o89+ozekAkb0xGBqAoBqAFoCkGoAWg+QdRhsX6UBkd2gAAAABJRU5ErkJggg=="
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -19,6 +24,47 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     ctx = event.get("requestContext") or {}
     request = ctx.get("http") or {}
     method = request.get("method")
+    path = request.get("path", "")
+    
+    # Handle favicon requests without authentication
+    if path == "/favicon.ico":
+        return {
+            "statusCode": 200,
+            "headers": {
+                "Content-Type": "image/png",
+                "Cache-Control": "public, max-age=31536000",  # Cache for 1 year
+            },
+            "body": FAVICON_BASE64,
+            "isBase64Encoded": True,
+        }
+
+    # Serve manifest and install icons without authentication
+    if path in {"/manifest.webmanifest", "/site.webmanifest"}:
+        manifest_body = build_manifest(
+            name="Weather Nodes Graphs",
+            short_name="Graphs",
+            start_path="/",
+        )
+        return {
+            "statusCode": 200,
+            "headers": {
+                "Content-Type": "application/manifest+json",
+                "Cache-Control": "public, max-age=86400",
+            },
+            "body": manifest_body,
+        }
+
+    if path in {"/icon-192.png", "/icon-512.png"}:
+        size = 192 if "192" in path else 512
+        return {
+            "statusCode": 200,
+            "headers": {
+                "Content-Type": "image/png",
+                "Cache-Control": "public, max-age=31536000",
+            },
+            "body": get_icon_base64(size),
+            "isBase64Encoded": True,
+        }
     
     api_key = extract_api_key(event)
     is_valid, device_id, error_message, _ = authenticate_api_key(api_key)
