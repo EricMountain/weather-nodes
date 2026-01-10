@@ -6,7 +6,7 @@ import json
 from importlib import resources
 from typing import Dict
 
-ASSET_PACKAGE = "aws.lambdas.shared.assets"
+ASSET_PACKAGE = "assets"
 ICON_FILES: Dict[int, str] = {
     192: "icon-192.png",
     512: "icon-512.png",
