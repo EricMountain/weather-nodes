@@ -7,12 +7,10 @@ import base64
 from auth import extract_api_key, authenticate_api_key
 from datahelper import get_available_devices, get_measurements_data
 from htmlhelper import generate_html_interface
-from assets import build_manifest, get_icon_base64
+from assets import build_manifest, get_icon_base64, get_favicon_base64
 
 logger = logging.getLogger(__name__)
 
-# Weather-themed favicon (sun, cloud, raindrops on purple background)
-FAVICON_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAACAklEQVR4nO2Y3W2DMBSFnSgrVOoceWEFlEHKFo06BosgVshL5qiaHdo+BCMEduz7Y44R/qQ8JCbX5x6u7QuHj8+fP7NjjmgBaIoBaAFoigFoAWiKAWgBaE7cP7aXevFb0/UiMQjIBoyJV+flmHmObckIkgHtpXYmPjKMtabejAnRe0Aw+SnV2blEciTKAFLylo2YsPtTIGgA6+5bNlAFpQLQAtAUA9AC0AQNaLremNudF/12z74h2n0FRLXCTdc/+3zKcei5++3X2zL+9REfV5kD5a1wdE/gSN6V+ByEEaQlMO4Hvj1hGOMkT7lOE1IFTIl9H8BJas1KYL8QsclOE2yrYUwxgdR7Br8CAOU6R8MI1jGYQ/LG6OggG5BL8hapnt03QiQDcrv7FomuUgFoAWiKAWgBaGjPAszGo7k+xk8KJHFXr4CURnAgG0AV77pe8ziVmsmqgNhJc0/eGMnT4DA54g1PFk+DHCR3P5Wp5RhEC0BTDEALQLOqAZJOMhWlAlIF/n13H3kaneSr+FSSGGDFSU0IJa9hgnoj5BJ1/PYnTO0kqfFDsFthLdBPhtlsglprmoq6AfNyjClPyprmxH8ZT/RvX9BBFCV533dp/GAscQRfYAVxa8TPZg9AATdAe02T5191Ng+aa5o89+ozekAkb0xGBqAoBqAFoCkGoAWg+QdRhsX6UBkd2gAAAABJRU5ErkJggg=="
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -34,7 +32,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 "Content-Type": "image/png",
                 "Cache-Control": "public, max-age=31536000",  # Cache for 1 year
             },
-            "body": FAVICON_BASE64,
+            "body": get_favicon_base64(),
             "isBase64Encoded": True,
         }
 
