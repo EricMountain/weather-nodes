@@ -13,7 +13,7 @@ from botocore.exceptions import ClientError
 
 from auth import extract_api_key, authenticate_api_key
 from dynamodb import dynamo_to_python
-from aws.lambdas.shared.webapp_assets import build_manifest, get_icon_base64
+from assets import build_manifest, get_icon_base64
 
 logger = logging.getLogger(__name__)
 

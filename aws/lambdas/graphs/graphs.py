@@ -7,7 +7,7 @@ import base64
 from auth import extract_api_key, authenticate_api_key
 from datahelper import get_available_devices, get_measurements_data
 from htmlhelper import generate_html_interface
-from aws.lambdas.shared.webapp_assets import build_manifest, get_icon_base64
+from assets import build_manifest, get_icon_base64
 
 logger = logging.getLogger(__name__)
 
