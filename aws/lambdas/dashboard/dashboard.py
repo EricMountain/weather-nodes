@@ -1011,14 +1011,27 @@ def render_measurement_with_min_max(
             measurement_name, min_max_entry["max"]
         )
         unit_suffix = unit or min_unit or max_unit
-        unit_suffix = f" {unit_suffix}" if unit_suffix else ""
+        # unit_suffix = f" {unit_suffix}" if unit_suffix else ""
+        # return (
+        #     f"<span class=\"measurement-minmax\">{min_val}</span>"
+        #     f"<span class=\"measurement-minmax\">/</span>"
+        #     f"<span class=\"measurement-current\">{current_val}</span>"
+        #     f"<span class=\"measurement-minmax\">/</span>"
+        #     f"<span class=\"measurement-minmax\">{max_val}</span>{unit_suffix}"
+        # )
+        # return (
+        #         f"<span class=\"measurement-minmax\">{min_val}</span>"
+        #         f"<span class=\"measurement-minmax\">~</span>"
+        #         f"<span class=\"measurement-minmax\">{max_val}"
+        #         f"<span class=\"measurement-current\"> {current_val}</span>"
+        #         f"{unit_suffix}"
+        #     )
         return (
-            f"<span class=\"measurement-minmax\">{min_val}</span>"
-            f"<span class=\"measurement-minmax\">/</span>"
-            f"<span class=\"measurement-current\">{current_val}</span>"
-            f"<span class=\"measurement-minmax\">/</span>"
-            f"<span class=\"measurement-minmax\">{max_val}</span>{unit_suffix}"
-        )
+                    f"<span class=\"measurement-minmax\">{min_val} </span>"
+                    f"<span class=\"measurement-current\">{current_val}</span>"
+                    f"{unit_suffix}"
+                    f"<span class=\"measurement-minmax\"> {max_val}"
+                )
 
     # Fallback to original formatting when no min/max
     return format_measurement_value(measurement_name, current_value)
