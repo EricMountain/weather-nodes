@@ -784,7 +784,7 @@ def generate_dashboard_html(
                     const raw = tsEl.getAttribute('data-timestamp');
                     const fuzzySpan = tsEl.querySelector('.timestamp-fuzzy');
                     if (raw && fuzzySpan) {{
-                        fuzzySpan.textContent = "Updated " + formatAgo(raw) || raw;
+                        fuzzySpan.textContent = "Updated " + (formatAgo(raw) || raw);
                     }}
                 }}
             }};
