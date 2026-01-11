@@ -340,6 +340,14 @@ def generate_dashboard_html(
             margin-bottom: 20px;
         }}
 
+        .extra-measurements {{
+            display: none;
+        }}
+
+        .node-content.show-status .extra-measurements {{
+            display: block;
+        }}
+
         .node-content .status-section {{
             display: none;
         }}
@@ -499,23 +507,36 @@ def render_node_card(node: Dict[str, Any]) -> str:
         measurements_html = '<div class="measurement-section">'
         measurements_html += '<div class="section-title">📊 Measurements</div>'
 
-        # Collect all measurements first
+        # Collect and sort measurements
         all_measurements = []
         for device_name, device_measurements in node["measurements"].items():
             for measurement_name, measurement_value in device_measurements.items():
                 all_measurements.append((measurement_name, measurement_value))
 
-        # Sort measurements by priority
         all_measurements.sort(key=get_sort_key)
 
-        # Render sorted measurements
+        always_show = {"temperature", "humidity", "pressure"}
+        extra_rows = ""
+
         for measurement_name, measurement_value in all_measurements:
-            measurements_html += f"""
+            row_html = f"""
                 <div class="measurement-row">
                     <span class="measurement-label">{format_measurement_name(measurement_name)}</span>
                     <span class="measurement-value">{format_measurement_value(measurement_name, measurement_value)}</span>
                 </div>
                 """
+
+            if measurement_name.lower() in always_show:
+                measurements_html += row_html
+            else:
+                extra_rows += row_html
+
+        if extra_rows:
+            measurements_html += f"""
+                <div class="extra-measurements">
+                    {extra_rows}
+                </div>
+            """
 
         measurements_html += "</div>"
 
