@@ -588,7 +588,6 @@ def generate_dashboard_html(
             letter-spacing: 0.5px;
             margin-bottom: 12px;
             border-bottom: 2px solid var(--section-border);
-            padding-bottom: 8px;
             background: var(--section-title-bg);
             padding: 10px 12px;
             border-radius: 10px;
