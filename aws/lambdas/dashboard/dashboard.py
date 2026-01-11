@@ -332,12 +332,34 @@ def generate_dashboard_html(
             margin-top: 10px;
         }}
 
+        .node-meta .last-measurement {{
+            background: rgba(255, 255, 255, 0.15);
+            color: #f1f1f1;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }}
+
         .node-meta .version-label {{
             font-size: 0.8em;
             opacity: 0.9;
         }}
 
         .node-meta .version-value {{
+            font-size: 1.05em;
+            font-weight: 600;
+            margin-top: 3px;
+            word-break: break-all;
+        }}
+
+        .node-meta .last-measurement-label {{
+            font-size: 0.8em;
+            opacity: 0.9;
+        }}
+
+        .node-meta .last-measurement-value {{
             font-size: 1.05em;
             font-weight: 600;
             margin-top: 3px;
@@ -592,15 +614,6 @@ def render_node_card(node: Dict[str, Any]) -> str:
 
         status_html += "</div>"
 
-    # Build timestamp HTML
-    timestamp_html = ""
-    if "timestamp_local_str" in node:
-        timestamp_html = f"""
-        <div class="timestamp-info">
-            Last measurement: {node["timestamp_local_str"]}
-        </div>
-        """
-
     return f"""
     <div class="node-card">
         <div class="node-header">
@@ -614,12 +627,12 @@ def render_node_card(node: Dict[str, Any]) -> str:
                     <div class="version-label">Firmware Version</div>
                     <div class="version-value">{version}</div>
                 </div>
+                {f"<div class='last-measurement'><div class='last-measurement-label'>Last Measurement</div><div class='last-measurement-value'>{node['timestamp_local_str']}</div></div>" if 'timestamp_local_str' in node else ''}
             </div>
         </div>
         <div class="node-content">
             {measurements_html}
             {status_html}
-            {timestamp_html}
         </div>
     </div>
     """
