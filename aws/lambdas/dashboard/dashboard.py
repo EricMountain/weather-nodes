@@ -33,7 +33,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         return {
             "statusCode": 200,
             "headers": {
-                "Content-Type": "image/png",
+                "Content-Type": "image/x-icon",
                 "Cache-Control": "public, max-age=31536000",
             },
             "body": get_favicon_base64(),
@@ -231,7 +231,7 @@ def generate_dashboard_html(
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" href="/favicon.ico" type="image/png">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <link rel="manifest" href="/manifest.webmanifest">
     <title>Weather Station Dashboard</title>

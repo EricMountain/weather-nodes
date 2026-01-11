@@ -31,7 +31,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         return {
             "statusCode": 200,
             "headers": {
-                "Content-Type": "image/png",
+                "Content-Type": "image/x-icon",
                 "Cache-Control": "public, max-age=31536000",  # Cache for 1 year
             },
             "body": get_favicon_base64(),
