@@ -189,6 +189,7 @@ def get_node_data(node: Dict[str, Any], tz: ZoneInfo, now_utc: datetime) -> Dict
     except Exception as e:
         logger.error(f"Error processing node data: {str(e)}")
         return None
+
 def fetch_min_max(node_device_id: str, now_utc: datetime, hours: int = 24) -> Dict[str, Any]:
     """Fetch 24h min/max for key measurements (temperature, humidity, pressure)."""
     window_start = (now_utc - timedelta(hours=hours)).isoformat(timespec="seconds")
@@ -255,7 +256,6 @@ def fetch_min_max(node_device_id: str, now_utc: datetime, hours: int = 24) -> Di
             }
 
     return result
-
 
 def generate_dashboard_html(
     nodes_data: List[Dict[str, Any]], device_config: Dict[str, Any], tz: ZoneInfo
