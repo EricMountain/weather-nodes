@@ -1056,7 +1056,7 @@ def format_measurement_parts(name: str, value: Any) -> tuple[str, str]:
         unit = "V"
     elif "battery_percentage" in name_lower:
         unit = "%"
-    elif "rssi" in name_lower or name_lower in {"wifi", "wifi_dbm"}:
+    elif name_lower == "wifi_dbm":
         unit = "dBm"
     elif "uptime" in name_lower:
         unit = "s"
