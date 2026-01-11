@@ -296,13 +296,40 @@ def generate_dashboard_html(
             font-size: 0.85em;
             opacity: 0.9;
             font-family: 'Courier New', monospace;
-            display: none;
-            margin-top: 8px;
             word-break: break-all;
         }}
 
-        .node-header.show-id .node-id {{
+        .node-meta {{
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+        }}
+
+        .node-header.show-id .node-meta {{
             display: block;
+        }}
+
+        .node-meta .version {{
+            background: rgba(255, 255, 255, 0.15);
+            color: #f1f1f1;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }}
+
+        .node-meta .version-label {{
+            font-size: 0.8em;
+            opacity: 0.9;
+        }}
+
+        .node-meta .version-value {{
+            font-size: 1.05em;
+            font-weight: 600;
+            margin-top: 3px;
+            word-break: break-all;
         }}
         
         .node-content {{
@@ -490,14 +517,6 @@ def render_node_card(node: Dict[str, Any]) -> str:
 
         status_html += "</div>"
 
-    # Build version HTML
-    version_html = f"""
-    <div class="version">
-        <div class="version-label">Firmware Version</div>
-        <div class="version-value">{version}</div>
-    </div>
-    """
-
     # Build timestamp HTML
     timestamp_html = ""
     if "timestamp_local_str" in node:
@@ -511,12 +530,17 @@ def render_node_card(node: Dict[str, Any]) -> str:
     <div class="node-card">
         <div class="node-header">
             <h2>{display_name}</h2>
-            <div class="node-id">{device_id}</div>
+            <div class="node-meta">
+                <div class="node-id">{device_id}</div>
+                <div class="version">
+                    <div class="version-label">Firmware Version</div>
+                    <div class="version-value">{version}</div>
+                </div>
+            </div>
         </div>
         <div class="node-content">
             {measurements_html}
             {status_html}
-            {version_html}
             {timestamp_html}
         </div>
     </div>
