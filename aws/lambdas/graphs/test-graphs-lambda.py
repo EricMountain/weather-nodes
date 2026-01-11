@@ -67,7 +67,9 @@ def test_get_request():
     print("GET Request Test:")
     print(f"Status Code: {result['statusCode']}")
     print(f"Content-Type: {result['headers']['Content-Type']}")
+    print(f"Set-Cookie: {result['headers'].get('Set-Cookie')}")
     print(f"Body length: {len(result['body'])} characters")
+    assert 'Set-Cookie' in result['headers']
     print("✓ GET request test passed\n")
 
 def test_post_request():

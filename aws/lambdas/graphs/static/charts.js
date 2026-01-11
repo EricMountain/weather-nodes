@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Chart dimensions
 const margin = {top: 20, right: 80, bottom: 50, left: 60};
+const API_KEY_COOKIE_NAME = 'weather_nodes_api_key';
 let width = document.getElementById('chart').offsetWidth - margin.left - margin.right;
 const height = 500 - margin.top - margin.bottom;
 
@@ -247,9 +248,36 @@ function showError(message) {
 }
 
 function getApiKeyFromUrl() {
-    // Extract API key from URL parameters if present
+    // Extract API key from URL parameters if present, otherwise use the cookie
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('api_key') || '';
+    return urlParams.get('api_key') || getApiKeyFromCookie();
+}
+
+function getApiKeyFromCookie() {
+    if (!document.cookie) {
+        return '';
+    }
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+        const trimmed = cookie.trim();
+        if (!trimmed) {
+            continue;
+        }
+        const separatorIndex = trimmed.indexOf('=');
+        if (separatorIndex === -1) {
+            continue;
+        }
+        const name = trimmed.slice(0, separatorIndex);
+        const value = trimmed.slice(separatorIndex + 1);
+        if (name === API_KEY_COOKIE_NAME && value) {
+            try {
+                return decodeURIComponent(value);
+            } catch (error) {
+                return value;
+            }
+        }
+    }
+    return '';
 }
 
 // Update the width dynamically on window resize

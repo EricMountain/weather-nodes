@@ -6,16 +6,24 @@ from typing import Dict, Any, List
 import logging
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
+import base64
 
 import boto3
 from botocore.exceptions import ClientError
 
-from auth import extract_api_key, authenticate_api_key
+from auth import (
+    extract_api_key,
+    authenticate_api_key,
+    add_cookie_header,
+    handle_public_asset_request,
+)
 from dynamodb import dynamo_to_python
+from assets import build_manifest, get_icon_base64, get_favicon_base64
 
 logger = logging.getLogger(__name__)
 
 dynamodb = boto3.client("dynamodb")
+
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -23,6 +31,20 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     ctx = event.get("requestContext") or {}
     request = ctx.get("http") or {}
     method = request.get("method")
+    path = request.get("path", "")
+
+    asset_response = handle_public_asset_request(
+        path,
+        manifest_builder=lambda: build_manifest(
+            name="Weather Station Dashboard",
+            short_name="Weather",
+            start_path="/",
+        ),
+        icon_provider=get_icon_base64,
+        favicon_provider=get_favicon_base64,
+    )
+    if asset_response:
+        return asset_response
 
     api_key = extract_api_key(event)
     is_valid, device_id, error_message, _ = authenticate_api_key(api_key)
@@ -36,7 +58,11 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return {"statusCode": 500, "body": error_message}
 
     if method != "GET":
-        return {"statusCode": 405, "body": "Method not allowed"}
+        return {
+            "statusCode": 405,
+            "headers": add_cookie_header({"Content-Type": "text/plain"}, api_key),
+            "body": "Method not allowed",
+        }
 
     try:
         # Get device config to find associated nodes
@@ -69,9 +95,12 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
         return {
             "statusCode": 200,
-            "headers": {
-                "Content-Type": "text/html; charset=utf-8",
-            },
+            "headers": add_cookie_header(
+                {
+                    "Content-Type": "text/html; charset=utf-8",
+                },
+                api_key,
+            ),
             "body": html_content,
         }
 
@@ -79,7 +108,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         logger.error(f"Error generating dashboard: {str(e)}")
         return {
             "statusCode": 500,
-            "headers": {"Content-Type": "text/plain"},
+            "headers": add_cookie_header({"Content-Type": "text/plain"}, api_key),
             "body": f"Error generating dashboard: {str(e)}",
         }
 
@@ -177,6 +206,12 @@ def generate_dashboard_html(
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="manifest" href="/manifest.webmanifest">
     <title>Weather Station Dashboard</title>
     <style>
         * {{
