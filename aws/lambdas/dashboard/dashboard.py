@@ -354,6 +354,18 @@ def generate_dashboard_html(
             cursor: pointer;
         }}
 
+        .timestamp-pill {{
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: var(--chip-bg);
+            color: var(--text);
+            font-weight: 600;
+            border: 1px solid var(--section-border);
+        }}
+
         .timestamp .timestamp-full {{
             display: none;
         }}
@@ -365,6 +377,24 @@ def generate_dashboard_html(
 
         .timestamp.show-full .timestamp-fuzzy {{
             display: none;
+        }}
+
+        .theme-badge {{
+            display: none;
+            margin-left: 10px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: var(--chip-bg);
+            color: var(--text);
+            font-size: 0.8em;
+            font-weight: 600;
+            border: 1px solid var(--section-border);
+        }}
+
+        .timestamp.show-full .theme-badge {{
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }}
 
         .nodes-grid {{
@@ -586,8 +616,9 @@ def generate_dashboard_html(
         </div>
 
         <div class="timestamp" data-timestamp="{now}">
-            <span class="timestamp-fuzzy"></span>
-            <span class="timestamp-full">Updated {now}</span>
+            <span class="timestamp-fuzzy timestamp-pill"></span>
+            <span class="timestamp-full timestamp-pill">Updated {now}</span>
+            <span class="theme-badge" aria-label="Theme"></span>
         </div>
     </div>
 
@@ -595,20 +626,37 @@ def generate_dashboard_html(
         document.addEventListener('DOMContentLoaded', () => {{
             const prefersDark = () => window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
             const dynamicThemeMeta = document.getElementById('dynamic-theme-color');
+            const themeBadge = document.querySelector('.theme-badge');
+
+            const updateThemeBadge = (mode) => {{
+                if (!themeBadge) return;
+                let label;
+                if (mode === 'light') {{
+                    label = 'Light';
+                }} else if (mode === 'dark') {{
+                    label = 'Dark';
+                }} else {{
+                    label = `Auto (${{prefersDark() ? 'Dark' : 'Light'}})`;
+                }}
+                themeBadge.textContent = label;
+            }};
 
             const applyTheme = (mode, persist = false) => {{
                 if (mode === 'light') {{
                     document.documentElement.setAttribute('data-theme', 'light');
                     dynamicThemeMeta?.setAttribute('content', '#f6f4ec');
                     if (persist) localStorage.setItem('themePreference', 'light');
+                    updateThemeBadge('light');
                 }} else if (mode === 'dark') {{
                     document.documentElement.setAttribute('data-theme', 'dark');
                     dynamicThemeMeta?.setAttribute('content', '#0f1115');
                     if (persist) localStorage.setItem('themePreference', 'dark');
+                    updateThemeBadge('dark');
                 }} else {{
                     document.documentElement.removeAttribute('data-theme');
                     dynamicThemeMeta?.setAttribute('content', prefersDark() ? '#0f1115' : '#f6f4ec');
                     if (persist) localStorage.removeItem('themePreference');
+                    updateThemeBadge('auto');
                 }}
             }};
 
@@ -734,7 +782,6 @@ def render_node_card(node: Dict[str, Any]) -> str:
     measurements_html = ""
     if node.get("measurements"):
         measurements_html = '<div class="measurement-section">'
-        measurements_html += '<div class="section-title">📊 Measurements</div>'
 
         # Collect and sort measurements
         all_measurements = []
