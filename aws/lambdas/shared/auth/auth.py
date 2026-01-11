@@ -9,7 +9,7 @@ from .dynamodb import dynamo_to_python
 
 dynamodb = boto3.client("dynamodb")
 API_KEY_COOKIE_NAME = "weather_nodes_api_key"
-API_KEY_COOKIE_MAX_AGE = 30 * 24 * 60 * 60  # 30 days
+API_KEY_COOKIE_MAX_AGE = 400 * 24 * 60 * 60  # 400 days, max allowed by Chrome
 
 
 def extract_api_key(event: Dict[str, Any]) -> Optional[str]:
