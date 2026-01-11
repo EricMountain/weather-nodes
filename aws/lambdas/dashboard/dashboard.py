@@ -376,12 +376,7 @@ def generate_dashboard_html(
             justify-content: space-between;
             align-items: center;
             padding: 8px 0;
-            border-bottom: 1px solid #f0f0f0;
             font-size: 0.95em;
-        }}
-        
-        .measurement-row:last-child {{
-            border-bottom: none;
         }}
         
         .measurement-label {{
