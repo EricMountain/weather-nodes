@@ -1,7 +1,7 @@
 """
 Authentication utilities shared across lambdas.
 """
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, Callable
 from http.cookies import SimpleCookie
 from urllib.parse import quote
 import boto3
@@ -55,6 +55,49 @@ def add_cookie_header(headers: Dict[str, str], api_key: Optional[str]) -> Dict[s
     updated_headers = dict(headers)
     updated_headers["Set-Cookie"] = build_api_key_cookie(api_key)
     return updated_headers
+
+
+def handle_public_asset_request(
+    path: str,
+    manifest_builder: Callable[[], str],
+    icon_provider: Callable[[int], str],
+    favicon_provider: Callable[[], str],
+) -> Optional[Dict[str, Any]]:
+    """Serve favicon, manifest, or icon assets without authentication."""
+    if path == "/favicon.ico":
+        return {
+            "statusCode": 200,
+            "headers": {
+                "Content-Type": "image/x-icon",
+                "Cache-Control": "public, max-age=31536000",
+            },
+            "body": favicon_provider(),
+            "isBase64Encoded": True,
+        }
+
+    if path in {"/manifest.webmanifest", "/site.webmanifest"}:
+        return {
+            "statusCode": 200,
+            "headers": {
+                "Content-Type": "application/manifest+json",
+                "Cache-Control": "public, max-age=86400",
+            },
+            "body": manifest_builder(),
+        }
+
+    if path in {"/icon-192.png", "/icon-512.png"}:
+        size = 192 if "192" in path else 512
+        return {
+            "statusCode": 200,
+            "headers": {
+                "Content-Type": "image/png",
+                "Cache-Control": "public, max-age=31536000",
+            },
+            "body": icon_provider(size),
+            "isBase64Encoded": True,
+        }
+
+    return None
 
 
 def authenticate_api_key(api_key: str) -> Tuple[bool, Optional[str], str, Optional[str]]:

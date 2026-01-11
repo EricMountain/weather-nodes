@@ -8,6 +8,7 @@ from auth import (
     extract_api_key,
     authenticate_api_key,
     add_cookie_header,
+    handle_public_asset_request,
 )
 from datahelper import get_available_devices, get_measurements_data
 from htmlhelper import generate_html_interface
@@ -25,46 +26,19 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     request = ctx.get("http") or {}
     method = request.get("method")
     path = request.get("path", "")
-    
-    # Handle favicon requests without authentication
-    if path == "/favicon.ico":
-        return {
-            "statusCode": 200,
-            "headers": {
-                "Content-Type": "image/x-icon",
-                "Cache-Control": "public, max-age=31536000",  # Cache for 1 year
-            },
-            "body": get_favicon_base64(),
-            "isBase64Encoded": True,
-        }
 
-    # Serve manifest and install icons without authentication
-    if path in {"/manifest.webmanifest", "/site.webmanifest"}:
-        manifest_body = build_manifest(
+    asset_response = handle_public_asset_request(
+        path,
+        manifest_builder=lambda: build_manifest(
             name="Weather Nodes Graphs",
             short_name="Graphs",
             start_path="/",
-        )
-        return {
-            "statusCode": 200,
-            "headers": {
-                "Content-Type": "application/manifest+json",
-                "Cache-Control": "public, max-age=86400",
-            },
-            "body": manifest_body,
-        }
-
-    if path in {"/icon-192.png", "/icon-512.png"}:
-        size = 192 if "192" in path else 512
-        return {
-            "statusCode": 200,
-            "headers": {
-                "Content-Type": "image/png",
-                "Cache-Control": "public, max-age=31536000",
-            },
-            "body": get_icon_base64(size),
-            "isBase64Encoded": True,
-        }
+        ),
+        icon_provider=get_icon_base64,
+        favicon_provider=get_favicon_base64,
+    )
+    if asset_response:
+        return asset_response
     
     api_key = extract_api_key(event)
     is_valid, device_id, error_message, _ = authenticate_api_key(api_key)
