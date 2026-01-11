@@ -232,7 +232,7 @@ def generate_dashboard_html(
             --card-border: #dcd6c6;
             --accent: #0f0f0f;
             --accent-soft: #e5dfd2;
-            --header-bg: #0f0f0f;
+            --header-bg: #f6f4ec;
             --header-text: #0f0f0f;
             --shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
             --section-border: #e4dece;
@@ -253,7 +253,7 @@ def generate_dashboard_html(
             --card-border: #dcd6c6;
             --accent: #0f0f0f;
             --accent-soft: #e5dfd2;
-            --header-bg: #0f0f0f;
+            --header-bg: #f6f4ec;
             --header-text: #0f0f0f;
             --shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
             --section-border: #e4dece;
