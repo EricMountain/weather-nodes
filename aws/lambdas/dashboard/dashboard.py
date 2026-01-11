@@ -206,7 +206,9 @@ def generate_dashboard_html(
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#667eea">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f4ec">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1115">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
@@ -219,13 +221,59 @@ def generate_dashboard_html(
             padding: 0;
             box-sizing: border-box;
         }}
-        
+
+        :root {{
+            color-scheme: light dark;
+            --bg: #f6f4ec;
+            --text: #0f0f0f;
+            --muted: #4c4c4c;
+            --card: #ffffff;
+            --card-border: #dcd6c6;
+            --accent: #0f0f0f;
+            --accent-soft: #e5dfd2;
+            --header-bg: #0f0f0f;
+            --header-text: #f6f4ec;
+            --shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            --section-border: #e4dece;
+            --timestamp: #6c655a;
+            --chip-bg: #ece6d8;
+            --status-card: #f7f2e4;
+            --section-title-bg: #f0ebde;
+            --section-title-color: #0f0f0f;
+            --header-gradient: linear-gradient(135deg, #f6f4ec 0%, #e8e0cf 100%);
+            --node-header-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }}
+
+        @media (prefers-color-scheme: dark) {{
+            :root {{
+                --bg: #0f1115;
+                --text: #f1f1f1;
+                --muted: #a4a6ad;
+                --card: #151821;
+                --card-border: #242a35;
+                --accent: #f6f4ec;
+                --accent-soft: #1f2430;
+                --header-bg: #f6f4ec;
+                --header-text: #0f1115;
+                --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+                --section-border: #252b36;
+                --timestamp: #b7b9c2;
+                --chip-bg: #202634;
+                --status-card: #1b212d;
+                --section-title-bg: #202634;
+                --section-title-color: #f6f4ec;
+                --header-gradient: linear-gradient(135deg, #151821 0%, #0f1115 100%);
+                --node-header-gradient: linear-gradient(135deg, #242a35 0%, #1b202b 100%);
+            }}
+        }}
+
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg);
             min-height: 100vh;
             padding: 20px;
-            color: #333;
+            color: var(--text);
+            transition: background 0.3s ease, color 0.3s ease;
         }}
         
         .container {{
@@ -235,25 +283,29 @@ def generate_dashboard_html(
         
         .header {{
             text-align: center;
-            color: white;
+            color: var(--header-text);
             margin-bottom: 40px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            background: var(--header-gradient, var(--header-bg));
+            padding: 18px 16px;
+            border-radius: 14px;
+            box-shadow: var(--shadow);
         }}
         
         .header h1 {{
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 2.3em;
             font-weight: 700;
+            letter-spacing: 0.5px;
         }}
         
         .header p {{
-            font-size: 1.1em;
-            opacity: 0.95;
+            font-size: 1.05em;
+            opacity: 0.9;
+            margin-top: 8px;
         }}
         
         .timestamp {{
             text-align: center;
-            color: rgba(255, 255, 255, 0.8);
+            color: var(--timestamp);
             font-size: 0.9em;
             margin-bottom: 30px;
             cursor: pointer;
@@ -280,23 +332,25 @@ def generate_dashboard_html(
         }}
         
         .node-card {{
-            background: white;
+            background: var(--card);
+            border: 1px solid var(--card-border);
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow);
             overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
         }}
         
         .node-card:hover {{
             transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.18);
+            border-color: var(--accent);
         }}
         
         .node-header {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: var(--node-header-gradient, var(--accent));
+            color: var(--header-text);
             padding: 20px;
-            border-bottom: 3px solid rgba(0, 0, 0, 0.1);
+            border-bottom: 3px solid var(--accent-soft);
             cursor: pointer;
             position: relative;
         }}
@@ -315,7 +369,7 @@ def generate_dashboard_html(
         
         .node-id {{
             font-size: 0.85em;
-            opacity: 0.9;
+            opacity: 0.85;
             font-family: 'Courier New', monospace;
             word-break: break-all;
         }}
@@ -324,12 +378,13 @@ def generate_dashboard_html(
             display: none;
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            border-top: 1px solid var(--accent-soft);
         }}
 
         .measurement-age {{
             font-size: 0.9em;
             opacity: 0.9;
+            color: var(--timestamp);
         }}
 
         .node-header.show-id .node-meta {{
@@ -337,8 +392,8 @@ def generate_dashboard_html(
         }}
 
         .node-meta .version {{
-            background: rgba(255, 255, 255, 0.15);
-            color: #f1f1f1;
+            background: var(--chip-bg);
+            color: var(--text);
             padding: 10px;
             border-radius: 8px;
             text-align: center;
@@ -347,8 +402,8 @@ def generate_dashboard_html(
         }}
 
         .node-meta .last-measurement {{
-            background: rgba(255, 255, 255, 0.15);
-            color: #f1f1f1;
+            background: var(--chip-bg);
+            color: var(--text);
             padding: 10px;
             border-radius: 8px;
             text-align: center;
@@ -411,12 +466,15 @@ def generate_dashboard_html(
         .section-title {{
             font-size: 0.95em;
             font-weight: 600;
-            color: #667eea;
+            color: var(--section-title-color);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 12px;
-            border-bottom: 2px solid #eee;
+            border-bottom: 2px solid var(--section-border);
             padding-bottom: 8px;
+            background: var(--section-title-bg);
+            padding: 10px 12px;
+            border-radius: 10px;
         }}
         
         .measurement-row {{
@@ -428,19 +486,19 @@ def generate_dashboard_html(
         }}
         
         .measurement-label {{
-            color: #666;
+            color: var(--muted);
             font-weight: 500;
         }}
         
         .measurement-value {{
-            color: #333;
+            color: var(--text);
             font-weight: 600;
             font-family: 'Courier New', monospace;
         }}
         
         .version {{
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
+            background: var(--accent-soft);
+            color: var(--accent);
             padding: 12px;
             border-radius: 6px;
             text-align: center;
@@ -461,14 +519,14 @@ def generate_dashboard_html(
         
         .timestamp-info {{
             font-size: 0.85em;
-            color: #999;
+            color: var(--timestamp);
             margin-top: 15px;
             padding-top: 15px;
-            border-top: 1px solid #eee;
+            border-top: 1px solid var(--section-border);
         }}
         
         .no-data {{
-            color: #999;
+            color: var(--muted);
             font-style: italic;
             padding: 10px 0;
         }}
