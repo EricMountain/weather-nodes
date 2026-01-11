@@ -573,6 +573,8 @@ def generate_dashboard_html(
             font-size: 0.9em;
             opacity: 0.9;
             color: var(--timestamp);
+            margin-left: auto;
+            text-align: right;
         }}
 
         .node-header.show-id .node-meta {{
