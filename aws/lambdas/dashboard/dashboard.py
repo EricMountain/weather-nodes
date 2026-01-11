@@ -283,6 +283,8 @@ def generate_dashboard_html(
             color: white;
             padding: 20px;
             border-bottom: 3px solid rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            position: relative;
         }}
         
         .node-header h2 {{
@@ -294,6 +296,13 @@ def generate_dashboard_html(
             font-size: 0.85em;
             opacity: 0.9;
             font-family: 'Courier New', monospace;
+            display: none;
+            margin-top: 8px;
+            word-break: break-all;
+        }}
+
+        .node-header.show-id .node-id {{
+            display: block;
         }}
         
         .node-content {{
@@ -401,6 +410,16 @@ def generate_dashboard_html(
             <p>Weather Station Dashboard • Real-time monitoring</p>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {{
+            document.querySelectorAll('.node-header').forEach((header) => {{
+                header.addEventListener('click', () => {{
+                    header.classList.toggle('show-id');
+                }});
+            }});
+        }});
+    </script>
 </body>
 </html>"""
 
