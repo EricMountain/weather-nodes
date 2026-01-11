@@ -381,6 +381,7 @@ def generate_dashboard_html(
             font-size: 2.3em;
             font-weight: 700;
             letter-spacing: 0.5px;
+            cursor: pointer;
         }}
         
         .header p {{
