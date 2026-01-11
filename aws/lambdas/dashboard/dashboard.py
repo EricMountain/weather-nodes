@@ -256,8 +256,22 @@ def generate_dashboard_html(
             color: rgba(255, 255, 255, 0.8);
             font-size: 0.9em;
             margin-bottom: 30px;
+            cursor: pointer;
         }}
-        
+
+        .timestamp .timestamp-full {{
+            display: none;
+        }}
+
+        .timestamp.show-full .timestamp-full {{
+            display: inline;
+            margin-left: 6px;
+        }}
+
+        .timestamp.show-full .timestamp-fuzzy {{
+            display: none;
+        }}
+
         .nodes-grid {{
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -453,13 +467,6 @@ def generate_dashboard_html(
             border-top: 1px solid #eee;
         }}
         
-        .footer {{
-            text-align: center;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9em;
-            padding: 20px;
-        }}
-        
         .no-data {{
             color: #999;
             font-style: italic;
@@ -470,20 +477,16 @@ def generate_dashboard_html(
 <body>
     <div class="container">
         <div class="header">
-            <h1>🌤️ Weather Station</h1>
-            <p>{location_name}</p>
+            <h1>🌤️ {location_name}</h1>
         </div>
-        
-        <div class="timestamp">
-            Last updated: {now}
-        </div>
-        
+
         <div class="nodes-grid">
             {measurements_html}
         </div>
-        
-        <div class="footer">
-            <p>Weather Station Dashboard • Real-time monitoring</p>
+
+        <div class="timestamp" data-timestamp="{now}">
+            <span class="timestamp-fuzzy"></span>
+            <span class="timestamp-full">Updated {now}</span>
         </div>
     </div>
 
@@ -500,6 +503,13 @@ def generate_dashboard_html(
                     content.classList.toggle('show-status');
                 }});
             }});
+
+            const pageTimestamp = document.querySelector('.timestamp');
+            if (pageTimestamp) {{
+                pageTimestamp.addEventListener('click', () => {{
+                    pageTimestamp.classList.toggle('show-full');
+                }});
+            }}
 
             const formatAgo = (dateString) => {{
                 const parsed = new Date(dateString);
@@ -525,6 +535,15 @@ def generate_dashboard_html(
                     const label = formatAgo(ts);
                     el.textContent = label;
                 }});
+
+                const tsEl = document.querySelector('.timestamp');
+                if (tsEl) {{
+                    const raw = tsEl.getAttribute('data-timestamp');
+                    const fuzzySpan = tsEl.querySelector('.timestamp-fuzzy');
+                    if (raw && fuzzySpan) {{
+                        fuzzySpan.textContent = "Updated " + formatAgo(raw) || raw;
+                    }}
+                }}
             }};
 
             refreshAges();
