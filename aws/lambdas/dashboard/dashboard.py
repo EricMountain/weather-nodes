@@ -339,6 +339,18 @@ def generate_dashboard_html(
         .measurement-section {{
             margin-bottom: 20px;
         }}
+
+        .node-content .status-section {{
+            display: none;
+        }}
+
+        .node-content.show-status .status-section {{
+            display: block;
+        }}
+
+        .node-content.show-status .status-section .measurement-row {{
+            display: flex;
+        }}
         
         .section-title {{
             font-size: 0.95em;
@@ -445,6 +457,12 @@ def generate_dashboard_html(
                     header.classList.toggle('show-id');
                 }});
             }});
+
+            document.querySelectorAll('.node-content').forEach((content) => {{
+                content.addEventListener('click', () => {{
+                    content.classList.toggle('show-status');
+                }});
+            }});
         }});
     </script>
 </body>
@@ -504,7 +522,7 @@ def render_node_card(node: Dict[str, Any]) -> str:
     # Build status HTML
     status_html = ""
     if node.get("status"):
-        status_html = '<div class="measurement-section">'
+        status_html = '<div class="measurement-section status-section">'
         status_html += '<div class="section-title">📡 Status</div>'
 
         for status_key, status_value in node["status"].items():
