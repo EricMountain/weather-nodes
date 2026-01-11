@@ -1045,8 +1045,24 @@ def format_measurement_parts(name: str, value: Any) -> tuple[str, str]:
     # If unit already present in value_str (case-insensitive), strip it for clean trio
     if unit and value_str.lower().endswith(unit.lower()):
         value_str = value_str[: -len(unit)].strip()
+    value_str = apply_rounding(name_lower, value_str)
 
     return value_str, (unit if unit else "")
+
+
+def apply_rounding(name_lower: str, value: Any) -> str:
+    """Round numeric values based on measurement type."""
+    try:
+        val = float(value)
+    except (ValueError, TypeError):
+        return str(value).strip()
+
+    if "temperature" in name_lower:
+        return f"{val:.1f}"
+    if "humidity" in name_lower or "pressure" in name_lower:
+        return f"{int(round(val))}"
+
+    return str(value).strip()
 
 
 def format_measurement_name(name: str) -> str:
@@ -1081,23 +1097,5 @@ def format_measurement_value(name: str, value: Any) -> str:
     if value is None:
         return "N/A"
 
-    name_lower = name.lower()
-    value_str = str(value)
-
-    # Add units based on measurement type
-    if "temperature" in name_lower and "°" not in value_str:
-        return f"{value}°C"
-    elif "humidity" in name_lower and "%" not in value_str:
-        return f"{value}%"
-    elif "pressure" in name_lower and "h" not in value_str:
-        return f"{value} hPa"
-    elif "battery_voltage" in name_lower and "V" not in value_str:
-        return f"{value} V"
-    elif "battery_percentage" in name_lower and "%" not in value_str:
-        return f"{value}%"
-    elif "rssi" in name_lower:
-        return f"{value} dBm"
-    elif "uptime" in name_lower:
-        return f"{value}s"
-
-    return value_str
+    val, unit = format_measurement_parts(name, value)
+    return f"{val}{unit}"
