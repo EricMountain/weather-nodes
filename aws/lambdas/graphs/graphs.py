@@ -1,15 +1,38 @@
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import json
 import logging
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, quote
 import base64
 
-from auth import extract_api_key, authenticate_api_key
+from auth import (
+    extract_api_key,
+    authenticate_api_key,
+    API_KEY_COOKIE_NAME,
+)
 from datahelper import get_available_devices, get_measurements_data
 from htmlhelper import generate_html_interface
 from assets import build_manifest, get_icon_base64, get_favicon_base64
 
 logger = logging.getLogger(__name__)
+API_KEY_COOKIE_MAX_AGE = 30 * 24 * 60 * 60  # 30 days
+
+
+def build_api_key_cookie(api_key: str) -> str:
+    """Build the Set-Cookie header value for the API key."""
+    encoded_value = quote(api_key, safe="")
+    return (
+        f"{API_KEY_COOKIE_NAME}={encoded_value}; "
+        "Path=/; Max-Age={API_KEY_COOKIE_MAX_AGE}; SameSite=Lax; Secure"
+    )
+
+
+def add_cookie_header(headers: Dict[str, str], api_key: Optional[str]) -> Dict[str, str]:
+    """Attach the API key cookie to the response headers when available."""
+    if not api_key:
+        return headers
+    updated_headers = dict(headers)
+    updated_headers["Set-Cookie"] = build_api_key_cookie(api_key)
+    return updated_headers
 
 
 
@@ -76,28 +99,36 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return {"statusCode": 500, "body": error_message}
 
     if method == "GET":
-        return handle_get_request(event, device_id)
+        return handle_get_request(event, device_id, api_key)
     elif method == "POST":
-        return handle_post_request(event, device_id)
+        return handle_post_request(event, device_id, api_key)
     else:
         return {"statusCode": 405, "body": "Method not allowed"}
 
 
-def handle_get_request(event: Dict[str, Any], device_id: str) -> Dict[str, Any]:
+def handle_get_request(
+    event: Dict[str, Any], device_id: str, api_key: Optional[str]
+) -> Dict[str, Any]:
     """Handle GET request - return the HTML interface"""
     # Get available devices for this API key to populate the interface
     available_devices = get_available_devices(device_id)
     html_content = generate_html_interface(available_devices)
-    return {
-        "statusCode": 200,
-        "headers": {
+    headers = add_cookie_header(
+        {
             "Content-Type": "text/html",
         },
+        api_key,
+    )
+    return {
+        "statusCode": 200,
+        "headers": headers,
         "body": html_content,
     }
 
 
-def handle_post_request(event: Dict[str, Any], device_id: str) -> Dict[str, Any]:
+def handle_post_request(
+    event: Dict[str, Any], device_id: str, api_key: Optional[str]
+) -> Dict[str, Any]:
     """Handle POST request - return graph data as JSON"""
     try:
         body = event.get("body", "")
@@ -114,7 +145,11 @@ def handle_post_request(event: Dict[str, Any], device_id: str) -> Dict[str, Any]
         selected_devices = params.get("devices", [])[0].split(',')
         
         if not start_date or not end_date:
-            return {"statusCode": 400, "body": "start_date and end_date are required"}
+            return {
+                "statusCode": 400,
+                "headers": add_cookie_header({"Content-Type": "text/plain"}, api_key),
+                "body": "start_date and end_date are required",
+            }
         
         # Get available devices for this API key
         available_devices = get_available_devices(device_id)
@@ -131,12 +166,19 @@ def handle_post_request(event: Dict[str, Any], device_id: str) -> Dict[str, Any]
         
         return {
             "statusCode": 200,
-            "headers": {
-                "Content-Type": "application/json",
-            },
+            "headers": add_cookie_header(
+                {
+                    "Content-Type": "application/json",
+                },
+                api_key,
+            ),
             "body": json.dumps(measurements_data),
         }
     
     except Exception as e:
         logger.error(f"Error in POST request: {str(e)}")
-        return {"statusCode": 500, "body": f"Error processing request: {str(e)}"}
+        return {
+            "statusCode": 500,
+            "headers": add_cookie_header({"Content-Type": "text/plain"}, api_key),
+            "body": f"Error processing request: {str(e)}",
+        }

@@ -2,24 +2,38 @@
 Authentication utilities for the graphs lambda.
 """
 from typing import Dict, Any, Optional, Tuple
+from http.cookies import SimpleCookie
 import boto3
 from .dynamodb import dynamo_to_python
 
 dynamodb = boto3.client("dynamodb")
+API_KEY_COOKIE_NAME = "weather_nodes_api_key"
 
 
 def extract_api_key(event: Dict[str, Any]) -> Optional[str]:
-    """Extract API key from headers or query parameters"""
+    """Extract API key from headers, query parameters, or cookies."""
     headers = event.get("headers") or {}
-    
+
     # Check headers first
     api_key = headers.get("x-api-key") or headers.get("X-API-Key")
-    
+
     # Also check for the api key passed as a query parameter
     if not api_key and event.get("queryStringParameters"):
         qs_params = event.get("queryStringParameters") or {}
         api_key = qs_params.get("api_key")
-    
+
+    # Finally, look for the API key stored as a cookie
+    if not api_key:
+        cookie_header = headers.get("Cookie") or headers.get("cookie")
+        if cookie_header:
+            cookie = SimpleCookie()
+            try:
+                cookie.load(cookie_header)
+            except (ValueError, TypeError):
+                cookie = None
+            if cookie and API_KEY_COOKIE_NAME in cookie:
+                api_key = cookie[API_KEY_COOKIE_NAME].value
+
     return api_key
 
 
