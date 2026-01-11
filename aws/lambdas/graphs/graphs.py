@@ -1,40 +1,19 @@
 from typing import Dict, Any, Optional
 import json
 import logging
-from urllib.parse import parse_qs, quote
+from urllib.parse import parse_qs
 import base64
 
 from auth import (
     extract_api_key,
     authenticate_api_key,
-    API_KEY_COOKIE_NAME,
+    add_cookie_header,
 )
 from datahelper import get_available_devices, get_measurements_data
 from htmlhelper import generate_html_interface
 from assets import build_manifest, get_icon_base64, get_favicon_base64
 
 logger = logging.getLogger(__name__)
-API_KEY_COOKIE_MAX_AGE = 30 * 24 * 60 * 60  # 30 days
-
-
-def build_api_key_cookie(api_key: str) -> str:
-    """Build the Set-Cookie header value for the API key."""
-    encoded_value = quote(api_key, safe="")
-    return (
-        f"{API_KEY_COOKIE_NAME}={encoded_value}; "
-        "Path=/; Max-Age={API_KEY_COOKIE_MAX_AGE}; SameSite=Lax; Secure"
-    )
-
-
-def add_cookie_header(headers: Dict[str, str], api_key: Optional[str]) -> Dict[str, str]:
-    """Attach the API key cookie to the response headers when available."""
-    if not api_key:
-        return headers
-    updated_headers = dict(headers)
-    updated_headers["Set-Cookie"] = build_api_key_cookie(api_key)
-    return updated_headers
-
-
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """

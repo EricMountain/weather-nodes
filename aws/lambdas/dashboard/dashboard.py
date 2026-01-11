@@ -11,7 +11,7 @@ import base64
 import boto3
 from botocore.exceptions import ClientError
 
-from auth import extract_api_key, authenticate_api_key
+from auth import extract_api_key, authenticate_api_key, add_cookie_header
 from dynamodb import dynamo_to_python
 from assets import build_manifest, get_icon_base64, get_favicon_base64
 
@@ -80,7 +80,11 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return {"statusCode": 500, "body": error_message}
 
     if method != "GET":
-        return {"statusCode": 405, "body": "Method not allowed"}
+        return {
+            "statusCode": 405,
+            "headers": add_cookie_header({"Content-Type": "text/plain"}, api_key),
+            "body": "Method not allowed",
+        }
 
     try:
         # Get device config to find associated nodes
@@ -113,9 +117,12 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
         return {
             "statusCode": 200,
-            "headers": {
-                "Content-Type": "text/html; charset=utf-8",
-            },
+            "headers": add_cookie_header(
+                {
+                    "Content-Type": "text/html; charset=utf-8",
+                },
+                api_key,
+            ),
             "body": html_content,
         }
 
@@ -123,7 +130,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         logger.error(f"Error generating dashboard: {str(e)}")
         return {
             "statusCode": 500,
-            "headers": {"Content-Type": "text/plain"},
+            "headers": add_cookie_header({"Content-Type": "text/plain"}, api_key),
             "body": f"Error generating dashboard: {str(e)}",
         }
 

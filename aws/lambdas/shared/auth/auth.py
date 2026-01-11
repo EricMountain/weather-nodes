@@ -1,13 +1,15 @@
 """
-Authentication utilities for the graphs lambda.
+Authentication utilities shared across lambdas.
 """
 from typing import Dict, Any, Optional, Tuple
 from http.cookies import SimpleCookie
+from urllib.parse import quote
 import boto3
 from .dynamodb import dynamo_to_python
 
 dynamodb = boto3.client("dynamodb")
 API_KEY_COOKIE_NAME = "weather_nodes_api_key"
+API_KEY_COOKIE_MAX_AGE = 30 * 24 * 60 * 60  # 30 days
 
 
 def extract_api_key(event: Dict[str, Any]) -> Optional[str]:
@@ -35,6 +37,24 @@ def extract_api_key(event: Dict[str, Any]) -> Optional[str]:
                 api_key = cookie[API_KEY_COOKIE_NAME].value
 
     return api_key
+
+
+def build_api_key_cookie(api_key: str) -> str:
+    """Build the Set-Cookie header value for the API key."""
+    encoded_value = quote(api_key, safe="")
+    return (
+        f"{API_KEY_COOKIE_NAME}={encoded_value}; "
+        f"Path=/; Max-Age={API_KEY_COOKIE_MAX_AGE}; SameSite=Lax; Secure"
+    )
+
+
+def add_cookie_header(headers: Dict[str, str], api_key: Optional[str]) -> Dict[str, str]:
+    """Attach the API key cookie to the response headers when available."""
+    if not api_key:
+        return headers
+    updated_headers = dict(headers)
+    updated_headers["Set-Cookie"] = build_api_key_cookie(api_key)
+    return updated_headers
 
 
 def authenticate_api_key(api_key: str) -> Tuple[bool, Optional[str], str, Optional[str]]:
