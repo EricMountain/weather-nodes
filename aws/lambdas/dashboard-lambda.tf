@@ -58,6 +58,13 @@ resource "aws_iam_policy" "dashboard_lambda_policy" {
           "dynamodb:GetItem"
         ],
         Resource = aws_dynamodb_table.latest_measurements.arn
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "dynamodb:Query"
+        ],
+        Resource = aws_dynamodb_table.measurements.arn
       }
     ]
   })
@@ -69,7 +76,7 @@ resource "aws_iam_role_policy_attachment" "dashboard_lambda_policy_attach" {
 }
 
 # Uncomment for logging in CloudWatch
-# resource "aws_iam_role_policy_attachment" "dashboard_lambda_attach_lambda_basic_execution" {
-#   role       = aws_iam_role.iam_for_dashboard_lambda.name
-#   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-# }
+resource "aws_iam_role_policy_attachment" "dashboard_lambda_attach_lambda_basic_execution" {
+  role       = aws_iam_role.iam_for_dashboard_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}

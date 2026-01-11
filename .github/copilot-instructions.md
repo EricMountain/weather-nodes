@@ -74,8 +74,9 @@ pio test --list-tests -e native
 
 * Lambda functions are in `aws/lambdas/`
 * Written in Python
-* Use shared code from `aws/lambdas/shared/`
+* They share code in `aws/lambdas/shared/`: auth, assets and dynamodb helpers.
 * Infrastructure managed with Terraform
+    * Update lambdas using `terraform apply -auto-approve` from the `aws/lambdas` subdirectory each time a change is made.
 
 ## Documentation
 

@@ -4,7 +4,7 @@ node statuses, and version information.
 """
 from typing import Dict, Any, List
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 import base64
 
@@ -83,10 +83,11 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             tz = ZoneInfo("Etc/UTC")
 
         # Collect data for all nodes
+        now_utc = datetime.now(timezone.utc)
         nodes_data = []
         if "nodes" in device_config:
             for node in device_config["nodes"]:
-                node_data = get_node_data(node, tz)
+                node_data = get_node_data(node, tz, now_utc)
                 if node_data:
                     nodes_data.append(node_data)
 
@@ -113,8 +114,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
 
 
-def get_node_data(node: Dict[str, Any], tz: ZoneInfo) -> Dict[str, Any]:
-    """Fetch latest measurements and status for a single node."""
+def get_node_data(node: Dict[str, Any], tz: ZoneInfo, now_utc: datetime) -> Dict[str, Any]:
+    """Fetch latest measurements, status, and 24h min/max for a single node."""
     try:
         node_device_id = node.get("device_id")
         node_display_name = node.get("display_name", node_device_id)
@@ -172,8 +173,12 @@ def get_node_data(node: Dict[str, Any], tz: ZoneInfo) -> Dict[str, Any]:
             except (ValueError, TypeError):
                 node_data["timestamp_utc"] = latest_measurement["timestamp_utc"]
 
-        return node_data
+        # Fetch 24h min/max aggregates
+        min_max = fetch_min_max(node_device_id, now_utc)
+        if min_max:
+            node_data["measurements_min_max"] = min_max
 
+        return node_data
     except ClientError as err:
         logger.error(
             "Error fetching node data: %s: %s",
@@ -184,6 +189,72 @@ def get_node_data(node: Dict[str, Any], tz: ZoneInfo) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Error processing node data: {str(e)}")
         return None
+def fetch_min_max(node_device_id: str, now_utc: datetime, hours: int = 24) -> Dict[str, Any]:
+    """Fetch 24h min/max for key measurements (temperature, humidity, pressure)."""
+    window_start = (now_utc - timedelta(hours=hours)).isoformat(timespec="seconds")
+    try:
+        measurements_today_response = dynamodb.query(
+            TableName="measurements",
+            KeyConditionExpression="device_id = :device_id AND timestamp_utc >= :start_timestamp_utc",
+            ExpressionAttributeValues={
+                ":device_id": {"S": node_device_id},
+                ":start_timestamp_utc": {"S": window_start},
+            },
+        )
+    except ClientError as err:
+        logger.error(
+            "Couldn't query measurements: %s: %s",
+            err.response["Error"]["Code"],
+            err.response["Error"]["Message"],
+        )
+        return None
+
+    items = measurements_today_response.get("Items") or []
+    if not items:
+        return None
+
+    measurements_today = [dynamo_to_python(item) for item in items]
+    min_max: Dict[str, Dict[str, Dict[str, float]]] = {}
+
+    for measurement in measurements_today:
+        if "measurements_v2" not in measurement:
+            continue
+        for device, device_measurements in measurement["measurements_v2"].items():
+            if device not in min_max:
+                min_max[device] = {}
+            for measurement_name, measurement_value in device_measurements.items():
+                if measurement_name not in ["temperature", "humidity", "pressure"]:
+                    continue
+                try:
+                    value_as_float = float(measurement_value)
+                except (ValueError, TypeError):
+                    continue
+
+                if measurement_name not in min_max[device]:
+                    min_max[device][measurement_name] = {
+                        "min": value_as_float,
+                        "max": value_as_float,
+                    }
+                else:
+                    if value_as_float < min_max[device][measurement_name]["min"]:
+                        min_max[device][measurement_name]["min"] = value_as_float
+                    if value_as_float > min_max[device][measurement_name]["max"]:
+                        min_max[device][measurement_name]["max"] = value_as_float
+
+    if not min_max:
+        return None
+
+    result: Dict[str, Dict[str, Dict[str, str]]] = {}
+    for device, device_measurements in min_max.items():
+        if device_measurements:
+            result[device] = {}
+        for measurement_name, measurement_value in device_measurements.items():
+            result[device][measurement_name] = {
+                "min": str(measurement_value["min"]),
+                "max": str(measurement_value["max"]),
+            }
+
+    return result
 
 
 def generate_dashboard_html(
@@ -611,6 +682,17 @@ def generate_dashboard_html(
             font-weight: 600;
             font-family: 'Courier New', monospace;
         }}
+
+        .measurement-value .measurement-minmax {{
+            font-size: 0.9em;
+            color: var(--muted);
+            font-weight: 600;
+        }}
+
+        .measurement-value .measurement-current {{
+            font-weight: 700;
+            color: var(--text);
+        }}
         
         .version {{
             background: var(--accent-soft);
@@ -818,7 +900,7 @@ def render_node_card(node: Dict[str, Any]) -> str:
 
     def get_sort_key(item):
         """Get sort priority for a measurement."""
-        name = item[0].lower()
+        name = item[1].lower()
         return measurement_priority.get(name, 100)
 
     # Build measurements HTML
@@ -830,18 +912,22 @@ def render_node_card(node: Dict[str, Any]) -> str:
         all_measurements = []
         for device_name, device_measurements in node["measurements"].items():
             for measurement_name, measurement_value in device_measurements.items():
-                all_measurements.append((measurement_name, measurement_value))
+                all_measurements.append((device_name, measurement_name, measurement_value))
 
         all_measurements.sort(key=get_sort_key)
 
         always_show = {"temperature", "humidity", "pressure"}
         extra_rows = ""
 
-        for measurement_name, measurement_value in all_measurements:
+        measurements_min_max = node.get("measurements_min_max", {})
+
+        for device_name, measurement_name, measurement_value in all_measurements:
             row_html = f"""
                 <div class="measurement-row">
                     <span class="measurement-label">{format_measurement_name(measurement_name)}</span>
-                    <span class="measurement-value">{format_measurement_value(measurement_name, measurement_value)}</span>
+                    <span class="measurement-value">
+                        {render_measurement_with_min_max(measurement_name, measurement_value, measurements_min_max.get(device_name, {}))}
+                    </span>
                 </div>
                 """
 
@@ -897,6 +983,70 @@ def render_node_card(node: Dict[str, Any]) -> str:
         </div>
     </div>
     """
+
+
+def render_measurement_with_min_max(
+    measurement_name: str, current_value: Any, min_max_for_device: Dict[str, Any]
+) -> str:
+    """Render a measurement value with optional min/current/max trio."""
+    def lookup_min_max(name: str, min_max: Dict[str, Any]):
+        if not min_max:
+            return None
+        if name in min_max:
+            return min_max[name]
+        name_lower = name.lower()
+        for k, v in min_max.items():
+            if k.lower() == name_lower:
+                return v
+        return None
+
+    min_max_entry = lookup_min_max(measurement_name, min_max_for_device)
+    current_val, unit = format_measurement_parts(measurement_name, current_value)
+
+    if min_max_entry and "min" in min_max_entry and "max" in min_max_entry:
+        min_val, min_unit = format_measurement_parts(measurement_name, min_max_entry["min"])
+        max_val, max_unit = format_measurement_parts(measurement_name, min_max_entry["max"])
+        unit_suffix = unit or min_unit or max_unit
+        unit_suffix = unit_suffix or ""
+        return (
+            f"<span class=\"measurement-minmax\">{min_val}</span>/"
+            f"<span class=\"measurement-current\">{current_val}</span>/"
+            f"<span class=\"measurement-minmax\">{max_val}</span>{unit_suffix}"
+        )
+
+    # Fallback to original formatting when no min/max
+    return format_measurement_value(measurement_name, current_value)
+
+
+def format_measurement_parts(name: str, value: Any) -> tuple[str, str]:
+    """Return (value_string_without_unit, unit_suffix_with_leading_symbol_if_any)."""
+    if value is None:
+        return ("N/A", "")
+
+    name_lower = name.lower()
+    value_str = str(value).strip()
+
+    unit = ""
+    if "temperature" in name_lower:
+        unit = "°C"
+    elif "humidity" in name_lower:
+        unit = "%"
+    elif "pressure" in name_lower:
+        unit = "hPa"
+    elif "battery_voltage" in name_lower:
+        unit = "V"
+    elif "battery_percentage" in name_lower:
+        unit = "%"
+    elif "rssi" in name_lower or name_lower in {"wifi", "wifi_dbm"}:
+        unit = "dBm"
+    elif "uptime" in name_lower:
+        unit = "s"
+
+    # If unit already present in value_str (case-insensitive), strip it for clean trio
+    if unit and value_str.lower().endswith(unit.lower()):
+        value_str = value_str[: -len(unit)].strip()
+
+    return value_str, (unit if unit else "")
 
 
 def format_measurement_name(name: str) -> str:
