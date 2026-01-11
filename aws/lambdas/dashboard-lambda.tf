@@ -58,6 +58,13 @@ resource "aws_iam_policy" "dashboard_lambda_policy" {
           "dynamodb:GetItem"
         ],
         Resource = aws_dynamodb_table.latest_measurements.arn
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "dynamodb:Query"
+        ],
+        Resource = aws_dynamodb_table.measurements.arn
       }
     ]
   })
