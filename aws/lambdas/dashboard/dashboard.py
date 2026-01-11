@@ -1004,10 +1004,14 @@ def render_measurement_with_min_max(
     current_val, unit = format_measurement_parts(measurement_name, current_value)
 
     if min_max_entry and "min" in min_max_entry and "max" in min_max_entry:
-        min_val, min_unit = format_measurement_parts(measurement_name, min_max_entry["min"])
-        max_val, max_unit = format_measurement_parts(measurement_name, min_max_entry["max"])
+        min_val, min_unit = format_measurement_parts(
+            measurement_name, min_max_entry["min"]
+        )
+        max_val, max_unit = format_measurement_parts(
+            measurement_name, min_max_entry["max"]
+        )
         unit_suffix = unit or min_unit or max_unit
-        unit_suffix = unit_suffix or ""
+        unit_suffix = f" {unit_suffix}" if unit_suffix else ""
         return (
             f"<span class=\"measurement-minmax\">{min_val}</span>/"
             f"<span class=\"measurement-current\">{current_val}</span>/"
@@ -1098,4 +1102,4 @@ def format_measurement_value(name: str, value: Any) -> str:
         return "N/A"
 
     val, unit = format_measurement_parts(name, value)
-    return f"{val}{unit}"
+    return f"{val} {unit}".strip()
