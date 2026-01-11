@@ -209,6 +209,7 @@ def generate_dashboard_html(
     <meta name="color-scheme" content="light dark">
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f4ec">
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1115">
+    <meta name="theme-color" id="dynamic-theme-color" content="#f6f4ec">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
@@ -232,7 +233,7 @@ def generate_dashboard_html(
             --accent: #0f0f0f;
             --accent-soft: #e5dfd2;
             --header-bg: #0f0f0f;
-            --header-text: #f6f4ec;
+            --header-text: #0f0f0f;
             --shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
             --section-border: #e4dece;
             --timestamp: #6c655a;
@@ -241,7 +242,28 @@ def generate_dashboard_html(
             --section-title-bg: #f0ebde;
             --section-title-color: #0f0f0f;
             --header-gradient: linear-gradient(135deg, #f6f4ec 0%, #e8e0cf 100%);
-            --node-header-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --node-header-gradient: linear-gradient(135deg, #f6f4ec 0%, #e8e0cf 100%);
+        }}
+
+        :root[data-theme="light"] {{
+            --bg: #f6f4ec;
+            --text: #0f0f0f;
+            --muted: #4c4c4c;
+            --card: #ffffff;
+            --card-border: #dcd6c6;
+            --accent: #0f0f0f;
+            --accent-soft: #e5dfd2;
+            --header-bg: #0f0f0f;
+            --header-text: #0f0f0f;
+            --shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            --section-border: #e4dece;
+            --timestamp: #6c655a;
+            --chip-bg: #ece6d8;
+            --status-card: #f7f2e4;
+            --section-title-bg: #f0ebde;
+            --section-title-color: #0f0f0f;
+            --header-gradient: linear-gradient(135deg, #f6f4ec 0%, #e8e0cf 100%);
+            --node-header-gradient: linear-gradient(135deg, #f6f4ec 0%, #e8e0cf 100%);
         }}
 
         @media (prefers-color-scheme: dark) {{
@@ -253,8 +275,8 @@ def generate_dashboard_html(
                 --card-border: #242a35;
                 --accent: #f6f4ec;
                 --accent-soft: #1f2430;
-                --header-bg: #f6f4ec;
-                --header-text: #0f1115;
+                --header-bg: #0f1115;
+                --header-text: #f6f4ec;
                 --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
                 --section-border: #252b36;
                 --timestamp: #b7b9c2;
@@ -265,6 +287,27 @@ def generate_dashboard_html(
                 --header-gradient: linear-gradient(135deg, #151821 0%, #0f1115 100%);
                 --node-header-gradient: linear-gradient(135deg, #242a35 0%, #1b202b 100%);
             }}
+        }}
+
+        :root[data-theme="dark"] {{
+            --bg: #0f1115;
+            --text: #f1f1f1;
+            --muted: #a4a6ad;
+            --card: #151821;
+            --card-border: #242a35;
+            --accent: #f6f4ec;
+            --accent-soft: #1f2430;
+            --header-bg: #0f1115;
+            --header-text: #f6f4ec;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            --section-border: #252b36;
+            --timestamp: #b7b9c2;
+            --chip-bg: #202634;
+            --status-card: #1b212d;
+            --section-title-bg: #202634;
+            --section-title-color: #f6f4ec;
+            --header-gradient: linear-gradient(135deg, #151821 0%, #0f1115 100%);
+            --node-header-gradient: linear-gradient(135deg, #242a35 0%, #1b202b 100%);
         }}
 
         body {{
@@ -535,7 +578,7 @@ def generate_dashboard_html(
 <body>
     <div class="container">
         <div class="header">
-            <h1>🌤️ {location_name}</h1>
+            <h1 class="theme-toggle" title="Click to toggle theme">🌤️ {location_name}</h1>
         </div>
 
         <div class="nodes-grid">
@@ -550,6 +593,57 @@ def generate_dashboard_html(
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {{
+            const prefersDark = () => window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const dynamicThemeMeta = document.getElementById('dynamic-theme-color');
+
+            const applyTheme = (mode, persist = false) => {{
+                if (mode === 'light') {{
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    dynamicThemeMeta?.setAttribute('content', '#f6f4ec');
+                    if (persist) localStorage.setItem('themePreference', 'light');
+                }} else if (mode === 'dark') {{
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    dynamicThemeMeta?.setAttribute('content', '#0f1115');
+                    if (persist) localStorage.setItem('themePreference', 'dark');
+                }} else {{
+                    document.documentElement.removeAttribute('data-theme');
+                    dynamicThemeMeta?.setAttribute('content', prefersDark() ? '#0f1115' : '#f6f4ec');
+                    if (persist) localStorage.removeItem('themePreference');
+                }}
+            }};
+
+            const savedPreference = localStorage.getItem('themePreference');
+            if (savedPreference === 'light' || savedPreference === 'dark') {{
+                applyTheme(savedPreference, false);
+            }} else {{
+                applyTheme(null, false);
+            }}
+
+            const headerTitle = document.querySelector('.header h1.theme-toggle');
+            if (headerTitle) {{
+                headerTitle.addEventListener('click', () => {{
+                    const currentAttr = document.documentElement.getAttribute('data-theme');
+                    const systemMode = prefersDark() ? 'dark' : 'light';
+                    const opposite = systemMode === 'dark' ? 'light' : 'dark';
+                    const current = currentAttr || 'auto';
+
+                    let nextMode;
+                    if (current === 'auto') {{
+                        nextMode = opposite; // first click: go to the opposite of system
+                    }} else if (current === opposite) {{
+                        nextMode = 'auto'; // second click: return to auto
+                    }} else {{
+                        nextMode = opposite; // fallback: force opposite to ensure manual override available
+                    }}
+
+                    if (nextMode === 'auto') {{
+                        applyTheme(null, true);
+                    }} else {{
+                        applyTheme(nextMode, true);
+                    }}
+                }});
+            }}
+
             document.querySelectorAll('.node-header').forEach((header) => {{
                 header.addEventListener('click', () => {{
                     header.classList.toggle('show-id');
