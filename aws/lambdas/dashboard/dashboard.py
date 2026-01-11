@@ -225,89 +225,132 @@ def generate_dashboard_html(
 
         :root {{
             color-scheme: light dark;
-            --bg: #f6f4ec;
-            --text: #0f0f0f;
-            --muted: #4c4c4c;
-            --card: #ffffff;
-            --card-border: #dcd6c6;
-            --accent: #0f0f0f;
-            --accent-soft: #e5dfd2;
-            --header-bg: #f6f4ec;
-            --header-text: #0f0f0f;
-            --shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-            --section-border: #e4dece;
-            --timestamp: #6c655a;
-            --chip-bg: #ece6d8;
-            --status-card: #f7f2e4;
-            --section-title-bg: #f0ebde;
-            --section-title-color: #0f0f0f;
-            --header-gradient: linear-gradient(135deg, #f6f4ec 0%, #e8e0cf 100%);
-            --node-header-gradient: linear-gradient(135deg, #f6f4ec 0%, #e8e0cf 100%);
+            /* Light palette */
+            --light-bg: #f6f4ec;
+            --light-text: #0f0f0f;
+            --light-muted: #4c4c4c;
+            --light-card: #ffffff;
+            --light-card-border: #dcd6c6;
+            --light-accent: #0f0f0f;
+            --light-accent-soft: #e5dfd2;
+            --light-header-bg: #f6f4ec;
+            --light-header-text: #0f0f0f;
+            --light-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            --light-section-border: #e4dece;
+            --light-timestamp: #6c655a;
+            --light-chip-bg: #ece6d8;
+            --light-status-card: #f7f2e4;
+            --light-section-title-bg: #f0ebde;
+            --light-section-title-color: #0f0f0f;
+            --light-header-gradient: linear-gradient(135deg, #f6f4ec 0%, #e8e0cf 100%);
+            --light-node-header-gradient: linear-gradient(135deg, #f6f4ec 0%, #e8e0cf 100%);
+
+            /* Dark palette */
+            --dark-bg: #0f1115;
+            --dark-text: #f1f1f1;
+            --dark-muted: #a4a6ad;
+            --dark-card: #151821;
+            --dark-card-border: #242a35;
+            --dark-accent: #f6f4ec;
+            --dark-accent-soft: #1f2430;
+            --dark-header-bg: #0f1115;
+            --dark-header-text: #f6f4ec;
+            --dark-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            --dark-section-border: #252b36;
+            --dark-timestamp: #b7b9c2;
+            --dark-chip-bg: #202634;
+            --dark-status-card: #1b212d;
+            --dark-section-title-bg: #202634;
+            --dark-section-title-color: #f6f4ec;
+            --dark-header-gradient: linear-gradient(135deg, #151821 0%, #0f1115 100%);
+            --dark-node-header-gradient: linear-gradient(135deg, #242a35 0%, #1b202b 100%);
+
+            /* Active theme defaults to light */
+            --bg: var(--light-bg);
+            --text: var(--light-text);
+            --muted: var(--light-muted);
+            --card: var(--light-card);
+            --card-border: var(--light-card-border);
+            --accent: var(--light-accent);
+            --accent-soft: var(--light-accent-soft);
+            --header-bg: var(--light-header-bg);
+            --header-text: var(--light-header-text);
+            --shadow: var(--light-shadow);
+            --section-border: var(--light-section-border);
+            --timestamp: var(--light-timestamp);
+            --chip-bg: var(--light-chip-bg);
+            --status-card: var(--light-status-card);
+            --section-title-bg: var(--light-section-title-bg);
+            --section-title-color: var(--light-section-title-color);
+            --header-gradient: var(--light-header-gradient);
+            --node-header-gradient: var(--light-node-header-gradient);
         }}
 
-        :root[data-theme="light"] {{
-            --bg: #f6f4ec;
-            --text: #0f0f0f;
-            --muted: #4c4c4c;
-            --card: #ffffff;
-            --card-border: #dcd6c6;
-            --accent: #0f0f0f;
-            --accent-soft: #e5dfd2;
-            --header-bg: #f6f4ec;
-            --header-text: #0f0f0f;
-            --shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-            --section-border: #e4dece;
-            --timestamp: #6c655a;
-            --chip-bg: #ece6d8;
-            --status-card: #f7f2e4;
-            --section-title-bg: #f0ebde;
-            --section-title-color: #0f0f0f;
-            --header-gradient: linear-gradient(135deg, #f6f4ec 0%, #e8e0cf 100%);
-            --node-header-gradient: linear-gradient(135deg, #f6f4ec 0%, #e8e0cf 100%);
-        }}
-
+        /* Respect system preference unless user toggles a theme */
         @media (prefers-color-scheme: dark) {{
-            :root {{
-                --bg: #0f1115;
-                --text: #f1f1f1;
-                --muted: #a4a6ad;
-                --card: #151821;
-                --card-border: #242a35;
-                --accent: #f6f4ec;
-                --accent-soft: #1f2430;
-                --header-bg: #0f1115;
-                --header-text: #f6f4ec;
-                --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-                --section-border: #252b36;
-                --timestamp: #b7b9c2;
-                --chip-bg: #202634;
-                --status-card: #1b212d;
-                --section-title-bg: #202634;
-                --section-title-color: #f6f4ec;
-                --header-gradient: linear-gradient(135deg, #151821 0%, #0f1115 100%);
-                --node-header-gradient: linear-gradient(135deg, #242a35 0%, #1b202b 100%);
+            :root:not([data-theme]) {{
+                --bg: var(--dark-bg);
+                --text: var(--dark-text);
+                --muted: var(--dark-muted);
+                --card: var(--dark-card);
+                --card-border: var(--dark-card-border);
+                --accent: var(--dark-accent);
+                --accent-soft: var(--dark-accent-soft);
+                --header-bg: var(--dark-header-bg);
+                --header-text: var(--dark-header-text);
+                --shadow: var(--dark-shadow);
+                --section-border: var(--dark-section-border);
+                --timestamp: var(--dark-timestamp);
+                --chip-bg: var(--dark-chip-bg);
+                --status-card: var(--dark-status-card);
+                --section-title-bg: var(--dark-section-title-bg);
+                --section-title-color: var(--dark-section-title-color);
+                --header-gradient: var(--dark-header-gradient);
+                --node-header-gradient: var(--dark-node-header-gradient);
             }}
         }}
 
+        /* Explicit theme overrides from the toggle */
+        :root[data-theme="light"] {{
+            --bg: var(--light-bg);
+            --text: var(--light-text);
+            --muted: var(--light-muted);
+            --card: var(--light-card);
+            --card-border: var(--light-card-border);
+            --accent: var(--light-accent);
+            --accent-soft: var(--light-accent-soft);
+            --header-bg: var(--light-header-bg);
+            --header-text: var(--light-header-text);
+            --shadow: var(--light-shadow);
+            --section-border: var(--light-section-border);
+            --timestamp: var(--light-timestamp);
+            --chip-bg: var(--light-chip-bg);
+            --status-card: var(--light-status-card);
+            --section-title-bg: var(--light-section-title-bg);
+            --section-title-color: var(--light-section-title-color);
+            --header-gradient: var(--light-header-gradient);
+            --node-header-gradient: var(--light-node-header-gradient);
+        }}
+
         :root[data-theme="dark"] {{
-            --bg: #0f1115;
-            --text: #f1f1f1;
-            --muted: #a4a6ad;
-            --card: #151821;
-            --card-border: #242a35;
-            --accent: #f6f4ec;
-            --accent-soft: #1f2430;
-            --header-bg: #0f1115;
-            --header-text: #f6f4ec;
-            --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            --section-border: #252b36;
-            --timestamp: #b7b9c2;
-            --chip-bg: #202634;
-            --status-card: #1b212d;
-            --section-title-bg: #202634;
-            --section-title-color: #f6f4ec;
-            --header-gradient: linear-gradient(135deg, #151821 0%, #0f1115 100%);
-            --node-header-gradient: linear-gradient(135deg, #242a35 0%, #1b202b 100%);
+            --bg: var(--dark-bg);
+            --text: var(--dark-text);
+            --muted: var(--dark-muted);
+            --card: var(--dark-card);
+            --card-border: var(--dark-card-border);
+            --accent: var(--dark-accent);
+            --accent-soft: var(--dark-accent-soft);
+            --header-bg: var(--dark-header-bg);
+            --header-text: var(--dark-header-text);
+            --shadow: var(--dark-shadow);
+            --section-border: var(--dark-section-border);
+            --timestamp: var(--dark-timestamp);
+            --chip-bg: var(--dark-chip-bg);
+            --status-card: var(--dark-status-card);
+            --section-title-bg: var(--dark-section-title-bg);
+            --section-title-color: var(--dark-section-title-color);
+            --header-gradient: var(--dark-header-gradient);
+            --node-header-gradient: var(--dark-node-header-gradient);
         }}
 
         body {{
