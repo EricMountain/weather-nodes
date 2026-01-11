@@ -291,6 +291,13 @@ def generate_dashboard_html(
             font-size: 1.5em;
             margin-bottom: 5px;
         }}
+
+        .node-header .title-line {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }}
         
         .node-id {{
             font-size: 0.85em;
@@ -304,6 +311,11 @@ def generate_dashboard_html(
             margin-top: 12px;
             padding-top: 12px;
             border-top: 1px solid rgba(255, 255, 255, 0.3);
+        }}
+
+        .measurement-age {{
+            font-size: 0.9em;
+            opacity: 0.9;
         }}
 
         .node-header.show-id .node-meta {{
@@ -466,6 +478,35 @@ def generate_dashboard_html(
                     content.classList.toggle('show-status');
                 }});
             }});
+
+            const formatAgo = (dateString) => {{
+                const parsed = new Date(dateString);
+                if (isNaN(parsed.getTime())) return '';
+                const diffMs = Date.now() - parsed.getTime();
+                const sec = Math.max(0, Math.floor(diffMs / 1000));
+                if (sec < 45) return 'a few seconds ago';
+                const min = Math.floor(sec / 60);
+                if (min < 2) return 'a minute ago';
+                if (min < 60) return `${{min}} minutes ago`;
+                const hours = Math.floor(min / 60);
+                if (hours < 2) return 'an hour ago';
+                if (hours < 24) return `${{hours}} hours ago`;
+                const days = Math.floor(hours / 24);
+                if (days < 2) return 'a day ago';
+                return `${{days}} days ago`;
+            }};
+
+            const refreshAges = () => {{
+                document.querySelectorAll('.measurement-age').forEach((el) => {{
+                    const ts = el.getAttribute('data-measured-at');
+                    if (!ts) return;
+                    const label = formatAgo(ts);
+                    el.textContent = label;
+                }});
+            }};
+
+            refreshAges();
+            setInterval(refreshAges, 30000);
         }});
     </script>
 </body>
@@ -563,7 +604,10 @@ def render_node_card(node: Dict[str, Any]) -> str:
     return f"""
     <div class="node-card">
         <div class="node-header">
-            <h2>{display_name}</h2>
+            <div class="title-line">
+                <h2>{display_name}</h2>
+                <div class="measurement-age" data-measured-at="{node.get("timestamp_local_str", "")}"></div>
+            </div>
             <div class="node-meta">
                 <div class="node-id">{device_id}</div>
                 <div class="version">
