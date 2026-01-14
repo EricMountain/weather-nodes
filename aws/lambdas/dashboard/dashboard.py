@@ -1896,6 +1896,34 @@ def handle_post_request(
 
 def get_available_devices_for_graphs(device_id: str) -> List[Dict[str, str]]:
     """Get list of all devices from the latest_measurements table"""
+    
+    def process_scan_items(items: List[Dict]) -> List[Dict[str, str]]:
+        """Process a list of DynamoDB scan items to extract device information"""
+        devices = []
+        for item in items:
+            measurement = dynamo_to_python(item)
+            device_id_val = measurement.get("device_id")
+            if device_id_val:
+                # Try to get display name from device_configs
+                display_name = device_id_val
+                try:
+                    config_response = dynamodb.get_item(
+                        TableName="device_configs",
+                        Key={"device_id": {"S": device_id_val}},
+                    )
+                    if "Item" in config_response:
+                        config = dynamo_to_python(config_response["Item"])
+                        if "location" in config and "name" in config["location"]:
+                            display_name = config["location"]["name"]
+                except Exception:
+                    pass
+                
+                devices.append({
+                    "device_id": device_id_val,
+                    "display_name": display_name
+                })
+        return devices
+    
     try:
         devices = []
         
@@ -1905,28 +1933,7 @@ def get_available_devices_for_graphs(device_id: str) -> List[Dict[str, str]]:
         )
         
         if "Items" in scan_response:
-            for item in scan_response["Items"]:
-                measurement = dynamo_to_python(item)
-                device_id_val = measurement.get("device_id")
-                if device_id_val:
-                    # Try to get display name from device_configs
-                    display_name = device_id_val
-                    try:
-                        config_response = dynamodb.get_item(
-                            TableName="device_configs",
-                            Key={"device_id": {"S": device_id_val}},
-                        )
-                        if "Item" in config_response:
-                            config = dynamo_to_python(config_response["Item"])
-                            if "location" in config and "name" in config["location"]:
-                                display_name = config["location"]["name"]
-                    except Exception:
-                        pass
-                    
-                    devices.append({
-                        "device_id": device_id_val,
-                        "display_name": display_name
-                    })
+            devices.extend(process_scan_items(scan_response["Items"]))
         
         # Handle pagination if there are more results
         while "LastEvaluatedKey" in scan_response:
@@ -1936,27 +1943,7 @@ def get_available_devices_for_graphs(device_id: str) -> List[Dict[str, str]]:
             )
             
             if "Items" in scan_response:
-                for item in scan_response["Items"]:
-                    measurement = dynamo_to_python(item)
-                    device_id_val = measurement.get("device_id")
-                    if device_id_val:
-                        display_name = device_id_val
-                        try:
-                            config_response = dynamodb.get_item(
-                                TableName="device_configs",
-                                Key={"device_id": {"S": device_id_val}},
-                            )
-                            if "Item" in config_response:
-                                config = dynamo_to_python(config_response["Item"])
-                                if "location" in config and "name" in config["location"]:
-                                    display_name = config["location"]["name"]
-                        except Exception:
-                            pass
-                        
-                        devices.append({
-                            "device_id": device_id_val,
-                            "display_name": display_name
-                        })
+                devices.extend(process_scan_items(scan_response["Items"]))
         
         return devices if devices else [{"device_id": device_id, "display_name": "Main Device"}]
     

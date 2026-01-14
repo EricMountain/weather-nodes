@@ -101,11 +101,11 @@ class MockTypeSerializer:
         return {'S': str(x)}
 
 sys.modules['boto3'] = MockBoto3()
-sys.modules['boto3.dynamodb'] = type('MockBoto3DynamoDB', (), {})()
+sys.modules['boto3.dynamodb'] = type('MockBoto3DynamoDB', (), {})
 sys.modules['boto3.dynamodb.types'] = type('MockBoto3DynamoDBTypes', (), {
     'TypeDeserializer': MockTypeDeserializer,
     'TypeSerializer': MockTypeSerializer
-})()
+})
 
 from dashboard import lambda_handler
 
