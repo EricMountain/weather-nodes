@@ -100,6 +100,9 @@ class MockTypeSerializer:
     def serialize(self, x):
         return {'S': str(x)}
 
+# Mock boto3 modules before importing dashboard
+# Note: This is a simple approach for testing. For production testing,
+# consider using unittest.mock or pytest-mock for more robust mocking.
 sys.modules['boto3'] = MockBoto3()
 sys.modules['boto3.dynamodb'] = type('MockBoto3DynamoDB', (), {})
 sys.modules['boto3.dynamodb.types'] = type('MockBoto3DynamoDBTypes', (), {

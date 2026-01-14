@@ -1233,7 +1233,7 @@ def generate_dashboard_html(
                         start_date: new Date(startDate).toISOString(),
                         end_date: new Date(endDate).toISOString(),
                         metric: metric,
-                        devices: selectedDevices
+                        devices: selectedDevices.join(',')
                     }})
                 }});
                 
