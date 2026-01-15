@@ -1032,7 +1032,7 @@ def generate_dashboard_html(
                 </div>
                 
                 <div class="control-group">
-                    <label>Devices:</label>
+                    <label for="device-selection">Devices:</label>
                     <div id="device-selection" class="device-selection">
                         {device_checkboxes}
                     </div>
