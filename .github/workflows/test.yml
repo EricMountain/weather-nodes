@@ -36,10 +36,14 @@ jobs:
         pip install --upgrade platformio
         pio --version
         
-    - name: Run tests
+    - name: Run PlatformIO tests
       run: |
         pio test -e native -v
-        
+
+    - name: Run AWS λ tests
+      run: |
+        python ./aws/lambdas/dashboard/test-dashboard-lambda.py
+
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
