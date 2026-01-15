@@ -1003,10 +1003,6 @@ def generate_dashboard_html(
 
         <!-- Historical Graphs Section -->
         <div class="graphs-section">
-            <div class="graphs-header">
-                <h2>📊 Historical Data</h2>
-            </div>
-            
             <div class="graphs-controls">
                 <div class="control-group">
                     <label for="start-date">Start Date:</label>
