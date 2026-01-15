@@ -850,7 +850,7 @@ def generate_dashboard_html(
             gap: 20px;
             margin-bottom: 30px;
             padding: 20px;
-            background: var(--accent-soft);
+            background: var(--node-header-gradient);
             border-radius: 8px;
         }}
 
