@@ -1414,7 +1414,6 @@ def generate_dashboard_html(
                 'temperature': 'Temperature (°C)',
                 'humidity': 'Humidity (%)',
                 'pressure': 'Pressure (hPa)',
-                'battery': 'Battery Voltage (V)',
                 'wifi_dbm': 'WiFi Signal (dBm)',
                 'free_heap_bytes': 'Free Heap (bytes)'
             }};
@@ -1916,7 +1915,11 @@ def get_available_devices_for_graphs(device_id: str) -> List[Dict[str, str]]:
                         if "location" in config and "name" in config["location"]:
                             display_name = config["location"]["name"]
                 except Exception:
-                    pass
+                    logger.warning(  
+                        "Failed to load device config for %s: %s",  
+                        device_id_val,  
+                        str(e),  
+                    )
                 
                 devices.append({
                     "device_id": device_id_val,
