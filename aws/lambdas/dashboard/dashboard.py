@@ -983,12 +983,6 @@ def extract_battery_data(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
             elif "battery_voltage" in name_lower or name_lower == "vbat":
                 if value_num is not None:
                     voltage = value_num
-            elif name_lower == "battery":
-                if value_num is not None:
-                    if 1 <= value_num <= 100:
-                        percentage = value_num
-                    else:
-                        voltage = value_num
 
     if percentage is None and voltage is None:
         return None
