@@ -27,7 +27,6 @@ logger = logging.getLogger(__name__)
 dynamodb = boto3.client("dynamodb")
 
 
-
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """Main Lambda handler for dashboard requests."""
     ctx = event.get("requestContext") or {}
@@ -74,7 +73,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             TableName="device_configs",
             Key={"device_id": {"S": device_id}},
         )
-        
+
         if "Item" in device_config_response:
             device_config = dynamo_to_python(device_config_response["Item"])
         else:
@@ -99,7 +98,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         available_devices = get_available_devices_for_graphs(device_id)
 
         # Generate HTML
-        html_content = generate_dashboard_html(nodes_data, device_config, tz, available_devices)
+        html_content = generate_dashboard_html(
+            nodes_data, device_config, tz, available_devices)
 
         return {
             "statusCode": 200,
@@ -139,7 +139,8 @@ def get_node_data(node: Dict[str, Any], tz: ZoneInfo, now_utc: datetime) -> Dict
                 "status": "No data",
             }
 
-        latest_measurement = dynamo_to_python(latest_measurements_response["Item"])
+        latest_measurement = dynamo_to_python(
+            latest_measurements_response["Item"])
 
         node_data = {
             "device_id": node_device_id,
@@ -197,9 +198,11 @@ def get_node_data(node: Dict[str, Any], tz: ZoneInfo, now_utc: datetime) -> Dict
         logger.error(f"Error processing node data: {str(e)}")
         return None
 
+
 def fetch_min_max(node_device_id: str, now_utc: datetime, hours: int = 24) -> Dict[str, Any]:
     """Fetch 24h min/max for key measurements (temperature, humidity, pressure)."""
-    window_start = (now_utc - timedelta(hours=hours)).isoformat(timespec="seconds")
+    window_start = (now_utc - timedelta(hours=hours)
+                    ).isoformat(timespec="seconds")
     try:
         measurements_today_response = dynamodb.query(
             TableName="measurements",
@@ -264,6 +267,7 @@ def fetch_min_max(node_device_id: str, now_utc: datetime, hours: int = 24) -> Di
 
     return result
 
+
 def generate_dashboard_html(
     nodes_data: List[Dict[str, Any]], device_config: Dict[str, Any], tz: ZoneInfo, available_devices: List[Dict[str, str]] = None
 ) -> str:
@@ -278,7 +282,7 @@ def generate_dashboard_html(
     measurements_html = ""
     for node in nodes_data:
         measurements_html += render_node_card(node)
-    
+
     # Generate device checkboxes for graphs
     device_checkboxes = ""
     if available_devices:
@@ -1552,7 +1556,8 @@ def render_node_card(node: Dict[str, Any]) -> str:
     version = node.get("version", "Unknown")
 
     battery_data = extract_battery_data(node)
-    battery_html = render_battery_indicator(battery_data) if battery_data else ""
+    battery_html = render_battery_indicator(
+        battery_data) if battery_data else ""
     measurement_age_html = f'<div class="measurement-age" data-measured-at="{node.get("timestamp_local_str", "")}"></div>'
 
     # Define measurement order priority
@@ -1580,7 +1585,8 @@ def render_node_card(node: Dict[str, Any]) -> str:
         all_measurements = []
         for device_name, device_measurements in node["measurements"].items():
             for measurement_name, measurement_value in device_measurements.items():
-                all_measurements.append((device_name, measurement_name, measurement_value))
+                all_measurements.append(
+                    (device_name, measurement_name, measurement_value))
 
         all_measurements.sort(key=get_sort_key)
 
@@ -1681,13 +1687,16 @@ def render_primary_measurement(
 ) -> str:
     """Render primary metrics (temp/humidity/pressure) with stacked min/max over current."""
     min_max_entry = _lookup_min_max_entry(measurement_name, min_max_for_device)
-    current_val, unit = format_measurement_parts(measurement_name, current_value)
+    current_val, unit = format_measurement_parts(
+        measurement_name, current_value)
     unit_suffix = f"{unit}" if unit else ""
 
     min_max_line = ""
     if min_max_entry and "min" in min_max_entry and "max" in min_max_entry:
-        min_val, _ = format_measurement_parts(measurement_name, min_max_entry["min"])
-        max_val, _ = format_measurement_parts(measurement_name, min_max_entry["max"])
+        min_val, _ = format_measurement_parts(
+            measurement_name, min_max_entry["min"])
+        max_val, _ = format_measurement_parts(
+            measurement_name, min_max_entry["max"])
         unit_suffix_minmax = f"<span class=\"measurement-minmax\">{unit_suffix}</span>" if unit_suffix else ""
         min_max_line = (
             f"<div class=\"measurement-value metric-minmax-line\">"
@@ -1722,7 +1731,8 @@ def render_measurement_with_min_max(
 ) -> str:
     """Render a measurement value with optional min/current/max trio."""
     min_max_entry = _lookup_min_max_entry(measurement_name, min_max_for_device)
-    current_val, unit = format_measurement_parts(measurement_name, current_value)
+    current_val, unit = format_measurement_parts(
+        measurement_name, current_value)
 
     if min_max_entry and "min" in min_max_entry and "max" in min_max_entry:
         min_val, min_unit = format_measurement_parts(
@@ -1836,9 +1846,9 @@ def handle_post_request(
         body = event.get("body", "")
         if event.get("isBase64Encoded", False):
             body = base64.b64decode(body).decode('utf-8')
-        
+
         params = parse_qs(body)
-        
+
         # Extract parameters
         start_date = params.get("start_date", [""])[0]
         end_date = params.get("end_date", [""])[0]
@@ -1848,27 +1858,29 @@ def handle_post_request(
             selected_devices = selected_devices.split(',')
         else:
             selected_devices = []
-        
+
         if not start_date or not end_date:
             return {
                 "statusCode": 400,
                 "headers": add_cookie_header({"Content-Type": "text/plain"}, api_key),
                 "body": "start_date and end_date are required",
             }
-        
+
         # Get available devices for this API key
         available_devices = get_available_devices_for_graphs(device_id)
-        
+
         # Filter selected devices to only include available ones
         if not selected_devices:
             selected_devices = [d["device_id"] for d in available_devices]
         else:
             valid_device_ids = {d["device_id"] for d in available_devices}
-            selected_devices = [d for d in selected_devices if d in valid_device_ids]
-        
+            selected_devices = [
+                d for d in selected_devices if d in valid_device_ids]
+
         # Get measurements data
-        measurements_data = get_measurements_data(selected_devices, start_date, end_date, metric)
-        
+        measurements_data = get_measurements_data(
+            selected_devices, start_date, end_date, metric)
+
         return {
             "statusCode": 200,
             "headers": add_cookie_header(
@@ -1879,7 +1891,7 @@ def handle_post_request(
             ),
             "body": json.dumps(measurements_data),
         }
-    
+
     except Exception as e:
         logger.error(f"Error in POST request: {str(e)}")
         return {
@@ -1891,61 +1903,110 @@ def handle_post_request(
 
 def get_available_devices_for_graphs(current_device_id: str) -> List[Dict[str, str]]:
     """Get list of all devices from the latest_measurements table"""
-    
+
     def process_scan_items(items: List[Dict]) -> List[Dict[str, str]]:
         """Process a list of DynamoDB scan items to extract device information"""
-        devices = []
+        # First convert all items and collect unique device IDs
+        measurements: List[Dict[str, Any]] = []
+        device_ids_in_order: List[str] = []
         for item in items:
             measurement = dynamo_to_python(item)
             device_id_val = measurement.get("device_id")
-            if device_id_val:
-                # Try to get display name from device_configs
-                display_name = device_id_val
-                try:
-                    config_response = dynamodb.get_item(
-                        TableName="device_configs",
-                        Key={"device_id": {"S": device_id_val}},
-                    )
-                    if "Item" in config_response:
-                        config = dynamo_to_python(config_response["Item"])
-                        if "location" in config and "name" in config["location"]:
-                            display_name = config["location"]["name"]
-                except Exception:
-                    logger.warning(  
-                        "Failed to load device config for %s: %s",  
-                        device_id_val,  
-                        str(e),  
-                    )
-                
-                devices.append({
+            measurements.append(
+                {"measurement": measurement, "device_id": device_id_val})
+            if device_id_val and device_id_val not in device_ids_in_order:
+                device_ids_in_order.append(device_id_val)
+
+        # Batch load device configs to avoid N+1 GetItem calls
+        display_name_by_device_id: Dict[str, str] = {}
+        if device_ids_in_order:
+            try:
+                # DynamoDB BatchGetItem limit: 100 keys per request
+                batch_size = 100
+                for start in range(0, len(device_ids_in_order), batch_size):
+                    chunk = device_ids_in_order[start: start + batch_size]
+                    request_items = {
+                        "device_configs": {
+                            "Keys": [{"device_id": {"S": did}} for did in chunk],
+                        }
+                    }
+                    response = dynamodb.batch_get_item(
+                        RequestItems=request_items)
+                    config_items = response.get(
+                        "Responses", {}).get("device_configs", [])
+                    for config_item in config_items:
+                        config = dynamo_to_python(config_item)
+                        config_device_id = config.get("device_id")
+                        logger.warning(
+                            f"Processing config for device {config_device_id}")
+                        if not config_device_id:
+                            continue
+                        display_name = config_device_id
+                        display_name_by_device_id[config_device_id] = display_name
+                        nodes = config.get("nodes") or {}
+                        for node in nodes:
+                            node_device_id = node.get("device_id")
+                            logger.warning(
+                                f"Node for device {node_device_id}: {node}")
+                            node_display_name = node.get("display_name")
+                            if node_display_name:
+                                display_name_by_device_id[node_device_id] = node_display_name
+                                logger.warning(
+                                    f"Node display name for device {node_device_id}: {node_display_name}")
+                        # if nodes:
+                        #     logger.info(f"Nodes found for device {config_device_id}: {nodes.keys()}")
+                        #     first_node = next(iter(nodes.values()), {})
+                        #     node_name = first_node.get("display_name")
+                        #     if node_name:
+                        #         display_name = node_name
+                        # location = config.get("location") or {}
+                        # name = location.get("name")
+                        # if name:
+                        #     display_name = name
+
+            except Exception:
+                # On any error, fall back to using device_id as display name
+                logger.exception(
+                    "Error batch loading device configs for graphs")
+
+        devices: List[Dict[str, str]] = []
+        for entry in measurements:
+            device_id_val = entry["device_id"]
+            if not device_id_val:
+                continue
+            display_name = display_name_by_device_id.get(
+                device_id_val, device_id_val)
+            devices.append(
+                {
                     "device_id": device_id_val,
-                    "display_name": display_name
-                })
+                    "display_name": display_name,
+                }
+            )
         return devices
-    
+
     try:
         devices = []
-        
+
         # Scan the latest_measurements table to get all devices
         scan_response = dynamodb.scan(
             TableName="latest_measurements",
         )
-        
+
         if "Items" in scan_response:
             devices.extend(process_scan_items(scan_response["Items"]))
-        
+
         # Handle pagination if there are more results
         while "LastEvaluatedKey" in scan_response:
             scan_response = dynamodb.scan(
                 TableName="latest_measurements",
                 ExclusiveStartKey=scan_response["LastEvaluatedKey"]
             )
-            
+
             if "Items" in scan_response:
                 devices.extend(process_scan_items(scan_response["Items"]))
-        
+
         return devices if devices else [{"device_id": current_device_id, "display_name": "Main Device"}]
-    
+
     except Exception as e:
         logger.error(f"Error getting available devices: {str(e)}")
         return [{"device_id": current_device_id, "display_name": "Main Device"}]
@@ -1955,11 +2016,13 @@ def get_measurements_data(device_ids: List[str], start_date: str, end_date: str,
     """Get measurements data for the specified devices and date range"""
     try:
         # Parse dates
-        start_datetime = datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc)
-        end_datetime = datetime.fromisoformat(end_date).replace(tzinfo=timezone.utc)
-        
+        start_datetime = datetime.fromisoformat(
+            start_date).replace(tzinfo=timezone.utc)
+        end_datetime = datetime.fromisoformat(
+            end_date).replace(tzinfo=timezone.utc)
+
         all_data = {}
-        
+
         for device_id in device_ids:
             try:
                 measurements_response = dynamodb.query(
@@ -1971,21 +2034,23 @@ def get_measurements_data(device_ids: List[str], start_date: str, end_date: str,
                         ":end_time": {"S": end_datetime.isoformat()},
                     },
                 )
-                
+
                 measurements = []
                 if "Items" in measurements_response:
                     for item in measurements_response["Items"]:
                         measurement = dynamo_to_python(item)
                         measurements.append(measurement)
-                
+
                 # Process measurements to extract the specific metric
-                processed_data = process_measurements_for_metric(measurements, metric)
+                processed_data = process_measurements_for_metric(
+                    measurements, metric)
                 all_data[device_id] = processed_data
-                
+
             except ClientError as err:
-                logger.error(f"Error querying measurements for device {device_id}: {err}")
+                logger.error(
+                    f"Error querying measurements for device {device_id}: {err}")
                 all_data[device_id] = []
-        
+
         return {
             "success": True,
             "metric": metric,
@@ -1993,7 +2058,7 @@ def get_measurements_data(device_ids: List[str], start_date: str, end_date: str,
             "start_date": start_date,
             "end_date": end_date
         }
-    
+
     except Exception as e:
         logger.error(f"Error getting measurements data: {str(e)}")
         return {
@@ -2005,10 +2070,10 @@ def get_measurements_data(device_ids: List[str], start_date: str, end_date: str,
 def process_measurements_for_metric(measurements: List[Dict], metric: str) -> List[Dict]:
     """Process measurements to extract data points for a specific metric"""
     data_points = []
-    
+
     for measurement in measurements:
         timestamp = measurement.get("timestamp_utc", "")
-        
+
         if "measurements_v2" in measurement:
             for device_name, device_measurements in measurement["measurements_v2"].items():
                 if metric in device_measurements:
@@ -2021,5 +2086,5 @@ def process_measurements_for_metric(measurements: List[Dict], metric: str) -> Li
                         })
                     except (ValueError, TypeError):
                         continue
-    
+
     return sorted(data_points, key=lambda x: x["timestamp"])
