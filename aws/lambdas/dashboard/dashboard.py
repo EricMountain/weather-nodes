@@ -1893,7 +1893,7 @@ def handle_post_request(
         }
 
 
-def get_available_devices_for_graphs(device_id: str) -> List[Dict[str, str]]:
+def get_available_devices_for_graphs(current_device_id: str) -> List[Dict[str, str]]:
     """Get list of all devices from the latest_measurements table"""
     
     def process_scan_items(items: List[Dict]) -> List[Dict[str, str]]:
@@ -1948,11 +1948,11 @@ def get_available_devices_for_graphs(device_id: str) -> List[Dict[str, str]]:
             if "Items" in scan_response:
                 devices.extend(process_scan_items(scan_response["Items"]))
         
-        return devices if devices else [{"device_id": device_id, "display_name": "Main Device"}]
+        return devices if devices else [{"device_id": current_device_id, "display_name": "Main Device"}]
     
     except Exception as e:
         logger.error(f"Error getting available devices: {str(e)}")
-        return [{"device_id": device_id, "display_name": "Main Device"}]
+        return [{"device_id": current_device_id, "display_name": "Main Device"}]
 
 
 def get_measurements_data(device_ids: List[str], start_date: str, end_date: str, metric: str) -> Dict[str, Any]:
