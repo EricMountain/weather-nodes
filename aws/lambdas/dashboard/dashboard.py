@@ -1903,113 +1903,37 @@ def handle_post_request(
 
 def get_available_devices_for_graphs(current_device_id: str) -> List[Dict[str, str]]:
     """Get list of all devices from the latest_measurements table"""
+    try:
+        response = dynamodb.get_item(
+            TableName="device_configs",
+            Key={"device_id": {"S": current_device_id}},
+        )
 
-    def process_scan_items(items: List[Dict]) -> List[Dict[str, str]]:
-        """Process a list of DynamoDB scan items to extract device information"""
-        # First convert all items and collect unique device IDs
-        measurements: List[Dict[str, Any]] = []
-        device_ids_in_order: List[str] = []
-        for item in items:
-            measurement = dynamo_to_python(item)
-            device_id_val = measurement.get("device_id")
-            measurements.append(
-                {"measurement": measurement, "device_id": device_id_val})
-            if device_id_val and device_id_val not in device_ids_in_order:
-                device_ids_in_order.append(device_id_val)
-
-        # Batch load device configs to avoid N+1 GetItem calls
-        display_name_by_device_id: Dict[str, str] = {}
-        if device_ids_in_order:
-            try:
-                # DynamoDB BatchGetItem limit: 100 keys per request
-                batch_size = 100
-                for start in range(0, len(device_ids_in_order), batch_size):
-                    chunk = device_ids_in_order[start: start + batch_size]
-                    request_items = {
-                        "device_configs": {
-                            "Keys": [{"device_id": {"S": did}} for did in chunk],
-                        }
-                    }
-                    response = dynamodb.batch_get_item(
-                        RequestItems=request_items)
-                    config_items = response.get(
-                        "Responses", {}).get("device_configs", [])
-                    for config_item in config_items:
-                        config = dynamo_to_python(config_item)
-                        config_device_id = config.get("device_id")
-                        logger.warning(
-                            f"Processing config for device {config_device_id}")
-                        if not config_device_id:
-                            continue
-                        display_name = config_device_id
-                        display_name_by_device_id[config_device_id] = display_name
-                        nodes = config.get("nodes") or {}
-                        for node in nodes:
-                            node_device_id = node.get("device_id")
-                            logger.warning(
-                                f"Node for device {node_device_id}: {node}")
-                            node_display_name = node.get("display_name")
-                            if node_display_name:
-                                display_name_by_device_id[node_device_id] = node_display_name
-                                logger.warning(
-                                    f"Node display name for device {node_device_id}: {node_display_name}")
-                        # if nodes:
-                        #     logger.info(f"Nodes found for device {config_device_id}: {nodes.keys()}")
-                        #     first_node = next(iter(nodes.values()), {})
-                        #     node_name = first_node.get("display_name")
-                        #     if node_name:
-                        #         display_name = node_name
-                        # location = config.get("location") or {}
-                        # name = location.get("name")
-                        # if name:
-                        #     display_name = name
-
-            except Exception:
-                # On any error, fall back to using device_id as display name
-                logger.exception(
-                    "Error batch loading device configs for graphs")
+        config = dynamo_to_python(response.get("Item", {})) if response else {}
+        nodes = config.get("nodes") or []
 
         devices: List[Dict[str, str]] = []
-        for entry in measurements:
-            device_id_val = entry["device_id"]
-            if not device_id_val:
+        for node in nodes:
+            node_device_id = node.get("device_id")
+            if not node_device_id:
                 continue
-            display_name = display_name_by_device_id.get(
-                device_id_val, device_id_val)
+            display_name = node.get("display_name") or node_device_id
             devices.append(
                 {
-                    "device_id": device_id_val,
+                    "device_id": node_device_id,
                     "display_name": display_name,
                 }
             )
+
+        if not devices:
+            # Fallback to the authenticated device itself
+            return [{"device_id": current_device_id, "display_name": config.get("device_id", current_device_id)}]
+
         return devices
-
-    try:
-        devices = []
-
-        # Scan the latest_measurements table to get all devices
-        scan_response = dynamodb.scan(
-            TableName="latest_measurements",
-        )
-
-        if "Items" in scan_response:
-            devices.extend(process_scan_items(scan_response["Items"]))
-
-        # Handle pagination if there are more results
-        while "LastEvaluatedKey" in scan_response:
-            scan_response = dynamodb.scan(
-                TableName="latest_measurements",
-                ExclusiveStartKey=scan_response["LastEvaluatedKey"]
-            )
-
-            if "Items" in scan_response:
-                devices.extend(process_scan_items(scan_response["Items"]))
-
-        return devices if devices else [{"device_id": current_device_id, "display_name": "Main Device"}]
 
     except Exception as e:
         logger.error(f"Error getting available devices: {str(e)}")
-        return [{"device_id": current_device_id, "display_name": "Main Device"}]
+        return [{"device_id": current_device_id, "display_name": current_device_id}]
 
 
 def get_measurements_data(device_ids: List[str], start_date: str, end_date: str, metric: str) -> Dict[str, Any]:
