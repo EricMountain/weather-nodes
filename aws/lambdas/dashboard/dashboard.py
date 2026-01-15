@@ -2,7 +2,7 @@
 Dashboard Lambda - Serves an elegant web page with all latest sensor measurements,
 node statuses, and version information.
 """
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import logging
 from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
@@ -287,6 +287,7 @@ def generate_dashboard_html(
     <link rel="apple-touch-icon" href="/icon-192.png">
     <link rel="manifest" href="/manifest.webmanifest">
     <title>Weather Station Dashboard</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
     <style>
         * {{
             margin: 0;
@@ -554,6 +555,51 @@ def generate_dashboard_html(
             gap: 10px;
             flex-wrap: wrap;
         }}
+
+        .node-header .header-right {{
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }}
+        
+        .battery-indicator {{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 8px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--header-text);
+            border: 1px solid var(--accent-soft);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        }}
+
+        .battery-indicator .battery-icon {{
+            font-family: 'Material Symbols Rounded';
+            font-variation-settings:
+                'FILL' 1,
+                'wght' 400,
+                'GRAD' 0,
+                'opsz' 24;
+            font-size: 28px;
+            line-height: 1;
+        }}
+
+        .battery-indicator.low {{
+            background: rgba(255, 99, 71, 0.18);
+            border-color: rgba(255, 99, 71, 0.7);
+        }}
+
+        .battery-indicator.mid {{
+            background: rgba(255, 193, 7, 0.18);
+            border-color: rgba(255, 193, 7, 0.7);
+        }}
+
+        .battery-indicator.ok {{
+            background: rgba(67, 160, 71, 0.18);
+            border-color: rgba(67, 160, 71, 0.7);
+        }}
         
         .node-id {{
             font-size: 0.85em;
@@ -573,7 +619,7 @@ def generate_dashboard_html(
             font-size: 0.9em;
             opacity: 0.9;
             color: var(--timestamp);
-            margin-left: auto;
+            margin-left: 0;
             text-align: right;
         }}
 
@@ -910,11 +956,101 @@ def generate_dashboard_html(
     return html
 
 
+def _parse_numeric(value: Any) -> Optional[float]:
+    """Best-effort parse of a numeric string/number to float."""
+    if value is None:
+        return None
+    try:
+        cleaned = str(value).strip().rstrip("%")
+        return float(cleaned)
+    except (ValueError, TypeError):
+        return None
+
+
+def extract_battery_data(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Extract battery percentage/voltage for a node from its measurements."""
+    percentage: Optional[float] = None
+    voltage: Optional[float] = None
+
+    for device_measurements in node.get("measurements", {}).values():
+        for measurement_name, measurement_value in device_measurements.items():
+            name_lower = measurement_name.lower()
+            value_num = _parse_numeric(measurement_value)
+
+            if "battery_percentage" in name_lower or name_lower == "battery_percent":
+                if value_num is not None:
+                    percentage = value_num
+            elif "battery_voltage" in name_lower or name_lower == "vbat":
+                if value_num is not None:
+                    voltage = value_num
+
+    if percentage is None and voltage is None:
+        return None
+
+    return {
+        "percentage": percentage,
+        "voltage": voltage,
+    }
+
+
+def _battery_level_class(percentage: Optional[float]) -> str:
+    if percentage is None:
+        return ""
+    if percentage <= 20:
+        return "low"
+    if percentage <= 55:
+        return "mid"
+    return "ok"
+
+
+def _battery_glyph(percentage: Optional[float]) -> str:
+    if percentage is None:
+        return "battery_unknown"
+
+    clamped = max(0, min(100, percentage))
+    if clamped >= 95:
+        return "battery_full"
+    if clamped >= 75:
+        return "battery_5_bar"
+    if clamped >= 55:
+        return "battery_4_bar"
+    if clamped >= 35:
+        return "battery_3_bar"
+    if clamped >= 15:
+        return "battery_2_bar"
+    if clamped >= 5:
+        return "battery_1_bar"
+    return "battery_alert"
+
+
+def render_battery_indicator(battery_data: Dict[str, Any]) -> str:
+    percentage: Optional[float] = battery_data.get("percentage")
+    voltage: Optional[float] = battery_data.get("voltage")
+
+    level_class = _battery_level_class(percentage)
+    glyph = _battery_glyph(percentage)
+    tooltip = ""
+    if percentage is not None:
+        tooltip = f" title=\"Battery {percentage:.0f}%\""
+    elif voltage is not None:
+        tooltip = f" title=\"Battery {voltage:.2f}V\""
+
+    return (
+        f"<div class=\"battery-indicator {level_class}\"{tooltip}>"
+        f"<span class=\"battery-icon material-symbols-rounded\">{glyph}</span>"
+        f"</div>"
+    )
+
+
 def render_node_card(node: Dict[str, Any]) -> str:
     """Render an individual node card."""
     display_name = node.get("display_name", node.get("device_id", "Unknown"))
     device_id = node.get("device_id", "Unknown")
     version = node.get("version", "Unknown")
+
+    battery_data = extract_battery_data(node)
+    battery_html = render_battery_indicator(battery_data) if battery_data else ""
+    measurement_age_html = f'<div class="measurement-age" data-measured-at="{node.get("timestamp_local_str", "")}"></div>'
 
     # Define measurement order priority
     measurement_priority = {
@@ -1003,7 +1139,10 @@ def render_node_card(node: Dict[str, Any]) -> str:
         <div class="node-header">
             <div class="title-line">
                 <h2>{display_name}</h2>
-                <div class="measurement-age" data-measured-at="{node.get("timestamp_local_str", "")}"></div>
+                <div class="header-right">
+                    {measurement_age_html}
+                    {battery_html}
+                </div>
             </div>
             <div class="node-meta">
                 <div class="node-id">{device_id}</div>
