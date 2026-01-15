@@ -1258,7 +1258,7 @@ def generate_dashboard_html(
             
             // Prepare data
             const allDataPoints = [];
-            const deviceNames = [];
+            const deviceIds = [];
             
             Object.keys(data.data).forEach(deviceId => {{
                 const deviceData = data.data[deviceId];
@@ -1269,7 +1269,7 @@ def generate_dashboard_html(
                         date: new Date(point.timestamp)
                     }});
                 }});
-                deviceNames.push(deviceId);
+                deviceIds.push(deviceId);
             }});
             
             if (allDataPoints.length === 0) {{
@@ -1336,7 +1336,7 @@ def generate_dashboard_html(
                 .style('opacity', 0);
             
             // Draw lines for each device
-            deviceNames.forEach((deviceId, i) => {{
+            deviceIds.forEach((deviceId, i) => {{
                 const deviceData = allDataPoints.filter(d => d.deviceId === deviceId);
                 if (deviceData.length === 0) return;
                 
@@ -1384,7 +1384,7 @@ def generate_dashboard_html(
                 .attr('transform', `translate(10, 0)`);
             
             let legendY = 0;
-            deviceNames.forEach(deviceId => {{
+            deviceIds.forEach(deviceId => {{
                 const deviceData = allDataPoints.filter(d => d.deviceId === deviceId);
                 const deviceNames = [...new Set(deviceData.map(d => d.device_name))];
                 
