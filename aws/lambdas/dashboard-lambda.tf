@@ -48,6 +48,7 @@ resource "aws_iam_policy" "dashboard_lambda_policy" {
       {
         Effect = "Allow",
         Action = [
+          "dynamodb:BatchGetItem",
           "dynamodb:GetItem"
         ],
         Resource = aws_dynamodb_table.device_configs.arn
@@ -55,7 +56,8 @@ resource "aws_iam_policy" "dashboard_lambda_policy" {
       {
         Effect = "Allow",
         Action = [
-          "dynamodb:GetItem"
+          "dynamodb:GetItem",
+          "dynamodb:Scan"
         ],
         Resource = aws_dynamodb_table.latest_measurements.arn
       },
