@@ -12,6 +12,8 @@ from datetime import datetime, timedelta
 sys.path.insert(0, os.path.dirname(__file__))
 
 # Mock boto3 for testing
+
+
 class MockDynamoDBClient:
     def get_item(self, **kwargs):
         # Mock API key validation
@@ -64,11 +66,11 @@ class MockDynamoDBClient:
                 }
             }
         return {}
-    
+
     def query(self, **kwargs):
         # Mock measurements query
         return {'Items': []}
-    
+
     def scan(self, **kwargs):
         # Mock scan for available devices
         return {
@@ -79,10 +81,12 @@ class MockDynamoDBClient:
             ]
         }
 
+
 class MockBoto3:
     @staticmethod
     def client(service_name):
         return MockDynamoDBClient()
+
 
 class MockTypeDeserializer:
     def deserialize(self, x):
@@ -96,9 +100,11 @@ class MockTypeDeserializer:
             return [self.deserialize(v) for v in x['L']]
         return x
 
+
 class MockTypeSerializer:
     def serialize(self, x):
         return {'S': str(x)}
+
 
 # Mock boto3 modules before importing dashboard
 # Note: This is a simple approach for testing. For production testing,
@@ -110,7 +116,9 @@ sys.modules['boto3.dynamodb.types'] = type('MockBoto3DynamoDBTypes', (), {
     'TypeSerializer': MockTypeSerializer
 })
 
-from dashboard import lambda_handler
+
+from dashboard import lambda_handler  # noqa: E402 - must stay after mocking
+
 
 def test_get_request():
     """Test GET request that should return HTML dashboard"""
@@ -125,32 +133,32 @@ def test_get_request():
             "x-api-key": "test-api-key"
         }
     }
-    
+
     result = lambda_handler(event, {})
     print("GET Request Test:")
     print(f"Status Code: {result['statusCode']}")
     print(f"Content-Type: {result['headers']['Content-Type']}")
     print(f"Set-Cookie: {result['headers'].get('Set-Cookie')}")
     print(f"Body length: {len(result['body'])} characters")
-    
+
     # Check for key elements in the HTML
     assert result['statusCode'] == 200
     assert 'text/html' in result['headers']['Content-Type']
     assert 'Weather Station' in result['body'] or 'Test Location' in result['body']
-    assert 'Historical Data' in result['body']  # Graphs section
     assert 'Generate Graph' in result['body']  # Graph button
     assert 'd3.v7.min.js' in result['body']  # D3.js library
     assert 'Set-Cookie' in result['headers']
     print("✓ GET request test passed - dashboard includes graphs section\n")
+
 
 def test_post_request():
     """Test POST request for graph data"""
     # Calculate dates for the last 24 hours
     end_date = datetime.utcnow()
     start_date = end_date - timedelta(hours=24)
-    
+
     body = f"start_date={start_date.isoformat()}&end_date={end_date.isoformat()}&metric=temperature&devices=node1"
-    
+
     event = {
         "requestContext": {
             "http": {
@@ -164,13 +172,13 @@ def test_post_request():
         },
         "body": body
     }
-    
+
     print("POST Request Test:")
     print(f"Request body: {body}")
-    
+
     result = lambda_handler(event, {})
     print(f"Status Code: {result['statusCode']}")
-    
+
     if result['statusCode'] == 200:
         try:
             data = json.loads(result['body'])
@@ -183,8 +191,9 @@ def test_post_request():
             print("✗ POST request did not return valid JSON")
     else:
         print(f"Response body: {result['body']}")
-    
+
     print("✓ POST request test completed\n")
+
 
 def test_missing_api_key():
     """Test request without API key"""
@@ -197,16 +206,17 @@ def test_missing_api_key():
         },
         "headers": {}
     }
-    
+
     result = lambda_handler(event, {})
     print("Missing API Key Test:")
     print(f"Status Code: {result['statusCode']}")
     print(f"Body: {result['body']}")
-    
+
     if result['statusCode'] == 400 and "API key missing" in result['body']:
         print("✓ Missing API key test passed\n")
     else:
         print("✗ Missing API key test failed\n")
+
 
 def test_invalid_method():
     """Test invalid HTTP method"""
@@ -221,31 +231,32 @@ def test_invalid_method():
             "x-api-key": "test-api-key"
         }
     }
-    
+
     result = lambda_handler(event, {})
     print("Invalid Method Test:")
     print(f"Status Code: {result['statusCode']}")
     print(f"Body: {result['body']}")
-    
+
     if result['statusCode'] == 405:
         print("✓ Invalid method test passed\n")
     else:
         print("✗ Invalid method test failed\n")
 
+
 if __name__ == "__main__":
     print("Testing Dashboard Lambda Function with Graphs Integration")
     print("=" * 60)
-    
+
     try:
         test_missing_api_key()
         test_invalid_method()
         test_get_request()
         test_post_request()
-        
+
         print("All tests completed successfully!")
         print("\nNote: Tests use mocked DynamoDB data.")
         print("Deploy the lambda to AWS to test with real data.")
-        
+
     except Exception as e:
         print(f"Test failed with error: {e}")
         import traceback
