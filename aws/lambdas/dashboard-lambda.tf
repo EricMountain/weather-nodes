@@ -48,6 +48,7 @@ resource "aws_iam_policy" "dashboard_lambda_policy" {
       {
         Effect = "Allow",
         Action = [
+          "dynamodb:BatchGetItem",
           "dynamodb:GetItem"
         ],
         Resource = aws_dynamodb_table.device_configs.arn
