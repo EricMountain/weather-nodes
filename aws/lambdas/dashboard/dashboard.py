@@ -1939,7 +1939,7 @@ def get_available_devices_for_graphs(current_device_id: str) -> List[Dict[str, s
 def get_measurements_data(device_ids: List[str], start_date: str, end_date: str, metric: str) -> Dict[str, Any]:
     """Get measurements data for the specified devices and date range"""
     try:
-        # Parse dates
+        # Parse dates, UTC is expected
         start_datetime = datetime.fromisoformat(
             start_date).replace(tzinfo=timezone.utc)
         end_datetime = datetime.fromisoformat(
