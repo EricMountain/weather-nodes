@@ -20,7 +20,7 @@
 #define HAS_BME680
 // #define HAS_BATTERY
 #define OTA_UPDATE_ENABLED
-#define DISPLAY_NODE_VERSIONS
+// #define DISPLAY_NODE_VERSIONS
 // #define DISPLAY_TIME
 #endif
 

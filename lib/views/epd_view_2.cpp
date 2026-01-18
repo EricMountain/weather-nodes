@@ -305,7 +305,6 @@ uint EPDView2::displayNodes(const RenderContext& ctx) {
       JsonObject nodeData = node.value().as<JsonObject>();
       displayNodeHeader(node, nodeData, ctx, column, row, row_offset);
       displayNodeMeasurements(nodeData, ctx, column, row, row_offset);
-      // displayBatteryLevel(nodeData, ctx.node_count, column, row, row_offset);
       displayBadStatuses(nodeData, ctx.node_count, column, row, row_offset);
       displayStaleState(nodeData, ctx.node_count, column, row, row_offset);
       displayNodeVersion(nodeData, ctx.node_count, column, row, row_offset);
